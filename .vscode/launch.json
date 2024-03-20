@@ -9,7 +9,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
-            "url": "C:/GIT REPOS/prueba/inicio/login.php",
+            "url": "http://localhost/prueba/inicio/login.php",
             "webRoot": "${workspaceFolder}"
         }
     ]
