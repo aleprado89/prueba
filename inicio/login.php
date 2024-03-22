@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Formulario de Login</title>
     <!-- Bootswatch Material theme -->
-  <link rel="stylesheet" href="../css/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/material/bootstrap.min.css">
+  <!-- <link rel="stylesheet" href="../css/bootstrap.min.css"> -->
 </head>
 <body>
 
@@ -41,31 +42,30 @@
 </div>
 
 <!-- Modal -->
-<div class="modal" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<div class="modal" id="loginModal">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header bg-primary text-light">
-        <h5 class="modal-title" id="loginModalLabel">Resultado del Inicio de Sesión</h5>
-         </div>
+      <div class="modal-header">
+        <h5 class="modal-title">Resultado de Inicio de Sesión</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
       <div class="modal-body">
-        <!-- Aquí se mostrará el mensaje del inicio de sesión -->
-        <p id="loginMessage"></p>
+      <p id="loginMessage"></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-<!-- <script src="../js/jquery-3.7.1.slim.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script> -->
+  <script src="../js/jquery-3.7.1.slim.min.js"></script>
+ <script src="../js/bootstrap.min.js"></script> 
+ <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+ 
 <!-- JavaScript para mostrar el modal -->
 <script>
   <?php
