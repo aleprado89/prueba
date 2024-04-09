@@ -2,7 +2,8 @@
 $servername = "localhost";
 $username = "se_user";
 $password = "88668866";
-$dbname = "sistemas_terc_banfield";
+//$dbname = "sistemas_terc_banfield";
+$dbname = "se_bd";
 
 // Crear conexión
 $conn = new mysqli($servername, $username, $password, $dbname);
