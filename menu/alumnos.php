@@ -202,7 +202,6 @@
  <?php 
 include '../inicio/conexion.php';
 
-$banderaExamenFebAñoProx=0;
 // Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
 $sql = "SELECT inscExamDesde,inscExamHasta,iDturnoautoweb FROM colegio WHERE codnivel = 6"; 
 $resultado = $conn->query($sql);
@@ -218,18 +217,15 @@ if ($resultado->num_rows > 0) {
   $fechaInscExamHasta = null;
   $idTurno=null;
 }
-if($fechaInscExamDesde)
 
 $conn->close();
 
-// Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
-$banderaCursadoFebAñoProx=0;
+// Realizar la consulta para obtener la fecha de inscripción A CURSADO
+$sql2 = "SELECT inscCursDesde,insCursHasta FROM colegio WHERE codnivel = 6"; 
+$resultado2 = $conn->query($sql2);
 
-$sql = "SELECT inscExamDesde,inscExamHasta FROM colegio WHERE codnivel = 6"; 
-$resultado = $conn->query($sql);
-
-if ($resultado->num_rows > 0) {
-  $fila = $resultado->fetch_assoc();
+if ($resultado2->num_rows > 0) {
+  $fila = $resultado2->fetch_assoc();
   $fechaInscExamDesde = $fila['inscExamDesde'];
   $fechaInscExamHasta = $fila['inscExamHasta'];
 

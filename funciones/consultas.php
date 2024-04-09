@@ -210,4 +210,3 @@ and fechasexamenes.idTurno = $idTurno";
     }
     return $listadoFechasExamenes;
 }
-?>
