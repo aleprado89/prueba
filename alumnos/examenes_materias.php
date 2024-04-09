@@ -4,10 +4,11 @@
 <?php
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/pruebaSession.php';
 
-$idAlumno = 550; //$_SESSION['idAlumno'];
+$idAlumno = $_SESSION['idAlumno'];
 $idPlan = $_GET['idP'];
-$nombreAlumno = "NOMBRE ALUMNO"; //$_SESSION['nombreAlumno'];
+$nombreAlumno = $_SESSION['nombreAlumno'];
 $nombrePlan = $_GET['nombreP'];
 
 $listadoMaterias = array();
@@ -129,10 +130,12 @@ $cantidad = count($listadoMaterias);
       // Cargar idMateria y nombreMateria para pasar
       var idMateriaSeleccionada = boton.closest('tr').querySelector('td:nth-child(1)').textContent;
       var nombreMateriaCompleto = boton.closest('tr').querySelector('td:nth-child(2)').textContent;
+      var nombreCursoCompleto = boton.closest('tr').querySelector('td:nth-child(3)').textContent;
       // Redirigir a otra página y pasar los datos como parámetro en la URL
       window.location.href =
         '../alumnos/examenes_solicitar.php?idM=' + encodeURIComponent(idMateriaSeleccionada) +
-        '&nombreM=' + encodeURIComponent(nombreMateriaCompleto);
+        '&nombreM=' + encodeURIComponent(nombreMateriaCompleto) + 
+        '&nombreC=' + encodeURIComponent(nombreCursoCompleto);
     }  
   </script>
 

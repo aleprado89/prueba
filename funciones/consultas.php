@@ -60,6 +60,7 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
     }
     return $listadoCalificaciones;
 }
+
 function buscarExamenes($conexion, $idAlumno, $idMateria)
 {
     $consulta = "SELECT * from inscripcionexamenes inner join fechasexamenes
@@ -81,6 +82,7 @@ where inscripcionexamenes.idAlumno = $idAlumno and materiaterciario.idUnicoMater
     }
     return $listadoExamenes;
 }
+
 function buscarPlanes($conexion, $idAlumno)
 {
     $consulta = "SELECT * from matriculacion inner join plandeestudio
@@ -139,5 +141,73 @@ and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo";
         }
     }
     return $listadoSolicitudesExamenes;
+}
+
+function existeSolicitudExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idTurno)
+{
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from inscripcionexamenes_web inner join fechasexamenes
+on inscripcionexamenes.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
+on inscripcionexamenes.idMateria = materiaterciario.idMateria
+where inscripcionexamenes_web.idAlumno = $idAlumno 
+and materiaterciario.idUnicoMateria = 
+(Select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = $idMateria)
+and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo
+and fechasexamenes.idTurno = $idTurno";
+
+    $sol = mysqli_query($conexion, $consulta);
+
+    $listadoSolicitudesExamenes = array();
+    $i = 0;
+    if (!empty($sol)) {
+        while ($data = mysqli_fetch_array($sol)) {
+            $listadoSolicitudesExamenes[$i]['idInscripcionWeb'] = $data['id_Inscripcion_web'];
+            $listadoSolicitudesExamenes[$i]['Materia'] = $data['nombreMateria'];
+            $listadoSolicitudesExamenes[$i]['Fecha'] = $data['fecha'];
+            if ($data['estado'] == '1') {
+                $listadoSolicitudesExamenes[$i]['Estado'] = "Pendiente";
+            }
+            if ($data['estado'] == '2') {
+                $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
+            }
+            if ($data['estado'] == '3') {
+                $listadoSolicitudesExamenes[$i]['Estado'] = "Rechazada";
+            }
+            if ($data['estado'] == '4') {
+                $listadoSolicitudesExamenes[$i]['Estado'] = "Cancelada";
+            }
+            if ($data['estado'] == '5') {
+                $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
+            }
+            $listadoSolicitudesExamenes[$i]['Observaciones'] = $data['observaciones'];
+            $i++;
+        }
+    }
+    return $listadoSolicitudesExamenes;
+}
+
+function buscarFechasExamenTurno($conexion, $idMateria, $nombreCurso, $idCicloLectivo, $idTurno)
+{
+    $consulta = "SELECT * from fechasexamenes inner join materiaterciario
+on fechasexamenes.idMateria = materiaterciario.idMateria inner join curso
+on materiaterciario.idCurso = curso.idCurso
+where materiaterciario.idUnicoMateria = 
+(Select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = $idMateria)
+and curso.nombre like $nombreCurso
+and fechasexamenes.idcicloLectivo = $idCicloLectivo 
+and fechasexamenes.idTurno = $idTurno";
+
+    $fec = mysqli_query($conexion, $consulta);
+
+    $listadoFechasExamenes = array();
+    $i = 0;
+    if (!empty($fec)) {
+        while ($data = mysqli_fetch_array($fec)) {
+            $listadoFechasExamenes[$i]['idFechaExamen'] = $data['idFechaExamen'];
+            $listadoFechasExamenes[$i]['Fecha'] = $data['fecha'];
+            $listadoFechasExamenes[$i]['Hora'] = $data['hora'];            
+            $i++;
+        }
+    }
+    return $listadoFechasExamenes;
 }
 ?>

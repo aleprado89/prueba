@@ -4,11 +4,12 @@
 <?php
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/pruebaSession.php';
 
-$idCicloLectivo = 1; //$_SESSION['idCicloLectivo'];
-$idAlumno = 550; //$_SESSION['idAlumno'];
+$idCicloLectivo = $_SESSION['idCicloLectivo'];
+$idAlumno = $_SESSION['idAlumno'];
 $idPlan = $_GET['idP'];
-$nombreAlumno = "NOMBRE ALUMNO"; //$_SESSION['nombreAlumno'];
+$nombreAlumno = $_SESSION['nombreAlumno'];
 $nombrePlan = $_GET['nombreP'];
 
 $listadoSolicitudes = array();
