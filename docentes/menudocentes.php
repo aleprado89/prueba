@@ -91,9 +91,10 @@
                   <h6 >Actualiza tus datos personales</h6>
                 </a>
                 <br>
-                <p class="card-text" style="margin-bottom: 20%;">Aquí puedes consultar tus calificaciones y asistencias,
-                  actualizar tus datos y realizar inscripciones. 
-                  Las inscripciones se abren en períodos de fechas asignados por secretaría.</p>
+                <p class="card-text" style="margin-bottom: 20%;">Aquí puedes cargar calificaciones y asistencias y
+                  actualizar tus datos personales. Si se utiliza la carga de Actas desde esta plataforma, 
+                  se abrirá solo en los períodos de fechas que secretaría habilite.
+                  </p>
                 
               </div>
             </div>
@@ -102,7 +103,7 @@
         <div class="card col-md-7">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
-            <h3 class="text-center"style="margin-top:1%;margin-bottom:1%;">Ciclo Lectivo: 2024</h3>
+            <h3 class="text-center"style="margin-top:1%;margin-bottom:20%;">Ciclo Lectivo: 2024</h3>
             <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
@@ -110,7 +111,7 @@
                       <a href="#" class="card-link">
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Consulta de Calificaciones</h4>
+                        <h4 class="card-title text-center">Carga de Calificaciones y Asistencias</h4>
                         <div class="card-header text-center">
                           <i class="bi bi-award icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
@@ -123,7 +124,7 @@
 
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>
+                        <h4 class="card-title text-center">Carga de Actas de Exámenes Finales</h4>
                         <div class="card-header text-center">
                           <i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
@@ -132,11 +133,11 @@
                   </div>               
                  </div>
             </div>
-            <div class="row">
+            <!-- <div class="row">
                 <div class="col-md-6">
-                    <!-- Primera columna de la fila inferior -->
+                     Primera columna de la fila inferior 
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#"  class="card-link">
+                      <a href="#" onclick="verificarFechaInscripcionCursado()" class="card-link">
 
                       <div class="card-header"></div>
                       <div class="card-body">
@@ -149,9 +150,9 @@
                   </div>              
                   </div>
                 <div class="col-md-6">
-                    <!-- Segunda columna de la fila inferior -->
+                     Segunda columna de la fila inferior 
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" onclick="verificarFecha()" class="card-link">
+                      <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
 
                       <div class="card-header"></div>
                       <div class="card-body">
@@ -161,7 +162,7 @@
                         </div>
                       </div>
                       </a>
-                  </div>                </div>
+                  </div>                </div> -->
             </div>
         </div>
       </div>
@@ -198,45 +199,26 @@
  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 
 <script>
-          function verificarFecha() {
+        /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA INSCRIPCION CURSADO
+          function verificarFechaInscripcionExamen() {
  <?php 
 include '../inicio/conexion.php';
 
 // Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
-$sql = "SELECT inscExamDesde,inscExamHasta,iDturnoautoweb FROM colegio WHERE codnivel = 6"; 
+$sql = "SELECT inscExamDesde,inscExamHasta FROM colegio WHERE codnivel = 6"; 
 $resultado = $conn->query($sql);
 
 if ($resultado->num_rows > 0) {
   $fila = $resultado->fetch_assoc();
   $fechaInscExamDesde = $fila['inscExamDesde'];
   $fechaInscExamHasta = $fila['inscExamHasta'];
-  $idTurno = $fila['iDturnoautoweb'];
 
 } else {
   $fechaInscExamDesde = null;
   $fechaInscExamHasta = null;
-  $idTurno=null;
 }
-
 $conn->close();
-
-// Realizar la consulta para obtener la fecha de inscripción A CURSADO
-$sql2 = "SELECT inscCursDesde,insCursHasta FROM colegio WHERE codnivel = 6"; 
-$resultado2 = $conn->query($sql2);
-
-if ($resultado2->num_rows > 0) {
-  $fila = $resultado2->fetch_assoc();
-  $fechaInscExamDesde = $fila['inscExamDesde'];
-  $fechaInscExamHasta = $fila['inscExamHasta'];
-
-} else {
-  $fechaInscExamDesde = null;
-  $fechaInscExamHasta = null;
-
-}
-
-$conn->close(); //TERMINA EL PHP SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL           
-            ?>
+                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL  
 
         var inscExamDesde = new Date("<?php echo $fechaInscExamDesde; ?>");
         var inscExamHasta = new Date("<?php echo $fechaInscExamHasta; ?>");
@@ -253,30 +235,46 @@ $conn->close(); //TERMINA EL PHP SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL
           $('#inscModal').modal('show');
         }
       }
+
+
+
+      /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA INSCRIPCION CURSADO
+      function verificarFechaInscripcionCursado() {
+ <?php 
+include '../inicio/conexion.php';
+
+// Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
+$sql = "SELECT inscCursDesde,inscCursHasta FROM colegio WHERE codnivel = 6"; 
+$resultado = $conn->query($sql);
+
+if ($resultado->num_rows > 0) {
+  $fila = $resultado->fetch_assoc();
+  $fechaInscCursDesde = $fila['inscCursDesde'];
+  $fechaInscCursHasta = $fila['inscCursHasta'];
+
+} else {
+  $fechaInscCursDesde = null;
+  $fechaInscCursHasta = null;
+}
+$conn->close();
+                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL  
+
+        var inscCursDesde = new Date("<?php echo $fechaInscCursDesde; ?>");
+        var inscCursHasta = new Date("<?php echo $fechaInscCursHasta; ?>");
+        var fechaActual = new Date();
+        
+        if (inscCursDesde <= fechaActual && inscCursHasta>= fechaActual) {
+          //codigo para ingresar al formulario de la inscripcion
+          $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
+          $('#inscModal').modal('show');
+        }
+        else {
+            // Código para abrir el modal que dice inscripcion cerrada
+          $('#mensajeModal').text("Las inscripciones estan cerradas. Los períodos de inscripción son definidos por secretaria."); // Cambiar el contenido del modal con el mensaje
+          $('#inscModal').modal('show');
+        }
+      }
     </script>
     
 </body>
 </html>
-
-
-
-
-
-<!-- Iconos bootstrap para usar: 
-mortarboard 
-mortarboard-fill (son sombreritos de egresado)
-
-calendar-check
-calendar-event
-card-checklist (calif)
-
-adward (calif)
-award-fill
-
-person-gear
-person-fill-gear (actualizacion de datos)
-
-
-
-
--->

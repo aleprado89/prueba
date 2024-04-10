@@ -6,16 +6,28 @@ $username = $_POST['username'];
 $password = $_POST['password'];
 
 // Consulta para verificar el usuario y la contraseña del DOCENTE
-$sql = "SELECT * FROM persona INNER JOIN personal ON
-persona.idPersona=personal.idPersona INNER JOIN passwords ON
-personal.legajo=passwords.legajo WHERE persona.dni='$username' AND passwords.password='$password'";
+$sql = "SELECT p.nombre,p.apellido,p.dni,pl.legajo,p.idPersona FROM persona p INNER JOIN personal pl ON
+p.idPersona=pl.idPersona INNER JOIN passwords ON
+pl.legajo=passwords.legajo WHERE p.dni='$username' AND passwords.password='$password'";
 $result = $conn->query($sql);
 
 // Verificar si se encontró un registro en la base de datos
 if ($result->num_rows > 0) {
   // Usuario y contraseña válidos
   session_start();
-  $_SESSION['login_message'] = "Inicio de sesión exitoso.";
+
+  while($row = $result->fetch_assoc()) {
+    $_SESSION['doc_nombre'] = $row["nombre"];
+    $_SESSION['doc_apellido'] = $row["apellido"];
+    $_SESSION['doc_dni'] = $row["dni"];
+    $_SESSION['doc_legajo'] = $row["legajo"];
+    $_SESSION['doc_idPersona'] = $row["idPersona"];
+
+}
+  $conn->close();
+//Link al menu docentes
+   header("Location:../docentes/menudocentes.php");
+   exit();
 } else {
 // Consulta SQL para buscar el ALUMNO en la tabla de persona y password_alumnos
 $sql2 = "SELECT p.nombre,p.apellido,p.dni,a.idAlumno,p.idPersona FROM persona p INNER JOIN alumnosterciario a ON
@@ -43,7 +55,7 @@ if ($result2->num_rows > 0) {
 
   // Usuario y contraseña válidos
 
-   header("Location:../menu/alumnos.php");
+   header("Location:../alumnos/menualumnos.php");
    exit();
 } else {
   // Usuario o contraseña incorrectos
