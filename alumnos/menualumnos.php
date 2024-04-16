@@ -99,10 +99,24 @@
             </div>
                   </div>
 
+                  <?php //CONSULTA PARA OBTENER EL CICLO LECTIVO DE LA PLATAFORMA
+                  include '../inicio/conexion.php';
+
+                  $sql = "SELECT anioautoweb FROM colegio WHERE codnivel = 6"; 
+                  $resultado = $conn->query($sql);
+                  
+                  if ($resultado->num_rows > 0) {
+                    $fila = $resultado->fetch_assoc();
+                    $anioPlataforma = $fila['anioautoweb'];
+                    $_SESSION['anioPlataformaAlu']=$anioPlataforma;                  
+                  } 
+                  $conn->close();
+                  ?>
+
         <div class="card col-md-7">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
-            <h3 class="text-center"style="margin-top:1%;margin-bottom:1%;">Ciclo Lectivo: 2024</h3>
+            <h3 class="text-center"style="margin-top:1%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
             <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
