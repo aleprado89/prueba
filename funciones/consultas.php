@@ -1,7 +1,7 @@
 <?php
 function buscarMaterias($conexion, $idAlumno, $idPlan)
 {
-    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, cursospredeterminado.nombre as nombreCurso 
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
 from calificacionesterciario inner join materiaterciario 
 on calificacionesterciario.idMateria = materiaterciario.idMateria inner join curso
 on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
@@ -107,8 +107,8 @@ group by idPlan";
 function buscarSolicitudesExamen($conexion, $idAlumno, $idPlan, $idCicloLectivo)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from inscripcionexamenes_web inner join fechasexamenes
-on inscripcionexamenes.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
-on inscripcionexamenes.idMateria = materiaterciario.idMateria
+on inscripcionexamenes_web.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
+on inscripcionexamenes_web.idMateria = materiaterciario.idMateria
 where inscripcionexamenes_web.idAlumno = $idAlumno and materiaterciario.idPlan = $idPlan
 and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo";
 
@@ -146,8 +146,8 @@ and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo";
 function existeSolicitudExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idTurno)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from inscripcionexamenes_web inner join fechasexamenes
-on inscripcionexamenes.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
-on inscripcionexamenes.idMateria = materiaterciario.idMateria
+on inscripcionexamenes_web.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
+on inscripcionexamenes_web.idMateria = materiaterciario.idMateria
 where inscripcionexamenes_web.idAlumno = $idAlumno 
 and materiaterciario.idUnicoMateria = 
 (Select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = $idMateria)
@@ -186,14 +186,14 @@ and fechasexamenes.idTurno = $idTurno";
 }
 
 function buscarFechasExamenTurno($conexion, $idMateria, $nombreCurso, $idCicloLectivo, $idTurno)
-{
+{    
     $consulta = "SELECT * from fechasexamenes inner join materiaterciario
 on fechasexamenes.idMateria = materiaterciario.idMateria inner join curso
-on materiaterciario.idCurso = curso.idCurso
+on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
+on curso.idcursopredeterminado = cursospredeterminado.idcursopredeterminado
 where materiaterciario.idUnicoMateria = 
 (Select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = $idMateria)
-and curso.nombre like $nombreCurso
-and fechasexamenes.idcicloLectivo = $idCicloLectivo 
+and fechasexamenes.idCicloLectivo = $idCicloLectivo 
 and fechasexamenes.idTurno = $idTurno";
 
     $fec = mysqli_query($conexion, $consulta);

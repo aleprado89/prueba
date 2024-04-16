@@ -16,10 +16,11 @@ $nombreCurso = $_GET['nombreC'];
 
 $existeSolicitud = array();
 $existeSolicitud = existeSolicitudExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $datosColegio[0]['idTurno']);
+$cantidadSolicitudes = count($existeSolicitud);
 
 $listadoFechasExamenes = array();
 $listadoFechasExamenes = buscarFechasExamenTurno($conn, $idMateria, $nombreCurso, $idCicloLectivo, $datosColegio[0]['idTurno']);
-$cantidad = count($listadoFechasExamenes);
+$cantidadFechas = count($listadoFechasExamenes);
 ?>
 
 <head>
@@ -35,51 +36,64 @@ $cantidad = count($listadoFechasExamenes);
     <h3 class="card-header">
       <?php echo $nombreAlumno; ?>
     </h3>
-    <h4 class="card-header">
+    <h5 class="card-header">
+      MATERIA:
       <?php echo $nombreMateria; ?>
-    </h4>
-    <h4 class="card-header"> Turno: 
+    </h5>
+    <h5 class="card-header">
+      CURSO:
+      <?php echo $nombreCurso; ?>
+    </h5>
+    <h5 class="card-header">
+      TURNO:
       <?php echo $datosColegio[0]['nombreTurno']; ?>
-    </h4>
+    </h5>
   </div>
 
   <fieldset>
-      <legend class="mt-4">Fechas Disponibles</legend>
-      
+    <legend class="mt-4">Fechas Disponibles</legend>
+
+    <?php
+    $a = 0;
+    while ($a < $cantidadFechas) {
+      $idFechaExamen = $listadoFechasExamenes[$a]['idFechaExamen'];
+      $Fecha = $listadoFechasExamenes[$a]['Fecha'];
+      $Hora = $listadoFechasExamenes[$a]['Hora'];
+      $idRB = "fechaId" . $a;
+      ?>
+
       <div class="form-check">
+        <div class="card text-white bg-success mb-3" style="max-width: 20rem;">
+          <input class="form-check-input" type="radio" name="optionsRadios" value="<?php echo $idFechaExamen; ?>">
+          <label class="form-check-label" for="optionsRadios1">
+            <?php echo $Fecha . " " . $Hora; ?>
+          </label>
+        </div>
+      </div>
+
       <?php
-        $a = 0;
-        while ($a < $cantidad) 
-        {
-          $idFechaExamen = $listadoFechasExamenes[$a]['idFechaExamen'];
-          $Fecha = $listadoFechasExamenes[$a]['Fecha'];
-          $Hora = $listadoFechasExamenes[$a]['Hora'];          
-          $idRB = "fechaId".$a;
-        ?>
-        <input class="form-check-input" type="radio" name="optionsRadios" id=<?php echo $idRb;?> value=<?php echo $idFechaExamen; ?> checked="">
-        <label class="form-check-label" for="optionsRadios1">
-        <?php echo $Fecha." ".$Hora; ?>
-        </label>        
-        <?php
-        $a++;
-        }
-        if ($cantidad == 0)
-        {
-            ?>
-            <input class="form-check-input" type="radio" name="optionsRadios" id="optionsRadios1" value="option1" checked="" disabled="">
+      $a++;
+    }
+    if ($cantidadFechas == 0) {
+      ?>
+
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="optionsRadios" id="optionsRadios1" value="option1" checked=""
+          disabled="">
         <label class="form-check-label" for="optionsRadios1">
           Sin Fechas
         </label>
-            <?php
-        }
-        ?>         
-      </div> 
+      </div>
 
-    </fieldset>    
+      <?php
+    }
+    ?>
+
+  </fieldset>
 
   <div class="container mt-5">
     <table class="table table-hover">
-    <caption>Solicitudes Existentes</caption>
+      <caption>Solicitudes Existentes</caption>
       <thead>
         <tr class="table-primary">
           <th scope="col" style="display:none;">idInscripcionWeb</th>
@@ -96,7 +110,7 @@ $cantidad = count($listadoFechasExamenes);
         //RECORRER TABLA DE SOLICITUDES
         
         $a = 0;
-        while ($a < $cantidad) {
+        while ($a < $cantidadSolicitudes) {
           $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
           $Materia = $listadoSolicitudes[$a]['Materia'];
           $Fecha = $listadoSolicitudes[$a]['Fecha'];

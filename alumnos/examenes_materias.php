@@ -130,7 +130,7 @@ $cantidad = count($listadoMaterias);
       // Cargar idMateria y nombreMateria para pasar
       var idMateriaSeleccionada = boton.closest('tr').querySelector('td:nth-child(1)').textContent;
       var nombreMateriaCompleto = boton.closest('tr').querySelector('td:nth-child(2)').textContent;
-      var nombreCursoCompleto = boton.closest('tr').querySelector('td:nth-child(3)').textContent;
+      var nombreCursoCompleto = boton.closest('tr').querySelector('td:nth-child(4)').textContent;
       // Redirigir a otra página y pasar los datos como parámetro en la URL
       window.location.href =
         '../alumnos/examenes_solicitar.php?idM=' + encodeURIComponent(idMateriaSeleccionada) +
