@@ -76,15 +76,14 @@
     </div>
   </div>
 
-
 <div class="container" style="margin-top: 5%;">
     <div class="row">
         <div class="col-md-4">
             <!-- Columna en la mitad izquierda de la pantalla -->
             <div class="card " style="background-color: #739FA5;margin-bottom: 2%; ">
-              <div class="card-body text-center">
+              <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
                 
-                <h3 class="card-title" style="color: #fff; margin-top: 20%;">Hola Nombre del Alumno:</h3>
+                <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php session_start(); echo $_SESSION['alu_nombre']." ".$_SESSION["alu_apellido"]; ?></h4>
                 <br>
                 <a href="#" class="card-link-act">
 
@@ -100,10 +99,24 @@
             </div>
                   </div>
 
+                  <?php //CONSULTA PARA OBTENER EL CICLO LECTIVO DE LA PLATAFORMA
+                  include '../inicio/conexion.php';
+
+                  $sql = "SELECT anioautoweb FROM colegio WHERE codnivel = 6"; 
+                  $resultado = $conn->query($sql);
+                  
+                  if ($resultado->num_rows > 0) {
+                    $fila = $resultado->fetch_assoc();
+                    $anioPlataforma = $fila['anioautoweb'];
+                    $_SESSION['anioPlataformaAlu']=$anioPlataforma;                  
+                  } 
+                  $conn->close();
+                  ?>
+
         <div class="card col-md-7">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
-            <h3 class="text-center"style="margin-top:1%;margin-bottom:1%;">Ciclo Lectivo: 2024</h3>
+            <h3 class="text-center"style="margin-top:1%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
             <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
@@ -137,7 +150,7 @@
                 <div class="col-md-6">
                     <!-- Primera columna de la fila inferior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" class="card-link">
+                      <a href="#" onclick="verificarFechaInscripcionCursado()" class="card-link">
 
                       <div class="card-header"></div>
                       <div class="card-body">
@@ -152,7 +165,7 @@
                 <div class="col-md-6">
                     <!-- Segunda columna de la fila inferior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" class="card-link">
+                      <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
 
                       <div class="card-header"></div>
                       <div class="card-body">
@@ -168,6 +181,114 @@
       </div>
     </div>
 </div>
+
+
+<!-- Modal -->
+<div class="modal" id="inscModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Inscripciones Cerradas</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <p id="mensajeModal"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+       <!--           FUNCIONES     y SCRIPTS        -->
+
+<!-- Bootstrap JS y jQuery (necesario para el modal) -->
+<script src="../js/jquery-3.7.1.slim.min.js"></script>
+ <script src="../js/bootstrap.min.js"></script> 
+ <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+
+<script>
+        /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA INSCRIPCION CURSADO
+          function verificarFechaInscripcionExamen() {
+ <?php 
+include '../inicio/conexion.php';
+
+// Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
+$sql = "SELECT inscExamDesde,inscExamHasta FROM colegio WHERE codnivel = 6"; 
+$resultado = $conn->query($sql);
+
+if ($resultado->num_rows > 0) {
+  $fila = $resultado->fetch_assoc();
+  $fechaInscExamDesde = $fila['inscExamDesde'];
+  $fechaInscExamHasta = $fila['inscExamHasta'];
+
+} else {
+  $fechaInscExamDesde = null;
+  $fechaInscExamHasta = null;
+}
+$conn->close();
+                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL  
+
+        var inscExamDesde = new Date("<?php echo $fechaInscExamDesde; ?>");
+        var inscExamHasta = new Date("<?php echo $fechaInscExamHasta; ?>");
+        var fechaActual = new Date();
+        
+        if (inscExamDesde <= fechaActual && inscExamHasta>= fechaActual) {
+          //codigo para ingresar al formulario de la inscripcion
+          $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
+          $('#inscModal').modal('show');
+        }
+        else {
+            // Código para abrir el modal que dice inscripcion cerrada
+          $('#mensajeModal').text("Las inscripciones estan cerradas. Los períodos de inscripción son definidos por secretaria."); // Cambiar el contenido del modal con el mensaje
+          $('#inscModal').modal('show');
+        }
+      }
+
+
+
+      /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA INSCRIPCION CURSADO
+      function verificarFechaInscripcionCursado() {
+ <?php 
+include '../inicio/conexion.php';
+
+// Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
+$sql = "SELECT inscCursDesde,inscCursHasta FROM colegio WHERE codnivel = 6"; 
+$resultado = $conn->query($sql);
+
+if ($resultado->num_rows > 0) {
+  $fila = $resultado->fetch_assoc();
+  $fechaInscCursDesde = $fila['inscCursDesde'];
+  $fechaInscCursHasta = $fila['inscCursHasta'];
+
+} else {
+  $fechaInscCursDesde = null;
+  $fechaInscCursHasta = null;
+}
+$conn->close();
+                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL  
+
+        var inscCursDesde = new Date("<?php echo $fechaInscCursDesde; ?>");
+        var inscCursHasta = new Date("<?php echo $fechaInscCursHasta; ?>");
+        var fechaActual = new Date();
+        
+        if (inscCursDesde <= fechaActual && inscCursHasta>= fechaActual) {
+          //codigo para ingresar al formulario de la inscripcion
+          $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
+          $('#inscModal').modal('show');
+        }
+        else {
+            // Código para abrir el modal que dice inscripcion cerrada
+          $('#mensajeModal').text("Las inscripciones estan cerradas. Los períodos de inscripción son definidos por secretaria."); // Cambiar el contenido del modal con el mensaje
+          $('#inscModal').modal('show');
+        }
+      }
+    </script>
+    
 </body>
 </html>
 

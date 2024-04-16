@@ -9,8 +9,8 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
-            //"url": "http://localhost/prueba/inicio/login.php",
-            "url": "http://localhost/prueba/alumnos/examenes_planes.php",
+            "url": "http://localhost/prueba/inicio/login.php",
+           // "url": "http://localhost/prueba/alumnos/examenes_planes.php",
             "webRoot": "${workspaceFolder}"
         }
     ]
