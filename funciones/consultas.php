@@ -85,7 +85,7 @@ where inscripcionexamenes.idAlumno = $idAlumno and materiaterciario.idUnicoMater
 
 function buscarPlanes($conexion, $idAlumno)
 {
-    $consulta = "SELECT * from matriculacion inner join plandeestudio
+    $consulta = "SELECT plandeestudio.idPlan, plandeestudio.nombre from matriculacion inner join plandeestudio
 on matriculacion.idPlanDeEstudio = plandeestudio.idPlan
 where matriculacion.idAlumno = $idAlumno
 group by idPlan";
