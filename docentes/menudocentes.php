@@ -18,7 +18,11 @@
   transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 5px;
-  
+  }
+  @media  (min-width:800px) {
+  .card-link {
+    min-height: 280px;
+  }
 }
 .card-link:hover {
   color: #fff; /* Color de texto al pasar el mouse */
@@ -58,6 +62,12 @@
   .elemento {
     margin-bottom: 0%; /* Margen inferior para celulares */
   }
+}
+@media (min-width:800px)  {
+
+.card {
+    min-height: 280px;
+}
 }
 
 </style>
@@ -101,7 +111,7 @@
                   </div>
 
                   <?php //CONSULTA PARA OBTENER EL CICLO LECTIVO DE LA PLATAFORMA
-                  include '../inicio/conexion.php';
+                  /*include '../inicio/conexion.php';
 
                   $sql = "SELECT anio_carga_notas FROM colegio WHERE codnivel = 6"; 
                   $resultado = $conn->query($sql);
@@ -112,12 +122,12 @@
                     $_SESSION['anioPlataformaDoc']=$anioPlataforma;                  
                   } 
                   $conn->close();
-                  ?>
+                 */ ?>
 
         <div class="card col-md-7">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
-            <h3 class="text-center"style="margin-top:1%;margin-bottom:20%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaDoc']; ?></h3>
+            <h3 class="text-center"style="margin-top:1%;margin-bottom:10%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaDoc']; ?></h3>
             <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->

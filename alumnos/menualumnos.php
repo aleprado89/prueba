@@ -18,7 +18,12 @@
   transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 5px;
-  
+
+}
+@media (max-width: 1000px) and (min-width: 768px){
+  .card-link {
+    min-height: 250px;
+  }
 }
 .card-link:hover {
   color: #fff; /* Color de texto al pasar el mouse */
@@ -59,9 +64,34 @@
     margin-bottom: 0%; /* Margen inferior para celulares */
   }
 }
+@media (max-width: 1000px) and (min-width: 768px) {
 
+.card {
+    min-height: 250px;
+}
+}
 </style>
 
+
+<?php //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA
+                 /* include '../inicio/conexion.php';
+
+                  $sql = "SELECT colegio.anioautoweb,colegio.nombreColegio, ciclolectivo.idciclolectivo FROM colegio inner join ciclolectivo on
+                  colegio.anioautoweb=ciclolectivo.anio WHERE codnivel = 6"; 
+                  $resultado = $conn->query($sql);
+                  
+                  if ($resultado->num_rows > 0) {
+                    $fila = $resultado->fetch_assoc();
+                    $anioPlataforma = $fila['anioautoweb'];
+                    $colegio=$fila['nombreColegio'];
+                    $idciclo=$fila['idciclolectivo'];
+
+                    $_SESSION['anioPlataformaAlu']=$anioPlataforma;  
+                    $_SESSION['colegio']=$colegio;
+                    $_SESSION['idciclo']=$idciclo;  
+                  } 
+                  $conn->close();
+                */  ?>
 
 </head>
 <body>
@@ -91,40 +121,30 @@
                   <h6 >Actualiza tus datos personales</h6>
                 </a>
                 <br>
+                <br>
                 <p class="card-text" style="margin-bottom: 20%;">Aquí puedes consultar tus calificaciones y asistencias,
                   actualizar tus datos y realizar inscripciones. 
                   Las inscripciones se abren en períodos de fechas asignados por secretaría.</p>
-                
+                <br>
+                <br>
               </div>
             </div>
                   </div>
 
-                  <?php //CONSULTA PARA OBTENER EL CICLO LECTIVO DE LA PLATAFORMA
-                  include '../inicio/conexion.php';
-
-                  $sql = "SELECT anioautoweb FROM colegio WHERE codnivel = 6"; 
-                  $resultado = $conn->query($sql);
                   
-                  if ($resultado->num_rows > 0) {
-                    $fila = $resultado->fetch_assoc();
-                    $anioPlataforma = $fila['anioautoweb'];
-                    $_SESSION['anioPlataformaAlu']=$anioPlataforma;                  
-                  } 
-                  $conn->close();
-                  ?>
 
         <div class="card col-md-7">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
             <h3 class="text-center"style="margin-top:1%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
-            <div class="row elemento" >
+           <br> <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
-                      <a href="#" class="card-link">
+                      <a href="calificaciones_planes.php" class="card-link">
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Consulta de Calificaciones</h4>
+                        <h4 class="card-title text-center">Consulta de calificaciones</h4>
                         <div class="card-header text-center">
                           <i class="bi bi-award icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
@@ -133,17 +153,17 @@
                 <div class="col-md-6">
                     <!-- Segunda columna de la fila superior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" class="card-link">
+                      <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
 
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>
+                        <h4 class="card-title text-center">Inscripciones a exámenes</h4>
                         <div class="card-header text-center">
-                          <i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                          <i class="bi bi-calendar-week icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>
-                  </div>               
+                  </div>                 
                  </div>
             </div>
             <div class="row">
@@ -163,19 +183,43 @@
                   </div>              
                   </div>
                 <div class="col-md-6">
-                    <!-- Segunda columna de la fila inferior -->
-                    <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
 
-                      <div class="card-header"></div>
-                      <div class="card-body">
-                        <h4 class="card-title text-center">Inscripciones a exámenes</h4>
-                        <div class="card-header text-center">
-                          <i class="bi bi-calendar-week icono" style="font-size: 2.8rem; text-shadow: none;"></i>
-                        </div>
-                      </div>
-                      </a>
-                  </div>                </div>
+<?php
+//consulta para saber si se debe mostrar el boton de alumnos que solo deben finales
+//........
+$aluDebeFinal=0;
+if($aluDebeFinal==1)
+{
+  echo '<div class="card mx-auto" style="background-color: #739FA5; margin-bottom: 2%;">';
+echo '<a href="#" class="card-link">';
+echo '<div class="card-header"></div>';
+echo '<div class="card-body">';
+echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
+echo '<div class="card-header text-center">';
+echo '<i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>';
+echo '</div>';
+echo '</div>';
+echo '</a>';
+echo '</div>';
+
+}
+else 
+{
+  echo '<div class="card mx-auto" style="background-color: #7A7A7A; margin-bottom: 2%;">';
+  echo '<div class="card-header"></div>';
+  echo '<div class="card-body">';
+  echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
+  echo '<div class="card-header text-center">';
+  echo '<i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>';
+  echo '</div>';
+  echo '</div>';
+  echo '</div>';
+}
+?>
+                    
+                
+                
+                </div>
             </div>
         </div>
       </div>
@@ -239,8 +283,9 @@ $conn->close();
         
         if (inscExamDesde <= fechaActual && inscExamHasta>= fechaActual) {
           //codigo para ingresar al formulario de la inscripcion
-          $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
-          $('#inscModal').modal('show');
+          window.location.href = 'examenes_planes.php';
+          //$('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
+          //$('#inscModal').modal('show');
         }
         else {
             // Código para abrir el modal que dice inscripcion cerrada
