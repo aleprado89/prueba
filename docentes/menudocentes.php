@@ -70,22 +70,41 @@
 }
 }
 
+.header {
+    display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+  background-color:#ffff;
+  margin-top:0%;
+  margin-bottom: -1%;
+}
+
 </style>
 
 
 </head>
 <body>
-  <div class="container" style="background-color: #ffffff;">
-    <div class="row">
-      <div class="col-12 col-md-10 ">
-        <h1 style="font-style: normal; color: #333333; margin-top: 2%; ">ISFD Nuestra Madre de la Merced</h1>
+<div class="container-fluid header" >
+<div class="container header">
+    <div class="row header" >
+      <div class="col-12 col-md-2"  >
+      <img src="../img/logo merce.jpg" class="img-fluid mx-auto" alt="logo" style="display: block; max-width: 35%; height: auto; margin-top: 5px;  margin-bottom: 5px">
       </div>
-      <div class=" col-12 col-md-2">
-        <img src="../img/logo merce.jpg" class="img-fluid mx-auto" alt="logo" style="display: block; max-width: 35%; height: auto; margin-top: 20px; margin-right: 56px; margin-left: 76px;">
+      <div class=" col-12 col-md-8">
+      <h1 style="font-style: normal; color: #333333; margin-top: 2%; ">ISFD Nuestra Madre de la Merced</h1>
+      </div>
+      <div class="col-12 col-md-2" >
+      <!-- <i class="bi bi-power"></i> -->
+      <a class="icon-link" href="../funciones/cerrarsesion.php" style="margin-top:10%; ">
+  Cerrar Sesión
+  <i class="bi bi-power"></i>
+</a>
+      </div>
+      </div>
       </div>
     </div>
-  </div>
 
+    <div class="container-fluid text-center " style="background-color: #E6EAE8;height: calc(100vh - 100px);">
 <div class="container" style="margin-top: 5%;">
     <div class="row">
         <div class="col-md-4">
@@ -110,19 +129,7 @@
             </div>
                   </div>
 
-                  <?php //CONSULTA PARA OBTENER EL CICLO LECTIVO DE LA PLATAFORMA
-                  /*include '../inicio/conexion.php';
-
-                  $sql = "SELECT anio_carga_notas FROM colegio WHERE codnivel = 6"; 
-                  $resultado = $conn->query($sql);
-                  
-                  if ($resultado->num_rows > 0) {
-                    $fila = $resultado->fetch_assoc();
-                    $anioPlataforma = $fila['anio_carga_notas'];
-                    $_SESSION['anioPlataformaDoc']=$anioPlataforma;                  
-                  } 
-                  $conn->close();
-                 */ ?>
+                 
 
         <div class="card col-md-7">
         <div class="col-md-10 offset-md-1">

@@ -29,12 +29,12 @@ $cantidad = count($listadoPlanes);
     </h3>
   </div>
   <div class="container mt-5">
-    <table class="table table-hover">
+    <table class="table table-borderless ">
       <thead>
-        <tr class="table-primary">
+        <tr >
           <th scope="col" style="display:none;">idPlan</th>
           <th scope="col">Carrera</th>
-          <th scope="col">Calificaciones</th>
+          <th scope="col"></th>
         </tr>
       </thead>
       <tbody>
@@ -50,14 +50,14 @@ $cantidad = count($listadoPlanes);
           $a++;
           ?>
 
-          <tr class="table-info">
+          <tr >
             <td style="display:none;">
               <?php echo $idPlan ?>
             </td>
             <td>
               <?php echo $Plan ?>
             </td>
-            <td><button type="button" onclick="verCalificaciones(this)" class="btn btn-primary">Ver
+            <td><button type="button" onclick="verCalificaciones(this)" class="btn btn-primary btn-block">Ver
                 Calificaciones</button></td>
           </tr>
 

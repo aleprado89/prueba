@@ -70,47 +70,46 @@
     min-height: 250px;
 }
 }
+
+.header {
+    display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+  background-color:#ffff;
+  margin-top:0%;
+  margin-bottom: -1%;
+}
+
 </style>
-
-
-<?php //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA
-                 /* include '../inicio/conexion.php';
-
-                  $sql = "SELECT colegio.anioautoweb,colegio.nombreColegio, ciclolectivo.idciclolectivo FROM colegio inner join ciclolectivo on
-                  colegio.anioautoweb=ciclolectivo.anio WHERE codnivel = 6"; 
-                  $resultado = $conn->query($sql);
-                  
-                  if ($resultado->num_rows > 0) {
-                    $fila = $resultado->fetch_assoc();
-                    $anioPlataforma = $fila['anioautoweb'];
-                    $colegio=$fila['nombreColegio'];
-                    $idciclo=$fila['idciclolectivo'];
-
-                    $_SESSION['anioPlataformaAlu']=$anioPlataforma;  
-                    $_SESSION['colegio']=$colegio;
-                    $_SESSION['idciclo']=$idciclo;  
-                  } 
-                  $conn->close();
-                */  ?>
-
 </head>
 <body>
-  <div class="container" style="background-color: #ffffff;">
-    <div class="row">
-      <div class="col-12 col-md-10 ">
-        <h1 style="font-style: normal; color: #333333; margin-top: 2%; ">ISFD Nuestra Madre de la Merced</h1>
+  <div class="container-fluid header" >
+  <div class="container header">
+    <div class="row header" >
+      <div class="col-12 col-md-2"  >
+      <img src="../img/logo merce.jpg" class="img-fluid mx-auto" alt="logo" style="display: block; max-width: 35%; height: auto; margin-top: 5px;  margin-bottom: 5px">
       </div>
-      <div class=" col-12 col-md-2">
-        <img src="../img/logo merce.jpg" class="img-fluid mx-auto" alt="logo" style="display: block; max-width: 35%; height: auto; margin-top: 20px; margin-right: 56px; margin-left: 76px;">
+      <div class=" col-12 col-md-8">
+      <h1 style="font-style: normal; color: #333333; margin-top: 2%; ">ISFD Nuestra Madre de la Merced</h1>
+      </div>
+      <div class="col-12 col-md-2" >
+      <!-- <i class="bi bi-power"></i> -->
+      <a class="icon-link" href="../funciones/cerrarsesion.php" style="margin-top:10%; ">
+  Cerrar Sesión
+  <i class="bi bi-power"></i>
+</a>
+      </div>
+      </div>
       </div>
     </div>
-  </div>
 
-<div class="container" style="margin-top: 5%;">
+    <div class="container-fluid text-center " style="background-color: #E6EAE8;height: calc(100vh - 100px);">
+    
+<div class="container " style="margin-top: 5%; ">
     <div class="row">
         <div class="col-md-4">
             <!-- Columna en la mitad izquierda de la pantalla -->
-            <div class="card " style="background-color: #739FA5;margin-bottom: 2%; ">
+            <div class="card " style="background-color: #739FA5; ">
               <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
                 
                 <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php session_start(); echo $_SESSION['alu_nombre']." ".$_SESSION["alu_apellido"]; ?></h4>
@@ -136,7 +135,7 @@
         <div class="card col-md-7">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
-            <h3 class="text-center"style="margin-top:1%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
+            <h3 class="text-center"style="margin-top:5%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
            <br> <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
@@ -225,7 +224,7 @@ else
       </div>
     </div>
 </div>
-
+</div>
 
 <!-- Modal -->
 <div class="modal" id="inscModal">
