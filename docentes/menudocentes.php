@@ -6,81 +6,11 @@
   <title>Formulario de Login</title>
     <!-- Bootswatch Material theme -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/estilos.css">
+
   <!-- <link rel="stylesheet" href="../css/bootstrap.min.css"> -->
   <!-- Font Awesome CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> 
-
-<style>
-.card-link {
-  text-decoration: none; /* Para quitar el subrayado del enlace */
-  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-  color: #ffffff;  /*Color de texto por defecto */
-  transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-  border-radius: 5px;
-  }
-  @media  (min-width:800px) {
-  .card-link {
-    min-height: 280px;
-  }
-}
-.card-link:hover {
-  color: #fff; /* Color de texto al pasar el mouse */
-  background-color: #40848d; /* Color de fondo al pasar el mouse */
-  border-radius: 5px; /* Bordes redondeados al pasar el mouse */
-
-}
-.card-link .icono {
-  color: #597c81; /* Nuevo color al hacer hover sobre la card */
-}
-.card-link:hover .icono {
-  color: #739FA5; /* Nuevo color al hacer hover sobre la card */
-}
-.card-link-act{
-  text-decoration: none; /* Para quitar el subrayado del enlace */
-  color: #2c3236; /* Color de texto por defecto */
-  transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
-}
-.card-link-act:hover{
-  color: #fff; /* Color de texto al pasar el mouse */
-  /* background-color: #19608f; Color de fondo al pasar el mouse */
-}
-.card-link-act .icono {
-  color: #597c81; /* Nuevo color al hacer hover sobre la card */
-}
-.card-link-act:hover .icono {
-  color: #40848d; /* Nuevo color al hacer hover sobre la card */
-}
-
-/* Estilo para margen de cuadritos diferenciados en celulares */
-.elemento {
-  margin-bottom: 3%; /* Margen inferior por defecto */
-}
-
-/* Media query para dispositivos con un ancho máximo de 767px (celulares) */
-@media only screen and (max-width: 767px) {
-  .elemento {
-    margin-bottom: 0%; /* Margen inferior para celulares */
-  }
-}
-@media (min-width:800px)  {
-
-.card {
-    min-height: 280px;
-}
-}
-
-.header {
-    display: flex;
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Centra verticalmente */
-  background-color:#ffff;
-  margin-top:0%;
-  margin-bottom: -1%;
-}
-
-</style>
-
 
 </head>
 <body>
@@ -95,21 +25,22 @@
       </div>
       <div class="col-12 col-md-2" >
       <!-- <i class="bi bi-power"></i> -->
-      <a class="icon-link" href="../funciones/cerrarsesion.php" style="margin-top:10%; ">
-  Cerrar Sesión
+      <a class="icon-link" href="../funciones/cerrarsesion.php" style="margin-top: 10%; display: flex; flex-direction: column; align-items: center; text-decoration: none;">
   <i class="bi bi-power"></i>
+  Cerrar Sesión
 </a>
       </div>
       </div>
       </div>
     </div>
 
-    <div class="container-fluid text-center " style="background-color: #E6EAE8;height: calc(100vh - 100px);">
+    <div class="container-fluid text-center fondo" >
 <div class="container" style="margin-top: 5%;">
+<br>
     <div class="row">
         <div class="col-md-4">
             <!-- Columna en la mitad izquierda de la pantalla -->
-            <div class="card " style="background-color: #739FA5;margin-bottom: 2%; ">
+            <div class="card carddoc " style="background-color: #739FA5;margin-bottom: 2%; ">
               <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
                 
                 <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php session_start(); echo $_SESSION['doc_nombre']." ".$_SESSION["doc_apellido"]; ?></h4>
@@ -131,15 +62,15 @@
 
                  
 
-        <div class="card col-md-7">
+        <div class="card carddoc col-md-7">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
             <h3 class="text-center"style="margin-top:1%;margin-bottom:10%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaDoc']; ?></h3>
             <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
-                    <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
-                      <a href="#" class="card-link">
+                    <div class="card carddoc mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
+                      <a href="#" class="card-link carddoc-link">
                       <div class="card-header"></div>
                       <div class="card-body">
                         <h4 class="card-title text-center">Carga de Calificaciones y Asistencias</h4>
@@ -150,8 +81,8 @@
                   </div>                </div>
                 <div class="col-md-6">
                     <!-- Segunda columna de la fila superior -->
-                    <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" onclick="verificarFechaActasVolantes()" class="card-link">
+                    <div class="card carddoc mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
+                      <a href="#" onclick="verificarFechaActasVolantes()" class="card-link carddoc-link">
 
                       <div class="card-header"></div>
                       <div class="card-body">
