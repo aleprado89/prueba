@@ -1,0 +1,111 @@
+    .card-link {
+    text-decoration: none; /* Para quitar el subrayado del enlace */
+    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    color: #ffffff;  /*Color de texto por defecto */
+    transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 5px;
+  
+  }
+  .card-link:hover {
+    color: #fff; /* Color de texto al pasar el mouse */
+    background-color: #40848d; /* Color de fondo al pasar el mouse */
+    border-radius: 5px; /* Bordes redondeados al pasar el mouse */
+  
+  }
+  .card-link .icono {
+    color: #597c81; /* Nuevo color al hacer hover sobre la card */
+  }
+  .card-link:hover .icono {
+    color: #739FA5; /* Nuevo color al hacer hover sobre la card */
+  }
+  .card-link-act{
+    text-decoration: none; /* Para quitar el subrayado del enlace */
+    color: #2c3236; /* Color de texto por defecto */
+    transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
+  }
+  .card-link-act:hover{
+    color: #fff; /* Color de texto al pasar el mouse */
+    /* background-color: #19608f; Color de fondo al pasar el mouse */
+  }
+  .card-link-act .icono {
+    color: #597c81; /* Nuevo color al hacer hover sobre la card */
+  }
+  .card-link-act:hover .icono {
+    color: #40848d; /* Nuevo color al hacer hover sobre la card */
+  }
+  
+  /* Estilo para padding de cuadritos diferenciados en celulares */
+  .elemento {
+    margin-bottom: 3%; /* padding inferior por defecto */
+  }
+    
+  .est-logo{
+    display: block; 
+    /* max-width:3%;     */
+    width: 50px;
+    height: auto; 
+    margin-top: 5px; 
+     margin-bottom: 5px;
+  }
+  .header {
+      display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    background-color:#ffff;
+    margin-top:0%;
+    margin-bottom: -1%;
+  }
+
+  .fondo{
+    background-color: #E6EAE8;
+    height: calc(100vh - 100px);
+  }
+  .padding{
+padding-top: 1%;    
+padding-bottom: 1%;
+padding-left: 2%;
+padding-right: 1%;
+  }
+.margenes{
+margin-left: 1%;
+margin-bottom: 1%;
+}
+.navbar-nav .nav-link:hover {
+  color: #2e8b97; /* Cambia el color del texto a blanco para mayor contraste */
+}
+@media (max-width: 1000px) and (min-width: 768px){
+  .card-link {
+    min-height: 250px;
+  }
+}
+@media only screen and (max-width: 767px) {
+  .elemento {
+    margin-bottom: 0%; /* padding inferior para celulares */
+  }
+  .est-logo {
+    width: 300px; /* Ancho de 303 píxeles */
+    height: auto; /* Altura automática */
+    margin-top: 0px; 
+     margin-bottom: 0px;
+}
+}
+@media (max-width: 1000px) and (min-width: 768px) {
+
+.card {
+    min-height: 250px;
+}
+}
+@media  (min-width:800px) {
+  .carddoc-link {
+    min-height: 280px;
+  }
+}
+
+@media (min-width:800px)  {
+
+.carddoc {
+    min-height: 280px;
+}
+}
+
