@@ -4,14 +4,10 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
-$idCicloLectivo = $_SESSION['idCiclo'];
-$idAlumno = $_SESSION['alu_idAlumno'];
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $idFechaSeleccionada = $_POST["fechaExamen"];
-    $idMateria = $_POST['idM'];
-    solicitarExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $idFechaSeleccionada);
+    $idInscripcionWeb = $_POST["idInscripcionWeb"];    
+    cancelarExamen($conn, $idInscripcionWeb);
 
     header("refresh:3; url=../alumnos/examenes_solicitar.php");
     exit();

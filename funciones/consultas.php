@@ -220,5 +220,13 @@ function solicitarExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idF
     (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion, estado, fechhora_inscri) values
     ($idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, 0, 1,'$currentDate')";
 
-    //mysqli_query($conexion, $consulta);
+    mysqli_query($conexion, $consulta);
+}
+
+function cancelarExamen($conexion, $idInscripcionWeb)
+{
+    $consulta = "update inscripcionexamenes_web
+    set estado = '4' where id_Inscripcion_web = $idInscripcionWeb";
+    
+    mysqli_query($conexion, $consulta);
 }

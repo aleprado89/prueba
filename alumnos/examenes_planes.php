@@ -6,9 +6,33 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+  //BOTON VOLVER
+  if (isset($_POST['submitVolver'])) {
+    header("Location: ../alumnos/menualumnos.php");
+    exit;
+  }
+
+  //BOTON SELECCIONAR PLAN
+  if (isset($_POST['submitVer'])) {
+
+    $idP = $_POST['idP'];
+    $nombreP = $_POST['nombreP'];
+    $_SESSION['idP'] = $idP;
+    $_SESSION['nombreP'] = $nombreP;
+
+    header("Location: ../alumnos/examenes_materias.php");
+    exit;
+  }
+}
+
+//VARIABLES
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 
+//FUNCIONES
+//LISTAR PLANES
 $listadoPlanes = array();
 $listadoPlanes = buscarPlanes($conn, $idAlumno);
 $cantidad = count($listadoPlanes);
@@ -28,54 +52,60 @@ $cantidad = count($listadoPlanes);
       <?php echo $nombreAlumno; ?>
     </h3>
   </div>
-  <button type="button" class="btn btn-secondary float-end mb-3" onclick="window.history.back();">Volver</button>
+
+  <!-- FORM VOLVER -->
+  <form id="volver" method="POST">
+    <button type="submit" name="submitVolver" class="btn btn-secondary float-end mb-3">Volver</button>
+  </form>
+
   <div class="container mt-5">
-    
-    <form id="envio" action="../alumnos/examenes_materias.php" method="post">
-      <!-- Inputs ocultos para enviar los datos de la primera y segunda columna -->
+
+    <!-- FORM VER PLAN -->
+    <form id="envio" method="post">
       <input type="hidden" name="idP" id="idP">
       <input type="hidden" name="nombreP" id="nombreP">
-    </form>
 
-    <table id="planes" class="table table-hover">
-      <thead>
-        <tr class="table-primary">
-          <th scope="col" style="display:none;">idPlan</th>
-          <th scope="col">Carrera</th>
-          <th scope="col">Seleccionar Materias</th>
-        </tr>
-      </thead>
-      <tbody>
-
-        <?php
-
-        //RECORRER TABLA DE PLANES
-        
-        $a = 0;
-        while ($a < $cantidad) {
-          $idPlan = $listadoPlanes[$a]['idPlan'];
-          $Plan = $listadoPlanes[$a]['Plan'];
-          $a++;
-          ?>
-
-          <tr class="table-info">
-            <td style="display:none;">
-              <?php echo $idPlan ?>
-            </td>
-            <td>
-              <?php echo $Plan ?>
-            </td>
-            <td>
-              <button type="button" class="btn btn-primary ver-btn">Ver</button>
-            </td>
+      <!-- TABLA DE PLANES -->
+      <table id="planes" class="table table-hover">
+        <thead>
+          <tr class="table-primary">
+            <th scope="col" style="display:none;">idPlan</th>
+            <th scope="col">Carrera</th>
+            <th scope="col">Seleccionar Materias</th>
           </tr>
+        </thead>
+        <tbody>
 
           <?php
-        }
-        ?>
 
-      </tbody>
-    </table>
+          //RECORRER PARA ARMAR TABLA DE PLANES        
+          $a = 0;
+          while ($a < $cantidad) {
+            $idPlan = $listadoPlanes[$a]['idPlan'];
+            $Plan = $listadoPlanes[$a]['Plan'];
+            $a++;
+            ?>
+
+            <tr class="table-info">
+              <td style="display:none;">
+                <?php echo $idPlan ?>
+              </td>
+              <td>
+                <?php echo $Plan ?>
+              </td>
+              <td>
+                <button type="submit" name="submitVer" class="btn btn-primary ver-btn">Ver</button>
+              </td>
+            </tr>
+
+            <?php
+          }
+          ?>
+
+        </tbody>
+      </table>
+    </form>
+    
   </div>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
@@ -84,6 +114,7 @@ $cantidad = count($listadoPlanes);
   <script src="../js/bootstrap.min.js"></script>
 
   <script>
+    //SCRIPT PARA SELECCIONAR DATOS DEL PLAN A VER
     document.addEventListener("DOMContentLoaded", function () {
       // Agregar un evento de clic a todos los botones con la clase 'ver-btn'
       var botones = document.querySelectorAll('.ver-btn');
@@ -93,7 +124,7 @@ $cantidad = count($listadoPlanes);
           var fila = this.closest('tr');
           var idPlanSeleccionado = fila.querySelector("td:nth-child(1)").innerText;
           var nombrePlanCompleto = fila.querySelector("td:nth-child(2)").innerText;
-          // Asignar los valores de idPlanSeleccionado y nombrePlanCompleto a los inputs ocultos del formulario
+          // Cargar Datos
           document.getElementById("idP").value = idPlanSeleccionado;
           document.getElementById("nombreP").value = nombrePlanCompleto;
           // Enviar el formulario

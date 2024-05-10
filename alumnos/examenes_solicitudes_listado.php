@@ -6,27 +6,24 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
-if (isset($_COOKIE['idP']) && isset($_COOKIE['nombreP'])) 
-{
-  $idPlan = $_COOKIE['idP'];
-  $nombrePlan = $_COOKIE['nombreP'];
-}
-else
-{
-  if ($_SERVER["REQUEST_METHOD"] == "POST") 
-  {
-    $idPlan = $_POST['idP'];
-    $nombrePlan = $_POST['nombreP'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    setcookie("idP", $idPlan, time() + (86400 * 30), "/"); // 86400 segundos = 1 día
-    setcookie("nombreP", $nombrePlan, time() + (86400 * 30), "/"); // 86400 segundos = 1 día
+  //BOTON VOLVER
+  if (isset($_POST['submitVolver'])) {
+    header("Location: ../alumnos/examenes_materias.php");
+    exit;
   }
 }
 
+//VARIABLES
 $idCicloLectivo = $_SESSION['idCiclo'];
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
+$idPlan = $_SESSION['idP'];
+$nombrePlan = $_SESSION['nombreP'];
 
+//FUNCIONES
+//LISTAR SOLICITUDES
 $listadoSolicitudes = array();
 $listadoSolicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo);
 $cantidad = count($listadoSolicitudes);
@@ -49,8 +46,12 @@ $cantidad = count($listadoSolicitudes);
       <?php echo $nombrePlan; ?>
     </h4>
   </div>
-  <button type="button" class="btn btn-secondary float-end mb-3"
-  onclick="window.history.back();">Volver</button>
+  
+  <!-- FORM VOLVER -->
+  <form id="volver" method="POST">
+    <button type="submit" name="submitVolver" class="btn btn-secondary float-end mb-3">Volver</button>
+  </form>
+
   <div class="container mt-5">
     <table class="table table-hover">
       <thead>
@@ -66,8 +67,7 @@ $cantidad = count($listadoSolicitudes);
 
         <?php
 
-        //RECORRER TABLA DE SOLICITUDES
-        
+        //RECORRER TABLA DE SOLICITUDES        
         $a = 0;
         while ($a < $cantidad) {
           $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
