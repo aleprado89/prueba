@@ -6,8 +6,8 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
-$idAlumno = $_SESSION['idAlumno'];
-$nombreAlumno = $_SESSION['nombreAlumno'];
+$idAlumno = $_SESSION['alu_idAlumno'];
+$nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 
 $listadoPlanes = array();
 $listadoPlanes = buscarPlanes($conn, $idAlumno);
@@ -28,8 +28,16 @@ $cantidad = count($listadoPlanes);
       <?php echo $nombreAlumno; ?>
     </h3>
   </div>
+  <button type="button" class="btn btn-secondary float-end mb-3" onclick="window.history.back();">Volver</button>
   <div class="container mt-5">
-    <table class="table table-hover">
+    
+    <form id="envio" action="../alumnos/examenes_materias.php" method="post">
+      <!-- Inputs ocultos para enviar los datos de la primera y segunda columna -->
+      <input type="hidden" name="idP" id="idP">
+      <input type="hidden" name="nombreP" id="nombreP">
+    </form>
+
+    <table id="planes" class="table table-hover">
       <thead>
         <tr class="table-primary">
           <th scope="col" style="display:none;">idPlan</th>
@@ -57,7 +65,9 @@ $cantidad = count($listadoPlanes);
             <td>
               <?php echo $Plan ?>
             </td>
-            <td><button type="button" onclick="examenMaterias(this)" class="btn btn-primary">Ver</button></td>
+            <td>
+              <button type="button" class="btn btn-primary ver-btn">Ver</button>
+            </td>
           </tr>
 
           <?php
@@ -74,15 +84,23 @@ $cantidad = count($listadoPlanes);
   <script src="../js/bootstrap.min.js"></script>
 
   <script>
-    function examenMaterias(boton) {
-      // Cargar idMateria y nombreMateria para pasar
-      var idPlanSeleccionado = boton.closest('tr').querySelector('td:nth-child(1)').textContent;
-      var nombrePlanCompleto = boton.closest('tr').querySelector('td:nth-child(2)').textContent;
-      // Redirigir a otra página y pasar los datos como parámetro en la URL
-      window.location.href =
-        '../alumnos/examenes_materias.php?idP=' + encodeURIComponent(idPlanSeleccionado) +
-        '&nombreP=' + encodeURIComponent(nombrePlanCompleto);
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+      // Agregar un evento de clic a todos los botones con la clase 'ver-btn'
+      var botones = document.querySelectorAll('.ver-btn');
+      botones.forEach(function (boton) {
+        boton.addEventListener('click', function () {
+          // Obtener los datos de la fila seleccionada
+          var fila = this.closest('tr');
+          var idPlanSeleccionado = fila.querySelector("td:nth-child(1)").innerText;
+          var nombrePlanCompleto = fila.querySelector("td:nth-child(2)").innerText;
+          // Asignar los valores de idPlanSeleccionado y nombrePlanCompleto a los inputs ocultos del formulario
+          document.getElementById("idP").value = idPlanSeleccionado;
+          document.getElementById("nombreP").value = nombrePlanCompleto;
+          // Enviar el formulario
+          document.getElementById("envio").submit();
+        });
+      });
+    });
   </script>
 
 </body>

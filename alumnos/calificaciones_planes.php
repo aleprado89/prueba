@@ -6,8 +6,8 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
-$idAlumno = $_SESSION['idAlumno'];
-$nombreAlumno = $_SESSION['nombreAlumno'];
+$idAlumno = $_SESSION['alu_idAlumno'];
+$nombreAlumno = $_SESSION['alu_apellido'].", ".$_SESSION['alu_nombre'];
 
 $listadoPlanes = array();
 $listadoPlanes = buscarPlanes($conn, $idAlumno);

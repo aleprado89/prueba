@@ -6,10 +6,25 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
-$idAlumno = $_SESSION['idAlumno'];
-$idPlan = $_GET['idP'];
-$nombreAlumno = $_SESSION['nombreAlumno'];
-$nombrePlan = $_GET['nombreP'];
+if (isset($_COOKIE['idP']) && isset($_COOKIE['nombreP'])) 
+{
+  $idPlan = $_COOKIE['idP'];
+  $nombrePlan = $_COOKIE['nombreP'];
+}
+else
+{
+  if ($_SERVER["REQUEST_METHOD"] == "POST") 
+  {
+    $idPlan = $_POST['idP'];
+    $nombrePlan = $_POST['nombreP'];
+
+    setcookie("idP", $idPlan, time() + (86400 * 30), "/"); // 86400 segundos = 1 día
+    setcookie("nombreP", $nombrePlan, time() + (86400 * 30), "/"); // 86400 segundos = 1 día
+  }
+}
+
+$idAlumno = $_SESSION['alu_idAlumno'];
+$nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 
 $listadoMaterias = array();
 $listadoMaterias = buscarMaterias($conn, $idAlumno, $idPlan);
@@ -33,12 +48,24 @@ $cantidad = count($listadoMaterias);
       <?php echo $nombrePlan; ?>
     </h4>
   </div>
+  <button type="button" class="btn btn-secondary float-end mb-3" onclick="window.history.back();">Volver</button>
   <div class="text-center mb-3">
-    <a href='../alumnos/examenes_solicitudes_listado.php?idP=<?php echo urlencode($idPlan); ?>&nombreP=<?php echo urlencode($nombrePlan); ?>'
-      class="btn btn-primary">Ver Solicitudes enviadas</a>
+    <form action="../alumnos/examenes_solicitudes_listado.php" method="post">
+      <input type="hidden" name="idP" id="idP" value="<?php echo $idPlan; ?>">
+      <input type="hidden" name="nombreP" id="nombreP" value="<?php echo $nombrePlan; ?>">
+      <button type="submit" name="submit" class="btn btn-primary">Ver Solicitudes</button>
+    </form>
   </div>
   <div class="container mt-5">
-    <table class="table table-hover">
+
+    <form id="envio" action="../alumnos/examenes_solicitar.php" method="post">
+      <!-- Inputs ocultos para enviar los datos de la primera y segunda columna -->
+      <input type="hidden" name="idM" id="idM">
+      <input type="hidden" name="nombreM" id="nombreM">
+      <input type="hidden" name="nombreC" id="nombreC">
+    </form>
+
+    <table id="materias" class="table table-hover">
       <thead>
         <tr class="table-primary">
           <th scope="col" style="display:none;">idMateria</th>
@@ -106,11 +133,10 @@ $cantidad = count($listadoMaterias);
             </td>
             <?php
             if (empty(trim($CalificacionFinal)) || $CalificacionFinal == null) { ?>
-              <td><button type="button" onclick="examenesSolicitud(this)" class="btn btn-primary">Solicitar</button></td>
+              <td><button type="button" class="btn btn-primary ver-btn">Solicitar</button></td>
             <?php } else {
               ?>
-              <td><button type="button" style="display:none;" onclick="examenesSolicitud(this)"
-                  class="btn btn-primary">Solicitar</button></td>
+              <td><button type="button" style="display:none;" class="btn btn-primary ver-btn">Solicitar</button></td>
             <?php } ?>
           </tr>
           <?php
@@ -126,17 +152,25 @@ $cantidad = count($listadoMaterias);
   <script src="../js/bootstrap.min.js"></script>
 
   <script>
-    function examenesSolicitud(boton) {
-      // Cargar idMateria y nombreMateria para pasar
-      var idMateriaSeleccionada = boton.closest('tr').querySelector('td:nth-child(1)').textContent;
-      var nombreMateriaCompleto = boton.closest('tr').querySelector('td:nth-child(2)').textContent;
-      var nombreCursoCompleto = boton.closest('tr').querySelector('td:nth-child(4)').textContent;
-      // Redirigir a otra página y pasar los datos como parámetro en la URL
-      window.location.href =
-        '../alumnos/examenes_solicitar.php?idM=' + encodeURIComponent(idMateriaSeleccionada) +
-        '&nombreM=' + encodeURIComponent(nombreMateriaCompleto) + 
-        '&nombreC=' + encodeURIComponent(nombreCursoCompleto);
-    }  
+    document.addEventListener("DOMContentLoaded", function () {
+      // Agregar un evento de clic a todos los botones con la clase 'ver-btn'
+      var botones = document.querySelectorAll('.ver-btn');
+      botones.forEach(function (boton) {
+        boton.addEventListener('click', function () {
+          // Obtener los datos de la fila seleccionada
+          var fila = this.closest('tr');
+          var idMateriaSeleccionada = fila.querySelector("td:nth-child(1)").innerText;
+          var nombreMateriaCompleto = fila.querySelector("td:nth-child(2)").innerText;
+          var nombreCursoCompleto = fila.querySelector("td:nth-child(4)").innerText;
+          // Asignar los valores de idPlanSeleccionado y nombrePlanCompleto a los inputs ocultos del formulario
+          document.getElementById("idM").value = idMateriaSeleccionada;
+          document.getElementById("nombreM").value = nombreMateriaCompleto;
+          document.getElementById("nombreC").value = nombreCursoCompleto;
+          // Enviar el formulario
+          document.getElementById("envio").submit();
+        });
+      });
+    });
   </script>
 
 </body>

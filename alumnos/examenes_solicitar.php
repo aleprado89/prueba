@@ -7,16 +7,38 @@ include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
 include '../funciones/pruebaSession.php';
 
-$idCicloLectivo = $_SESSION['idCicloLectivo'];
-$idAlumno = $_SESSION['idAlumno'];
-$idMateria = $_GET['idM'];
-$nombreAlumno = $_SESSION['nombreAlumno'];
-$nombreMateria = $_GET['nombreM'];
-$nombreCurso = $_GET['nombreC'];
+if (isset($_COOKIE['idM']) && isset($_COOKIE['nombreMateria']) && isset($_COOKIE['nombreCurso'])) 
+{
+$idMateria = $_COOKIE['idM'];
+$nombreMateria = $_COOKIE['nombreMateria'];
+$nombreCurso = $_COOKIE['nombreCurso'];
+}
+else
+{
+  $idMateria = $_POST['idM'];
+  $nombreMateria = $_POST['nombreM'];
+  $nombreCurso = $_POST['nombreC'];
+  setcookie("idM", $idMateria, time() + (86400 * 30), "/"); // 86400 segundos = 1 día
+  setcookie("nombreMateria", $nombreMateria, time() + (86400 * 30), "/"); // 86400 segundos = 1 día
+  setcookie("nombreCurso", $nombreCurso, time() + (86400 * 30), "/"); // 86400 segundos = 1 día
+}
 
-$existeSolicitud = array();
-$existeSolicitud = existeSolicitudExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $datosColegio[0]['idTurno']);
-$cantidadSolicitudes = count($existeSolicitud);
+$idCicloLectivo = $_SESSION['idCiclo'];
+$idAlumno = $_SESSION['alu_idAlumno'];
+$nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
+
+$listadoSolicitudes = array();
+$listadoSolicitudes = existeSolicitudExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $datosColegio[0]['idTurno']);
+$cantidadSolicitudes = count($listadoSolicitudes);
+
+$habilitado = true;
+$a = 0;
+while ($a < $cantidadSolicitudes) 
+{
+  $Estado = $listadoSolicitudes[$a]['Estado'];
+  if ($Estado == "Pendiente" || $Estado == "Aprobada"){ $habilitado = false; }
+  $a++;
+}
 
 $listadoFechasExamenes = array();
 $listadoFechasExamenes = buscarFechasExamenTurno($conn, $idMateria, $nombreCurso, $idCicloLectivo, $datosColegio[0]['idTurno']);
@@ -49,48 +71,41 @@ $cantidadFechas = count($listadoFechasExamenes);
       <?php echo $datosColegio[0]['nombreTurno']; ?>
     </h5>
   </div>
-
+  <button type="button" class="btn btn-secondary float-end mb-3" onclick="window.history.back();">Volver</button>
   <fieldset>
     <legend class="mt-4">Fechas Disponibles</legend>
-
-    <?php
-    $a = 0;
-    while ($a < $cantidadFechas) {
-      $idFechaExamen = $listadoFechasExamenes[$a]['idFechaExamen'];
-      $Fecha = $listadoFechasExamenes[$a]['Fecha'];
-      $Hora = $listadoFechasExamenes[$a]['Hora'];
-      $idRB = "fechaId" . $a;
-      ?>
-
-      <div class="form-check">
-        <div class="card text-white bg-success mb-3" style="max-width: 20rem;">
-          <input class="form-check-input" type="radio" name="optionsRadios" value="<?php echo $idFechaExamen; ?>">
-          <label class="form-check-label" for="optionsRadios1">
+    
+    <form action="../alumnos/examenes_solicitar_ejecutar.php" method="POST">
+      <select class="form-select" name="fechaExamen" id="fechaExamen">
+        <?php
+        $a = 0;
+        while ($a < $cantidadFechas) {
+          $idFechaExamen = $listadoFechasExamenes[$a]['idFechaExamen'];
+          $Fecha = $listadoFechasExamenes[$a]['Fecha'];
+          $Hora = $listadoFechasExamenes[$a]['Hora'];
+          ?>
+          <option value="<?php echo $idFechaExamen; ?>">
             <?php echo $Fecha . " " . $Hora; ?>
-          </label>
-        </div>
-      </div>
-
-      <?php
-      $a++;
-    }
-    if ($cantidadFechas == 0) {
-      ?>
-
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="optionsRadios" id="optionsRadios1" value="option1" checked=""
-          disabled="">
-        <label class="form-check-label" for="optionsRadios1">
-          Sin Fechas
-        </label>
-      </div>
-
-      <?php
-    }
-    ?>
+          </option>
+          <?php
+          $a++;
+        }
+        if ($cantidadFechas == 0) {
+          ?>
+          <option value="" disabled selected>No hay fechas disponibles</option>
+          <?php
+        }
+        ?>
+      </select>
+      <input type="hidden" name="idM" value=<?php echo $idMateria; ?> />
+      <?php if ($habilitado == true){ ?>
+      <button type="submit" id="btnSolicitar" class="btn btn-primary">Solicitar</button>
+      <?php } else { ?>
+      <label>Ya hay solicitudes en proceso o aprobadas.</label>
+      <?php } ?>
+    </form>
 
   </fieldset>
-
   <div class="container mt-5">
     <table class="table table-hover">
       <caption>Solicitudes Existentes</caption>
@@ -149,6 +164,7 @@ $cantidadFechas = count($listadoFechasExamenes);
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
+
 </body>
 
 </html>
