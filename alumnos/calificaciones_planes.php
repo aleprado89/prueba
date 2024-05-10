@@ -33,7 +33,7 @@ $cantidad = count($listadoPlanes);
 <body>
   <nav class="navbar navbar-expand-lg bg-light" data-bs-theme="light">
   <div class="container">
-  <img src="../img/logo merce.jpg" class="img-fluid mx-auto" alt="logo" style="display: block; max-width:3%; height: auto; margin-top: 5px;  margin-bottom: 5px">
+  <img src="../img/logo merce.jpg" class="est-logo img-fluid mx-auto" alt="logo" >
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -73,24 +73,22 @@ $cantidad = count($listadoPlanes);
 <div class="row">
 
 
-<div class="card margen col-md-3">
-
-
+<div class="card margenes padding col-md-3">
   <br>
-    <h3 class="card-header">
+    <h3>
       <?php echo $_SESSION['alu_nombre']; ?>
     </h3>
-    <h4 class="card-header">Progreso Carrera:</h4>
-    <h6 class="card-header"> <?php echo $listadoPlanes[0]['Plan']; ?></h6>
+    <h4>Progreso Carrera:</h4>
+    <h6> <?php echo $listadoPlanes[0]['Plan']; ?></h6>
   
 <!--        ESTADISTICCASSSSSSSSSSSSSSSSSSS        -->
 
   <div><canvas id="myPieChart"></canvas></div>
 
   </div>
-  <div class="card margen col-md-8" style="margin-left:1%;">
+  <div class="card col-md-8 margenes padding">
   <br>
-  <h3 class="card-header">Carrera</h3>
+  <h3>Carrera</h3>
     <table class="table table-borderless ">
       <thead>
         <tr >
