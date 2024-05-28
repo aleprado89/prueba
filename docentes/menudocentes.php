@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -43,7 +44,7 @@
             <div class="card carddoc " style="background-color: #739FA5;margin-bottom: 2%; ">
               <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
                 
-                <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php session_start(); echo $_SESSION['doc_nombre']." ".$_SESSION["doc_apellido"]; ?></h4>
+                <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php echo $_SESSION['doc_nombre']." ".$_SESSION["doc_apellido"]; ?></h4>
                 <br>
                 <a href="#" class="card-link-act">
 
@@ -62,7 +63,7 @@
 
                  
 
-        <div class="card carddoc col-md-7">
+        <div class="card carddoc col-md-7 custom-card">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
             <h3 class="text-center"style="margin-top:1%;margin-bottom:10%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaDoc']; ?></h3>

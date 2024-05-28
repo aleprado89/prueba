@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+<?php
+  session_start();?>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -68,8 +70,8 @@
  
 <!-- JavaScript para mostrar el modal -->
 <script>
-  <?php
-  session_start();
+<?php
+  //session_start();
   if (isset($_SESSION['login_message'])) {
     $loginMessage = $_SESSION['login_message'];
     unset($_SESSION['login_message']); // Limpiamos la variable de sesión después de mostrar el mensaje

@@ -1,3 +1,4 @@
+<?php session_start();?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Formulario de Login</title>
     <!-- Bootswatch Material theme -->
+    <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
 
@@ -36,15 +38,15 @@
 
     <div class="container-fluid text-center fondo" >
     
-<div class="container " style="margin-top: 5%; ">
+<div class="container" style="margin-top: 5%; ">
 <br>
     <div class="row">
         <div class="col-md-4">
             <!-- Columna en la mitad izquierda de la pantalla -->
-            <div class="card " style="background-color: #739FA5; ">
+            <div class="card margenbottom" style="background-color: #739FA5; ">
               <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
                 
-                <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php session_start(); echo $_SESSION['alu_nombre']." ".$_SESSION["alu_apellido"]; ?></h4>
+                <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola<?php echo " ".$_SESSION['alu_nombre']." ".$_SESSION["alu_apellido"]; ?></h4>
                 <br>
                 <a href="#" class="card-link-act">
 
@@ -64,7 +66,7 @@
 
                   
 
-        <div class="card col-md-7">
+        <div class="card col-md-7 custom-card ">
         <div class="col-md-10 offset-md-1">
             <!-- Columna en la mitad derecha de la pantalla -->
             <h3 class="text-center"style="margin-top:5%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>

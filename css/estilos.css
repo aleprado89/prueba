@@ -1,3 +1,4 @@
+
     .card-link {
     text-decoration: none; /* Para quitar el subrayado del enlace */
     text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
@@ -59,8 +60,12 @@
 
   .fondo{
     background-color: #E6EAE8;
-    height: calc(100vh - 100px);
+    /*overflow-x: hidden; */
+    max-width: 100%;
+    min-height: 100vh; /* Minimo 100% del viewport height(del alto) */
+    /*min-width: 100vw;*/ /* Minimo 100% del viewport width(del ancho) */
   }
+
   .padding{
 padding-top: 1%;    
 padding-bottom: 1%;
@@ -71,27 +76,51 @@ padding-right: 1%;
 margin-left: 1%;
 margin-bottom: 1%;
 }
+
 .navbar-nav .nav-link:hover {
   color: #2e8b97; /* Cambia el color del texto a blanco para mayor contraste */
 }
-@media (max-width: 1000px) and (min-width: 768px){
-  .card-link {
-    min-height: 250px;
-  }
-}
-@media only screen and (max-width: 767px) {
+
+
+@media only screen and (max-width: 767px) {/*TAMAÑO CELULARES*/
   .elemento {
     margin-bottom: 0%; /* padding inferior para celulares */
   }
   .est-logo {
-    width: 300px; /* Ancho de 303 píxeles */
+    width: 150px; /* Ancho de 303 píxeles */
     height: auto; /* Altura automática */
     margin-top: 0px; 
      margin-bottom: 0px;
 }
+.centrarlogomenu{
+  margin: 0 auto;
+  width: 100%;
 }
-@media (max-width: 1000px) and (min-width: 768px) {
+.margenbottom{
+  margin-bottom: 5%;
+}
+.custom-card{
+  border: none; 
+  box-shadow: none ;
+  width: 100vw;
+    height: 100vh;
+    background-color: #E6EAE8;
 
+}
+table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+th, td {
+  min-width: 100px;
+}
+
+}
+@media (max-width: 1000px) and (min-width: 768px) { /*TAMAÑO ENTRE CELULAR Y PANTALLA GRANDE*/
+  .card-link {
+    min-height: 250px;
+  }
 .card {
     min-height: 250px;
 }
@@ -102,10 +131,17 @@ margin-bottom: 1%;
   }
 }
 
-@media (min-width:800px)  {
+@media (min-width:768px)  {/*ESTE TAMAÑO ES PARA TODOS MENOS CELULARES*/
 
 .carddoc {
     min-height: 280px;
+}
+.fondo{
+  background-color: #E6EAE8;
+  /*overflow-x: hidden; */
+  max-width: 100%;
+  min-height: 100vh; /* Minimo 100% del viewport height(del alto) */
+  /*min-width: 100vw;*/ /* Minimo 100% del viewport width(del ancho) */
 }
 }
 

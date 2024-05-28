@@ -1,13 +1,15 @@
+<?php session_start();?>
+
 <!DOCTYPE html>
 <html lang="es">
 
 <?php
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-include '../funciones/pruebaSession.php';
+//include '../funciones/pruebaSession.php';
 
-$idAlumno = $_SESSION['idAlumno'];
-$nombreAlumno = $_SESSION['nombreAlumno'];
+$idAlumno = $_SESSION['alu_idAlumno'];
+$nombreAlumno = $_SESSION['alu_nombre']." ".$_SESSION['alu_apellido'];
 
 $listadoPlanes = array();
 $listadoPlanes = buscarPlanes($conn, $idAlumno);
@@ -19,6 +21,7 @@ $cantidad = count($listadoPlanes);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Planes</title>
   <!-- Bootstrap CSS -->
+  <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> 
@@ -27,16 +30,25 @@ $cantidad = count($listadoPlanes);
 <script src="../js/bootstrap.min.js"></script> 
 <script src="../js/chartjs/dist/chart.umd.js"></script><!-- charjs  (necesario para el grafico de torta) -->
 
-
+<style>
+@media only screen and (max-width: 767px) {
+  table, thead, tbody, th, td, tr {
+        display: block;
+    }
+}
+</style>
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg bg-light" data-bs-theme="light">
-  <div class="container">
-  <img src="../img/logo merce.jpg" class="est-logo img-fluid mx-auto" alt="logo" >
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+  <nav class="navbar navbar-expand-lg " data-bs-theme="light">
+  <div class="container ">
+  <div class="d-flex flex-column align-items-center centrarlogomenu ">
+    <img src="../img/logo merce.jpg" class="est-logo img-fluid mx-auto" alt="logo" >
+  </div>
+    <button class="navbar-toggler margenbottom ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+ 
     <div class="collapse navbar-collapse" id="navbarColor01">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
@@ -59,7 +71,7 @@ $cantidad = count($listadoPlanes);
       </ul>
       <ul class="ms-auto" style="list-style-type: none;">
         <li class="nav-item">
-          <a class="nav-link" href="#" style="display: flex; flex-direction: column; align-items: center;" onmouseover="this.style.color='#2e8b97'"><i class="bi bi-power" ></i>Cerrar Sesión</a>
+          <a class="nav-link" href="#" style="display: flex; flex-direction: column; align-items: center;" onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'"><i class="bi bi-power" ></i>Cerrar Sesión</a>
         </li> 
 
   </ul>
