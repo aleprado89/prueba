@@ -7,9 +7,9 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
-$idAlumno = $_SESSION['idAlumno'];
+$idAlumno = $_SESSION['alu_idAlumno'];
 $idMateria = $_GET['idM'];
-$nombreAlumno = $_SESSION['nombreAlumno'];
+$nombreAlumno = $_SESSION['alu_apellido'].", ".$_SESSION['alu_nombre'];
 $nombreMateria = $_GET['nombreM'];
 
 $listadoExamenes = array();

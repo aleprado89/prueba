@@ -1,4 +1,4 @@
-<?php
+<?php 
 function buscarMaterias($conexion, $idAlumno, $idPlan)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
@@ -178,7 +178,7 @@ and fechasexamenes.idTurno = $idTurno";
             if ($data['estado'] == '5') {
                 $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
             }
-            $listadoSolicitudesExamenes[$i]['Observaciones'] = $data['observaciones'];
+            $listadoSolicitudesExamenes[$i]['Observaciones'] = $data['observaciones'];            
             $i++;
         }
     }
@@ -186,7 +186,7 @@ and fechasexamenes.idTurno = $idTurno";
 }
 
 function buscarFechasExamenTurno($conexion, $idMateria, $nombreCurso, $idCicloLectivo, $idTurno)
-{    
+{
     $consulta = "SELECT * from fechasexamenes inner join materiaterciario
 on fechasexamenes.idMateria = materiaterciario.idMateria inner join curso
 on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
@@ -204,9 +204,29 @@ and fechasexamenes.idTurno = $idTurno";
         while ($data = mysqli_fetch_array($fec)) {
             $listadoFechasExamenes[$i]['idFechaExamen'] = $data['idFechaExamen'];
             $listadoFechasExamenes[$i]['Fecha'] = $data['fecha'];
-            $listadoFechasExamenes[$i]['Hora'] = $data['hora'];            
+            $listadoFechasExamenes[$i]['Hora'] = $data['hora'];
             $i++;
         }
     }
     return $listadoFechasExamenes;
+}
+
+function solicitarExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen)
+{
+    $timestamp = time();
+    $currentDate = gmdate('Y-m-d H:i:s', $timestamp);
+
+    $consulta = "insert into inscripcionexamenes_web
+    (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion, estado, fechhora_inscri) values
+    ($idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, 0, 1,'$currentDate')";
+
+    mysqli_query($conexion, $consulta);
+}
+
+function cancelarExamen($conexion, $idInscripcionWeb)
+{
+    $consulta = "update inscripcionexamenes_web
+    set estado = '4' where id_Inscripcion_web = $idInscripcionWeb";
+    
+    mysqli_query($conexion, $consulta);
 }

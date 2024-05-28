@@ -6,12 +6,24 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/pruebaSession.php';
 
-$idCicloLectivo = $_SESSION['idCicloLectivo'];
-$idAlumno = $_SESSION['idAlumno'];
-$idPlan = $_GET['idP'];
-$nombreAlumno = $_SESSION['nombreAlumno'];
-$nombrePlan = $_GET['nombreP'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+  //BOTON VOLVER
+  if (isset($_POST['submitVolver'])) {
+    header("Location: ../alumnos/examenes_materias.php");
+    exit;
+  }
+}
+
+//VARIABLES
+$idCicloLectivo = $_SESSION['idCiclo'];
+$idAlumno = $_SESSION['alu_idAlumno'];
+$nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
+$idPlan = $_SESSION['idP'];
+$nombrePlan = $_SESSION['nombreP'];
+
+//FUNCIONES
+//LISTAR SOLICITUDES
 $listadoSolicitudes = array();
 $listadoSolicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo);
 $cantidad = count($listadoSolicitudes);
@@ -34,6 +46,12 @@ $cantidad = count($listadoSolicitudes);
       <?php echo $nombrePlan; ?>
     </h4>
   </div>
+  
+  <!-- FORM VOLVER -->
+  <form id="volver" method="POST">
+    <button type="submit" name="submitVolver" class="btn btn-secondary float-end mb-3">Volver</button>
+  </form>
+
   <div class="container mt-5">
     <table class="table table-hover">
       <thead>
@@ -49,8 +67,7 @@ $cantidad = count($listadoSolicitudes);
 
         <?php
 
-        //RECORRER TABLA DE SOLICITUDES
-        
+        //RECORRER TABLA DE SOLICITUDES        
         $a = 0;
         while ($a < $cantidad) {
           $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
