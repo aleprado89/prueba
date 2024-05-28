@@ -1,4 +1,4 @@
-<?php 
+<?php
 function buscarMaterias($conexion, $idAlumno, $idPlan)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
@@ -7,6 +7,90 @@ on calificacionesterciario.idMateria = materiaterciario.idMateria inner join cur
 on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
 on cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado
 where calificacionesterciario.idAlumno = $idAlumno and materiaterciario.idPlan = $idPlan
+order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
+
+    $calif = mysqli_query($conexion, $consulta);
+
+    $listadoCalificaciones = array();
+    $i = 0;
+    if (!empty($calif)) {
+        while ($data = mysqli_fetch_array($calif)) {
+            $idInscripcionExamen = $data['idInscripcionExamen'];
+            if ($idInscripcionExamen == null || $idInscripcionExamen == 0) {
+                if (
+                    $data['estadoCursado'] == "Aprobación PreSistema" ||
+                    $data['estadoCursado'] == "Aprobación por Equivalencia" ||
+                    $data['estadoCursado'] == "Aprobación por Pase"
+                ) {
+                    $examen = $data['examenIntegrador'];
+                } else {
+                    $examen = " ";
+                }
+            } else {
+                $consultaExamen = "SELECT calificacion from inscripcionexamenes 
+        where idInscripcion = $idInscripcionExamen";
+                $ex = mysqli_fetch_array(mysqli_query($conexion, $consultaExamen));
+                $examen = $ex["calificacion"];
+            }
+
+            $listadoCalificaciones[$i]['idMateria'] = $data['idMateria'];
+            $listadoCalificaciones[$i]['Materia'] = $data['nombreMateria'];
+            $listadoCalificaciones[$i]['Curso'] = $data['nombreCurso'];
+            $listadoCalificaciones[$i]['n1'] = $data['n1'];
+            $listadoCalificaciones[$i]['n2'] = $data['n2'];
+            $listadoCalificaciones[$i]['n3'] = $data['n3'];
+            $listadoCalificaciones[$i]['n4'] = $data['n4'];
+            $listadoCalificaciones[$i]['n5'] = $data['n5'];
+            $listadoCalificaciones[$i]['n6'] = $data['n5'];
+            $listadoCalificaciones[$i]['n7'] = $data['n5'];
+            $listadoCalificaciones[$i]['n8'] = $data['n5'];
+            $listadoCalificaciones[$i]['r1'] = $data['n5'];
+            $listadoCalificaciones[$i]['r2'] = $data['n5'];
+            $listadoCalificaciones[$i]['r3'] = $data['n5'];
+            $listadoCalificaciones[$i]['r4'] = $data['n5'];
+            $listadoCalificaciones[$i]['r5'] = $data['n5'];
+            $listadoCalificaciones[$i]['r6'] = $data['n5'];
+            $listadoCalificaciones[$i]['r7'] = $data['n5'];
+            $listadoCalificaciones[$i]['r8'] = $data['n5'];
+            $listadoCalificaciones[$i]['Asistencia'] = $data['asistencia'];
+            $listadoCalificaciones[$i]['Estado'] = $data['estadoCursado'];
+            $listadoCalificaciones[$i]['CalificacionFinal'] = $examen;
+            $i++;
+        }
+    }
+    return $listadoCalificaciones;
+}
+
+function buscarCursoPredeterminado($conexion, $idPlan)
+{
+    $consulta = "SELECT *, cursospredeterminado.nombre as nombreCP FROM `cursospredeterminado` inner join curso on
+    cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado and 
+    curso.idPlanEstudio = $idPlan group by cursospredeterminado.nombre";
+
+    $cursosP = mysqli_query($conexion, $consulta);
+
+    $listadoCursosP = array();
+    $i = 0;
+    if (!empty($cursosP)) {
+        while ($data = mysqli_fetch_array($cursosP)) {
+            $listadoCursosP[$i]['idcursopredeterminado'] = $data['idcursopredeterminado'];
+            $listadoCursosP[$i]['nombreCurso'] = $data['nombreCP'];
+            $i++;
+        }
+    }
+    return $listadoCursosP;
+}
+
+function buscarMateriasCurso($conexion, $idAlumno, $idPlan, $idCursoPredeterminado)
+{
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
+from calificacionesterciario inner join materiaterciario 
+on calificacionesterciario.idMateria = materiaterciario.idMateria inner join curso
+on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
+on cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado
+where calificacionesterciario.idAlumno = $idAlumno 
+and materiaterciario.idPlan = $idPlan 
+and cursospredeterminado.idcursopredeterminado = $idCursoPredeterminado
 order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
 
     $calif = mysqli_query($conexion, $consulta);
@@ -178,7 +262,7 @@ and fechasexamenes.idTurno = $idTurno";
             if ($data['estado'] == '5') {
                 $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
             }
-            $listadoSolicitudesExamenes[$i]['Observaciones'] = $data['observaciones'];            
+            $listadoSolicitudesExamenes[$i]['Observaciones'] = $data['observaciones'];
             $i++;
         }
     }
@@ -227,6 +311,6 @@ function cancelarExamen($conexion, $idInscripcionWeb)
 {
     $consulta = "update inscripcionexamenes_web
     set estado = '4' where id_Inscripcion_web = $idInscripcionWeb";
-    
+
     mysqli_query($conexion, $consulta);
 }

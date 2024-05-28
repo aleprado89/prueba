@@ -6,12 +6,21 @@ include '../funciones/consultas.php';
 //include '../funciones/pruebaSession.php';
 
 $idAlumno = $_SESSION['alu_idAlumno'];
-$idPlan = $_GET['idP'];
+$idPlan = $_SESSION['idP'];
 $nombreAlumno = $_SESSION['alu_nombre']." ".$_SESSION['alu_apellido'];
-$nombrePlan = $_GET['nombreP'];
+$nombrePlan = $_SESSION['nombreP'];
+
+$idCursoPredeterminado = " ";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $idCursoPredeterminado = $_POST['curso'];
+}
+
+$listadoCursosP = array();
+$listadoCursosP = buscarCursoPredeterminado($conn, $idPlan);
+$cantidadCursos = count($listadoCursosP);
 
 $listadoCalificaciones = array();
-$listadoCalificaciones = buscarMaterias($conn, $idAlumno, $idPlan);
+$listadoCalificaciones = buscarMateriasCurso($conn, $idAlumno, $idPlan, $idCursoPredeterminado);
 $cantidad = count($listadoCalificaciones);
 ?>
 <!DOCTYPE html>
@@ -83,13 +92,30 @@ $cantidad = count($listadoCalificaciones);
   <h5><?php echo "Carrera: ".$nombrePlan; ?></h5>
   <br>
   <div class="row col-12 col-md-4">
+    <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
       <label for="anios">Selecciona el Curso:</label>
-      <select class="form-select margenes padding" id="anios" name="años">
-        <option value="1">Primer Año</option>
-        <option value="2">Segundo Año</option>
-        <option value="3">Tercer Año</option>
-        <option value="4">Cuarto Año</option>
+      <select class="form-select margenes padding" id="curso" name="curso" onchange="this.form.submit()">
+      
+      <?php
+        $a = 0;
+        while ($a < $cantidadCursos) {
+          $idCursoP = $listadoCursosP[$a]['idcursopredeterminado'];
+          $nombreC = $listadoCursosP[$a]['nombreCurso'];
+          ?>
+          <option type="submit" value="<?php echo $idCursoP; ?>"
+          <?php if($idCursoPredeterminado == $idCursoP) echo 'selected'; ?>>
+            <?php echo $nombreC; ?>
+          </option>
+          <?php
+          $a++;
+        }
+        if ($idCursoPredeterminado == " ") {      
+        ?>        
+        <option type="submit" selected>  </option>
+        <?php } ?>
+        
       </select>
+    </form>
   </div>
 </div>
   
