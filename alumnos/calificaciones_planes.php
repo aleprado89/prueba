@@ -6,7 +6,8 @@
 <?php
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-//include '../funciones/pruebaSession.php';
+include '../funciones/parametrosWeb.php';
+include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -26,12 +27,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 //VARIABLES
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_nombre'] . " " . $_SESSION['alu_apellido'];
+$cicloLectivo =  $datosColegio[0]['anioautoweb'];
 
 //FUNCIONES
 //LISTAR PLANES
 $listadoPlanes = array();
 $listadoPlanes = buscarPlanes($conn, $idAlumno);
 $cantidad = count($listadoPlanes);
+
+$idPlanGrafico = $listadoPlanes[0]['idPlan'];
+
+$listadoCurricula = array();
+$listadoCurricula = estadoPlan($conn, $idAlumno, $idPlanGrafico, $cicloLectivo);
+$cantidadMaterias = count($listadoCurricula);
+$cantidadAprobado = 0;
+$cantidadCursando = 0;
+$cantidadFaltante = 0;
+$b = 0;
+while ($b < $cantidadMaterias) {
+  if ($listadoCurricula[$b]['idCalificacion'] != null) {
+    if ($listadoCurricula[$b]['materiaAprobada'] == 1) {
+      $cantidadAprobado = $cantidadAprobado + 1;
+    } else {
+      $cantidadCursando = $cantidadCursando + 1;
+    }
+  } else {
+    $cantidadFaltante = $cantidadFaltante + 1;
+  }
+  $b++;
+}
 ?>
 
 <head>
@@ -179,6 +203,10 @@ $cantidad = count($listadoPlanes);
 
     <script>
 
+      var cantidadAprobado = <?php echo $cantidadAprobado; ?>;
+      var cantidadCursando = <?php echo $cantidadCursando; ?>;
+      var cantidadFaltante = <?php echo $cantidadFaltante; ?>;
+
       ////////////////////////SCRIPT PARA GRAFICOS CHAR////////////////////////
       var ctx = document.getElementById('myPieChart').getContext('2d');
       var myPieChart = new Chart(ctx, {
@@ -186,7 +214,7 @@ $cantidad = count($listadoPlanes);
         data: {
           labels: ['Aprobadas', 'Cursando', 'A cursar'],
           datasets: [{
-            data: [30, 40, 30],
+            data: [cantidadAprobado, cantidadCursando, cantidadFaltante],
             backgroundColor: ['#40848d', '#333333', '#c1d7da']
           }]
         },

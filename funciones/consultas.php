@@ -1,4 +1,30 @@
 <?php
+
+function estadoPlan($conexion, $idAlumno, $idPlan, $cicloLectivo)
+{
+    $consulta = "SELECT * FROM materiaterciario inner join curso 
+on materiaterciario.idCurso = curso.idCurso
+left join calificacionesterciario on (calificacionesterciario.idAlumno = $idAlumno and 
+materiaterciario.idUnicoMateria = 
+(select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = calificacionesterciario.idMateria))
+where materiaterciario.idPlan = $idPlan and materiaterciario.idCicloLectivo =
+(select idciclolectivo from ciclolectivo where anio = $cicloLectivo) and curso.cursoPrincipal = 1";
+
+    $estadoP = mysqli_query($conexion, $consulta);
+
+    $listadoCurricula = array();
+    $i = 0;
+    if (!empty($estadoP)) {
+        while ($data = mysqli_fetch_array($estadoP)) {
+            $listadoCurricula[$i]['materiaAprobada'] = $data['materiaAprobada'];
+            $listadoCurricula[$i]['estadoCursado'] = $data['estadoCursado'];
+            $listadoCurricula[$i]['idCalificacion'] = $data['idCalificacion'];
+            $i++;
+        }
+    }
+    return $listadoCurricula;
+}
+
 function buscarMaterias($conexion, $idAlumno, $idPlan)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 

@@ -198,9 +198,7 @@ $cantidad = count($listadoCalificaciones);
             </td>
             <td>
               <?php echo $Materia ?>
-            </td>
-           
-            </td>
+            </td>           
             <td>
               <?php echo $Asistencia ?>
             </td>
