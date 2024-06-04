@@ -34,7 +34,7 @@
       </div>
     </div>
 
-    <div class="container-fluid text-center fondo" >
+    <div class="container-fluid text-center fondo padding-bottom" >
     
 <div class="container" style="margin-top: 5%; ">
 <br>
@@ -113,7 +113,7 @@
                       </a>
                   </div>              
                   </div>
-                <div class="col-md-6">
+          <div class="col-md-6">
 
 <?php
 //consulta para saber si se debe mostrar el boton de alumnos que solo deben finales
@@ -157,6 +157,7 @@ else
     </div>
 </div>
 <br>
+
 
 
 </div>

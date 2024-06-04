@@ -1,8 +1,11 @@
 
 footer {
-  text-align: center;
-  padding: 3px;
-  background-color: white;
+ /* position: relative;*/
+  margin-bottom: -10px;
+  width: 100%;
+  background-color: #f8f9fa; /* Color de fondo del pie de página */
+  padding: 10px; /* Espaciado interno del pie de página */
+  text-align: center; /* Alinear el texto al centro */
 }
     .card-link {
     text-decoration: none; /* Para quitar el subrayado del enlace */
@@ -88,6 +91,22 @@ margin-bottom: 1%;
 
 
 @media only screen and (max-width: 767px) {/*TAMAÑO CELULARES*/
+
+  .padding-bottom {
+
+  padding-bottom: 30%
+
+  }
+
+  footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9fa; /* Color de fondo del pie de página */
+    padding: 10px; /* Espaciado interno del pie de página */
+    text-align: center; /* Alinear el texto al centro */
+    
+  }
   .elemento {
     margin-bottom: 0%; /* padding inferior para celulares */
   }
