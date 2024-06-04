@@ -85,7 +85,7 @@ $cantidad = count($listadoCalificaciones);
 
 <br>
 <div class="container">
-<h3 class="text-center">Consulta de Calificaciones</h3>
+<h3 class="text-center">Consulta de calificaciones</h3>
 <br>
 <div class="card padding col-12">
   <h5><?php echo "Alumno: ".$nombreAlumno; ?></h5>
@@ -93,7 +93,7 @@ $cantidad = count($listadoCalificaciones);
   <br>
   <div class="row col-12 col-md-4">
     <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-      <label for="anios">Selecciona el Curso:</label>
+      <label for="anios">Selecciona el curso:</label>
       <select class="form-select margenes padding" id="curso" name="curso" onchange="this.form.submit()">
       
       <?php
@@ -205,7 +205,7 @@ $cantidad = count($listadoCalificaciones);
             <td>
               <?php echo $Estado ?>
             </td>
-            <td>
+            <td class= "text-center">
               <?php echo $CalificacionFinal ?>
             </td>
             <td><button type="button" onclick="verCalificaciones(this)" class="btn btn-primary">Ver Calificaciones</button></td>

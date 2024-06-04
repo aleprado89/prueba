@@ -27,10 +27,8 @@
       </div>
       <div class="col-12 col-md-2" >
       <!-- <i class="bi bi-power"></i> -->
-      <a class="icon-link" href="../funciones/cerrarsesion.php" style="margin-top: 10%; display: flex; flex-direction: column; align-items: center; text-decoration: none;">
-  <i class="bi bi-power"></i>
-  Cerrar Sesión
-</a>
+      <a class="nav-link" href="#" style="display: flex; flex-direction: column; align-items: center;" onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'"><i class="bi bi-power" ></i>Cerrar Sesión</a>
+
       </div>
       </div>
       </div>
@@ -158,7 +156,11 @@ else
       </div>
     </div>
 </div>
+<br>
+
+
 </div>
+
 
 <!-- Modal -->
 <div class="modal" id="inscModal">
@@ -178,10 +180,23 @@ else
       </div>
     </div>
   </div>
+
+ 
 </div>
 
+<!--        Pie de página        -->
 
-       <!--           FUNCIONES     y SCRIPTS        -->
+
+<footer>
+  <div class="container-fluid">
+
+    <p> Desarrollado por  <a target="_blank"  style="text-decoration: none;color:#646261;" href="https://web.sistemasescolares.com.ar"  onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'">Sistemas escolares</a></p>
+  
+  </div>
+</footer>
+
+
+<!--           FUNCIONES     y SCRIPTS        -->
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
 <script src="../js/jquery-3.7.1.slim.min.js"></script>
@@ -266,8 +281,14 @@ $conn->close();
         }
       }
     </script>
+
+
     
 </body>
+
+
+
+
 </html>
 
 

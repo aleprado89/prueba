@@ -72,25 +72,63 @@ $cantidad = count($listadoExamenes);
     </div>
   </div>
 </nav>
-<div class="container-fluid fondo">
 
-  <div class="card text-white bg-primary mb-3">
-    <h3 class="card-header">
-      <?php echo $nombreAlumno; ?>
-    </h3>
-    <h4 class="card-header">
-      <?php echo $nombreMateria; ?>
-    </h4>
+<div class="container-fluid fondo">
+  <br>
+  <div class="container">
+
+  <div class="card padding col-12">
+    <h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>
+    <h5><?php echo  "Materia: ".$nombreMateria; ?></h5>
   </div>
-  <div class="container mt-5">
+
+
+  <br>
+
+  <div>
+    <table class="table table-hover col-12">
+      <thead>
+        <tr class="table-primary">
+          <th scope="col">Exámenes parciales</th>
+          <th scope="col" class= "text-center">Calificación</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+     
+    <tr>
+        <td>Parcial 1</td>
+        <td class= "text-center">8.5</td>
+    </tr>
+    <tr>
+        <td>Parcial 2</td>
+        <td class= "text-center">9.2</td>
+    </tr>
+    <tr>
+        <td>Parcial 3</td>
+        <td class= "text-center">7.8</td>
+    </tr>
+
+
+      </tbody>
+    </table>
+  </div>
+
+  <br>
+
+  <div>
     <table class="table table-hover">
       <thead>
         <tr class="table-primary">
-          <th scope="col">Fecha</th>
-          <th scope="col">Calificación</th>
+          <th scope="col">Exámenes finales</th>
+          <th scope="col" class= "text-center">Calificación</th>
         </tr>
       </thead>
+
       <tbody>
+
+     
 
         <?php
 
@@ -119,7 +157,17 @@ $cantidad = count($listadoExamenes);
       </tbody>
     </table>
   </div>
+      </div>
 </div>
+
+<footer>
+  <div class="container-fluid">
+
+    <p> Desarrollado por  <a target="_blank"  style="text-decoration: none; color:#646261;" href="https://web.sistemasescolares.com.ar"  onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'">Sistemas escolares</a></p>
+  
+  </div>
+</footer>
+
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>
