@@ -1,9 +1,4 @@
-<?php session_start(); ?>
-
-<!DOCTYPE html>
-<html lang="es">
-
-<?php
+<?php session_start(); 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
@@ -57,7 +52,8 @@ while ($b < $cantidadMaterias) {
   $b++;
 }
 ?>
-
+<!DOCTYPE html>
+<html lang="es"></html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
