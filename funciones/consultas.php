@@ -107,6 +107,26 @@ function buscarCursoPredeterminado($conexion, $idPlan)
     return $listadoCursosP;
 }
 
+function buscarCursoMatriculado($conexion, $idPlan, $idAlumno)
+{
+    $consulta = "SELECT cursospredeterminado.idcursopredeterminado FROM `cursospredeterminado` inner join curso on
+    cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado and 
+    curso.idPlanEstudio = $idPlan
+    where curso.idCurso in (select max(m1.idCurso) from matriculacion m1 where m1.idAlumno = $idAlumno
+                            and m1.idPlanDeEstudio = $idPlan)";
+
+    $cursoM = mysqli_query($conexion, $consulta);
+
+    $cursosM = " ";
+
+    if (!empty($cursoM)) {
+        while ($data = mysqli_fetch_array($cursoM)) {
+            $cursosM = $data['idcursopredeterminado'];
+        }
+    }
+    return $cursosM;
+}
+
 function buscarMateriasCurso($conexion, $idAlumno, $idPlan, $idCursoPredeterminado)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 

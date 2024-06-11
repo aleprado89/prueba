@@ -8,4 +8,6 @@ $_SESSION['alu_idPersona'] = "";
 $_SESSION['anioPlataformaAlu'] = 2024;  
 $_SESSION['colegio'] ="Nombre Colegio";
 $_SESSION['idCiclo'] = 10;  
+$_SESSION['idP'] = 22;
+$_SESSION['nombreP'] = "Nombre Plan";
 ?>

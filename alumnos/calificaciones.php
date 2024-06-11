@@ -15,13 +15,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $idCursoPredeterminado = $_POST['curso'];
 }
 
+if ($idCursoPredeterminado == " ")
+{
+  $cursoM = " ";
+  $cursoM = buscarCursoMatriculado($conn, $idPlan, $idAlumno);
+  if ($cursoM != " "){$idCursoPredeterminado = $cursoM;}
+}
+
 $listadoCursosP = array();
 $listadoCursosP = buscarCursoPredeterminado($conn, $idPlan);
 $cantidadCursos = count($listadoCursosP);
 
+if ($idCursoPredeterminado == "T")
+{
+  $listadoCalificaciones = array();
+  $listadoCalificaciones = buscarMaterias($conn, $idAlumno, $idPlan);
+  $cantidad = count($listadoCalificaciones);
+}
+else
+{
 $listadoCalificaciones = array();
 $listadoCalificaciones = buscarMateriasCurso($conn, $idAlumno, $idPlan, $idCursoPredeterminado);
 $cantidad = count($listadoCalificaciones);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -113,6 +129,9 @@ $cantidad = count($listadoCalificaciones);
         ?>        
         <option type="submit" selected>  </option>
         <?php } ?>
+          
+        <option type="submit" value="T" <?php if ($idCursoPredeterminado == "T"){?> selected <?php }; ?>>
+        Todas las Materias </option>
         
       </select>
     </form>
