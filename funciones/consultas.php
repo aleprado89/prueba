@@ -114,9 +114,9 @@ from calificacionesterciario inner join materiaterciario
 on calificacionesterciario.idMateria = materiaterciario.idMateria inner join curso
 on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
 on cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado
-where calificacionesterciario.idAlumno = $idAlumno 
-and materiaterciario.idPlan = $idPlan 
-and cursospredeterminado.idcursopredeterminado = $idCursoPredeterminado
+where calificacionesterciario.idAlumno = '$idAlumno' 
+and materiaterciario.idPlan = '$idPlan' 
+and cursospredeterminado.idcursopredeterminado = '$idCursoPredeterminado'
 order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
 
     $calif = mysqli_query($conexion, $consulta);
