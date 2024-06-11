@@ -118,7 +118,7 @@ $cantidad = count($listadoExamenes);
   <br>
 
   <div>
-    <table class="table table-hover">
+    <table class="table table-hover col-12">
       <thead>
         <tr class="table-primary">
           <th scope="col">Exámenes finales</th>
@@ -141,11 +141,11 @@ $cantidad = count($listadoExamenes);
           $a++;
           ?>
 
-          <tr class="table-info">
+          <tr>
             <td>
               <?php echo $Fecha ?>
             </td>
-            <td>
+            <td class= "text-center">
               <?php echo $Calificacion ?>
             </td>
           </tr>
