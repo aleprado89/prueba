@@ -68,19 +68,7 @@ while ($b < $cantidadMaterias) {
   <script src="../js/bootstrap.min.js"></script>
   <script src="../js/chartjs/dist/chart.umd.js"></script><!-- charjs  (necesario para el grafico de torta) -->
 
-  <style>
-    @media only screen and (max-width: 767px) {
-
-      table,
-      thead,
-      tbody,
-      th,
-      td,
-      tr {
-        display: block;
-      }
-    }
-  </style>
+  
 </head>
 
 <body>

@@ -92,6 +92,14 @@ margin-bottom: 1%;
 
 @media only screen and (max-width: 767px) {/*TAMAÑO CELULARES*/
 
+  table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
   .padding-bottom {
 
   padding-bottom: 30%
