@@ -37,6 +37,7 @@
     <div class="container-fluid text-center fondo padding-bottom" >
     
 <div class="container" style="margin-top: 5%; ">
+
 <br>
     <div class="row">
         <div class="col-md-4">

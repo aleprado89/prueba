@@ -34,57 +34,23 @@ $cantidad = count($listadoExamenes);
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg " data-bs-theme="light">
-  <div class="container ">
-  <div class="d-flex flex-column align-items-center centrarlogomenu ">
-    <img src="../img/logo merce.jpg" class="est-logo img-fluid mx-auto" alt="logo" >
-  </div>
-    <button class="navbar-toggler margenbottom ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
- 
-    <div class="collapse navbar-collapse" id="navbarColor01">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link " href="menualumnos.php">Inicio
-            
-          </a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="calificaciones_planes.php">Calificaciones
-          <span class="visually-hidden">(current)</span>
-          </a>
-
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Insc.Cursado</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Insc. Exámen</a>
-        </li>
-      </ul>
-      <ul class="ms-auto" style="list-style-type: none;">
-        <li class="nav-item">
-          <a class="nav-link" href="#" style="display: flex; flex-direction: column; align-items: center;" onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'"><i class="bi bi-power" ></i>Cerrar Sesión</a>
-        </li> 
-
-  </ul>
-    </div>
-  </div>
-</nav>
+<?php include '../funciones/menu.html'; ?>
 
 <div class="container-fluid fondo">
   <br>
+  <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones_planes.php">Carreras</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones.php">Materias</a></li>
+  <li class="breadcrumb-item active">Calificaciones</li>
+</ol>
   <div class="container">
 
   <div class="card padding col-12">
     <h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>
     <h5><?php echo  "Materia: ".$nombreMateria; ?></h5>
   </div>
-
-
   <br>
-
   <div>
     <table class="table table-hover col-12">
       <thead>
