@@ -38,13 +38,13 @@ $cantidad = count($listadoExamenes);
 
 <div class="container-fluid fondo">
   <br>
+  <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones_planes.php">Carreras</a></li>
   <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones.php">Materias</a></li>
   <li class="breadcrumb-item active">Calificaciones</li>
 </ol>
-  <div class="container">
 
   <div class="card padding col-12">
     <h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>

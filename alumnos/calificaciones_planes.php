@@ -75,12 +75,12 @@ while ($b < $cantidadMaterias) {
 <?php include '../funciones/menu.html'; ?>
 
   <div class="container-fluid fondo">
+  <br>
+  <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item active">Carreras</li>
 </ol>
-    <br>
-    <div class="container">
       <div class="row">
 
 

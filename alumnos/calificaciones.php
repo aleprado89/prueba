@@ -62,13 +62,14 @@ $cantidad = count($listadoCalificaciones);
 <?php include '../funciones/menu.html'; ?>
 
 <div class="container-fluid fondo">
+<br>
+
+<div class="container">
 <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones_planes.php">Carreras</a></li>
   <li class="breadcrumb-item active">Materias</li>
 </ol>
-<br>
-<div class="container">
 <h3 class="text-center">Consulta de calificaciones</h3>
 <br>
 <div class="card padding col-12">
