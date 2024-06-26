@@ -44,7 +44,8 @@ $cantidad = count($listadoSolicitudes);
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Carreras</a></li>
-  <li class="breadcrumb-item active">Materias</li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_materias.php">Materias</a></li>
+  <li class="breadcrumb-item active">Solicitudes</li>
 </ol>
 <div class="card padding col-12">
 <h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>

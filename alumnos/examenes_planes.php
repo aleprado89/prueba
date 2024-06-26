@@ -133,7 +133,8 @@ while ($b < $cantidadMaterias) {
                     <td>
                       <?php echo $Plan ?>
                     </td>
-                    <td><button type="submit" name="submitVer" class="btn btn-primary ver-btn">Ver materias</button></td>
+                    <td><button type="submit" name="submitVer" class="btn btn-primary ver-btn">Ver
+                        Materias</button></td>
                   </tr>
 
                   <?php
