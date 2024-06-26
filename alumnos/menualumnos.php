@@ -74,7 +74,6 @@
                     <!-- Primera columna de la fila superior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
                       <a href="calificaciones_planes.php" class="card-link">
-                      <!-- <div class="card-header"></div> -->
                       <div class="card-body">
                         <h4 class="card-title text-center">Consulta de calificaciones</h4>
                         <div class="text-center">
@@ -86,8 +85,6 @@
                     <!-- Segunda columna de la fila superior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
                       <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
-
-                      <!-- <div class="card-header"></div> -->
                       <div class="card-body">
                         <h4 class="card-title text-center">Inscripciones a exámenes</h4>
                         <div class="text-center">
@@ -104,8 +101,6 @@
                     <!-- Primera columna de la fila inferior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
                       <a href="#" onclick="verificarFechaInscripcionCursado()" class="card-link">
-
-                      <!-- <div class="card-header"></div> -->
                       <div class="card-body">
                         <h4 class="card-title text-center">Inscripciones a cursado de materias</h4>
                         <div class="text-center">
@@ -125,7 +120,6 @@ if($aluDebeFinal==1)
 {
   echo '<div class="card mx-auto" style="background-color: #739FA5; margin-bottom: 2%;">';
 echo '<a href="#" class="card-link">';
-//echo '<div class="card-header"></div>';
 echo '<div class="card-body">';
 echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
 echo '<div class="text-center">';
@@ -139,7 +133,6 @@ echo '</div>';
 else 
 {
   echo '<div class="card mx-auto" style="background-color: #7A7A7A; margin-bottom: 2%;">';
-  //echo '<div class="card-header"></div>';
   echo '<div class="card-body">';
   echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
   echo '<div class="text-center">';
