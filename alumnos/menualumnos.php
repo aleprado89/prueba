@@ -69,7 +69,7 @@
         <div class="card col-md-7 custom-card ">
         <div class="col-md-10 offset-md-1">
             <h3 class="text-center"style="margin-top:5%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
-           <br> <div class="row elemento" >
+           <br> <br><div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
@@ -78,7 +78,7 @@
                       <div class="card-body">
                         <h4 class="card-title text-center">Consulta de calificaciones</h4>
                         <div class="text-center">
-                          <i class="bi bi-award icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                          <i class="bi bi-award icono" style="font-size: 3.2rem; text-shadow: none;"></i>
                         </div>
                       </div></a>
                   </div>                </div>
@@ -91,13 +91,14 @@
                       <div class="card-body">
                         <h4 class="card-title text-center">Inscripciones a exámenes</h4>
                         <div class="text-center">
-                          <i class="bi bi-calendar-week icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                          <i class="bi bi-calendar-week icono" style="font-size: 3.2rem; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>
                   </div>                 
                  </div>
             </div>
+            
             <div class="row">
                 <div class="col-md-6">
                     <!-- Primera columna de la fila inferior -->
@@ -108,7 +109,7 @@
                       <div class="card-body">
                         <h4 class="card-title text-center">Inscripciones a cursado de materias</h4>
                         <div class="text-center">
-                          <i class="bi bi-book icono" style="font-size: 2.8rem ; text-shadow: none;"></i>
+                          <i class="bi bi-book icono" style="font-size: 3.2rem ; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>
@@ -128,7 +129,7 @@ echo '<a href="#" class="card-link">';
 echo '<div class="card-body">';
 echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
 echo '<div class="text-center">';
-echo '<i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>';
+echo '<i class="bi bi-mortarboard icono" style="font-size: 3.2rem; text-shadow: none;"></i>';
 echo '</div>';
 echo '</div>';
 echo '</a>';
@@ -142,7 +143,7 @@ else
   echo '<div class="card-body">';
   echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
   echo '<div class="text-center">';
-  echo '<i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>';
+  echo '<i class="bi bi-mortarboard icono" style="font-size: 3.2rem; text-shadow: none;"></i>';
   echo '</div>';
   echo '</div>';
   echo '</div>';
