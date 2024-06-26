@@ -134,7 +134,7 @@ while ($b < $cantidadMaterias) {
                       <?php echo $Plan ?>
                     </td>
                     <td><button type="submit" name="submitVer" class="btn btn-primary ver-btn">Ver
-                        Calificaciones</button></td>
+                        Materias</button></td>
                   </tr>
 
                   <?php
