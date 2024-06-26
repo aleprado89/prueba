@@ -64,10 +64,10 @@
                   </div>
 
                   
+            <!-- Columna en la mitad derecha de la pantalla -->
 
         <div class="card col-md-7 custom-card ">
         <div class="col-md-10 offset-md-1">
-            <!-- Columna en la mitad derecha de la pantalla -->
             <h3 class="text-center"style="margin-top:5%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
            <br> <div class="row elemento" >
                 <div class="col-md-6">
