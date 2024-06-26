@@ -1,4 +1,3 @@
-
 footer {
  /* position: relative;*/
   margin-bottom: -10px;
@@ -6,6 +5,11 @@ footer {
   background-color: #f8f9fa; /* Color de fondo del pie de página */
   padding: 10px; /* Espaciado interno del pie de página */
   text-align: center; /* Alinear el texto al centro */
+}
+.breadcrumb-item a {
+  color: #2e8b97; /* Cambiar el color */
+  text-decoration: none; /* Quitar el subrayado */
+
 }
     .card-link {
     text-decoration: none; /* Para quitar el subrayado del enlace */
@@ -92,14 +96,6 @@ margin-bottom: 1%;
 
 @media only screen and (max-width: 767px) {/*TAMAÑO CELULARES*/
 
-  table,
-      thead,
-      tbody,
-      th,
-      td,
-      tr {
-        display: block;
-      }
   .padding-bottom {
 
   padding-bottom: 30%

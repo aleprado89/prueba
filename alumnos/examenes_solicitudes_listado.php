@@ -1,19 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-
 <?php
+session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-include '../funciones/pruebaSession.php';
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-  //BOTON VOLVER
-  if (isset($_POST['submitVolver'])) {
-    header("Location: ../alumnos/examenes_materias.php");
-    exit;
-  }
-}
+//include '../funciones/pruebaSession.php';
 
 //VARIABLES
 $idCicloLectivo = $_SESSION['idCiclo'];
@@ -28,31 +17,41 @@ $listadoSolicitudes = array();
 $listadoSolicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo);
 $cantidad = count($listadoSolicitudes);
 ?>
-
+<!DOCTYPE html>
+<html lang="es"></html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solicitudes</title>
+  <title>Exámenes</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
+  <!-- Bootstrap CSS -->
+   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
+   <link rel="stylesheet" href="../css/estilos.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> 
+
+<!-- Bootstrap JS (necesario para el navvar) -->
+<script src="../js/bootstrap.min.js"></script> 
+
 </head>
 
 <body>
-  <div class="card text-white bg-primary mb-3">
-    <h3 class="card-header">
-      <?php echo $nombreAlumno; ?>
-    </h3>
-    <h4 class="card-header">
-      <?php echo $nombrePlan; ?>
-    </h4>
-  </div>
-  
-  <!-- FORM VOLVER -->
-  <form id="volver" method="POST">
-    <button type="submit" name="submitVolver" class="btn btn-secondary float-end mb-3">Volver</button>
-  </form>
+<?php include '../funciones/menu.html'; ?>
 
-  <div class="container mt-5">
+<div class="container-fluid fondo">
+  <br>
+  <div class="container">
+  <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones_planes.php">Carreras</a></li>
+  <li class="breadcrumb-item active">Materias</li>
+</ol>
+<div class="card padding col-12">
+<h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>
+    <h5><?php echo  "Materia: ".$nombrePlan; ?></h5>
+  </div>
+  <br>
+     <div class="container">
     <table class="table table-hover">
       <thead>
         <tr class="table-primary">
@@ -78,7 +77,7 @@ $cantidad = count($listadoSolicitudes);
           $a++;
           ?>
 
-          <tr class="table-info">
+          <tr>
             <td style="display:none;">
               <?php echo $idInscripcionWeb ?>
             </td>
@@ -102,12 +101,6 @@ $cantidad = count($listadoSolicitudes);
 
       </tbody>
     </table>
-  </div>
-
-  <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-  <script src="../js/jquery-3.7.1.slim.min.js"></script>
-  <script src="../js/popper.min.js"></script>
-  <script src="../js/bootstrap.min.js"></script>
+  </div></div></div>
 </body>
-
 </html>

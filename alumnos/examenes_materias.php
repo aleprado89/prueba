@@ -53,9 +53,7 @@ $cantidad = count($listadoMaterias);
 
 <!-- Bootstrap JS (necesario para el navvar) -->
 <script src="../js/bootstrap.min.js"></script> 
-
 </head>
-
 <body>
 <?php include '../funciones/menu.html'; ?>
 
@@ -65,8 +63,7 @@ $cantidad = count($listadoMaterias);
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones_planes.php">Carreras</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones.php">Materias</a></li>
-  <li class="breadcrumb-item active">Calificaciones</li>
+  <li class="breadcrumb-item active">Materias</li>
 </ol>
 
 <div class="card padding col-12">
