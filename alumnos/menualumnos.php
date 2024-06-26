@@ -300,7 +300,7 @@ $conn->close();
 <!-- Iconos bootstrap para usar: 
 mortarboard 
 mortarboard-fill (son sombreritos de egresado)
-
+ostia
 calendar-check
 calendar-event
 card-checklist (calif)
