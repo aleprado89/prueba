@@ -66,9 +66,8 @@ $cantidad = count($listadoMaterias);
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones_planes.php">Carreras</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones.php">Materias</a></li>
-  <li class="breadcrumb-item active">Calificaciones</li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Carreras</a></li>
+  <li class="breadcrumb-item active">Materias</li>
 </ol>
 
       <div class="card padding col-12">
@@ -209,6 +208,9 @@ $cantidad = count($listadoMaterias);
       });
     });
   </script>
+
+
+  <?php include '../funciones/footer.html'; ?>
 
 </body>
 

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulario de Login</title>
+  <title>Menú de alumnos</title>
     <!-- Bootswatch Material theme -->
     <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
@@ -180,16 +180,7 @@ else
  
 </div>
 
-<!--        Pie de página        -->
-
-
-<footer>
-  <div class="container-fluid">
-
-    <p> Desarrollado por  <a target="_blank"  style="text-decoration: none;color:#646261;" href="https://web.sistemasescolares.com.ar"  onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'">Sistemas escolares</a></p>
-  
-  </div>
-</footer>
+<?php include '../funciones/footer.html'; ?>
 
 
 <!--           FUNCIONES     y SCRIPTS        -->

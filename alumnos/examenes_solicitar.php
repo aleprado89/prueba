@@ -5,7 +5,7 @@
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
-include '../funciones/pruebaSession.php';
+//include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -55,27 +55,50 @@ $cantidadFechas = count($listadoFechasExamenes);
 ?>
 
 <head>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solicitudes</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="../css/material/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/estilos.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<!-- Bootstrap JS (necesario para el navvar) -->
+<script src="../js/bootstrap.min.js"></script> 
+
 </head>
 
+
 <body>
-  <div class="card text-white bg-primary mb-3">
-    <h3 class="card-header">
+
+<?php include '../funciones/menu.html'; ?>
+
+<div class="container-fluid fondo">
+  <br>
+  <div class="container">
+  <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Carreras</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_materias.php">Materias</a></li>
+  <li class="breadcrumb-item active">Solicitar exámen</li>
+</ol>
+
+  <div class="card padding col-12">
+    <h5>
       <?php echo $nombreAlumno; ?>
-    </h3>
-    <h5 class="card-header">
+    </h5>
+    <h5>
       MATERIA:
       <?php echo $nombreMateria; ?>
     </h5>
-    <h5 class="card-header">
+    <h5>
       CURSO:
       <?php echo $nombreCurso; ?>
     </h5>
-    <h5 class="card-header">
+    <h5>
       TURNO:
       <?php echo $datosColegio[0]['nombreTurno']; ?>
     </h5>
@@ -187,6 +210,8 @@ $cantidadFechas = count($listadoFechasExamenes);
 
   </div>
 
+ 
+
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>
@@ -210,6 +235,15 @@ $cantidadFechas = count($listadoFechasExamenes);
       });
     });
   </script>
+  </div>
+
+</div>
+
+
+  <?php include '../funciones/footer.html'; ?>
+
+
 </body>
+
 
 </html>

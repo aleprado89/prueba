@@ -57,7 +57,7 @@ while ($b < $cantidadMaterias) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planes</title>
+  <title>Carreras</title>
   <!-- Bootstrap CSS -->
   <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
@@ -148,6 +148,8 @@ while ($b < $cantidadMaterias) {
       </div>
     </div>
 
+
+
     <script>
 
       var cantidadAprobado = <?php echo $cantidadAprobado; ?>;
@@ -196,6 +198,10 @@ while ($b < $cantidadMaterias) {
         });
       });
     </script>
+
+  </div>
+
+  <?php include '../funciones/footer.html'; ?>
 
 </body>
 
