@@ -94,7 +94,7 @@ while ($b < $cantidadMaterias) {
 
           <!--        ESTADISTICCASSSSSSSSSSSSSSSSSSS        -->
 
-          <div><canvas id="myPieChart"></canvas></div>
+          <div class="estadisticas"><canvas id="myPieChart"></canvas></div>
 
         </div>
         <div class="card col-md-8 margenes padding">
@@ -107,7 +107,7 @@ while ($b < $cantidadMaterias) {
             <input type="hidden" name="nombreP" id="nombreP">
 
             <!-- TABLA DE PLANES -->
-            <table class="table table-borderless ">
+            <table class="tabla-calificaciones-planes">
               <thead>
                 <tr>
                   <th scope="col" style="display:none;">idPlan</th>

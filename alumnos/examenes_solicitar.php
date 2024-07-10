@@ -91,30 +91,23 @@ $cantidadFechas = count($listadoFechasExamenes);
       <?php echo $nombreAlumno; ?>
     </h5>
     <h5>
-      MATERIA:
-      <?php echo $nombreMateria; ?>
+      Materia: <?php echo $nombreMateria; ?>
     </h5>
     <h5>
-      CURSO:
-      <?php echo $nombreCurso; ?>
+      Curso: <?php echo $nombreCurso; ?>
     </h5>
     <h5>
-      TURNO:
-      <?php echo $datosColegio[0]['nombreTurno']; ?>
+      Turno: <?php echo $datosColegio[0]['nombreTurno']; ?>
     </h5>
-  </div>
+ 
+  <br>
 
-  <!-- FORM VOLVER -->
-  <form id="volver" method="POST">
-    <button type="submit" name="submitVolver" class="btn btn-secondary float-end mb-3">Volver</button>
-  </form>
-
-  <fieldset>
-    <legend class="mt-4">Fechas Disponibles</legend>
-
+  <div class="row col-12 ">
+    <div class="col-12 col-md-6">
+    <h5 class="padding">Fechas Disponibles</h5>
     <!-- FORM SOLICITAR -->
     <form action="../alumnos/examenes_solicitar_ejecutar.php" method="POST">
-      <select class="form-select mx-auto" name="fechaExamen" id="fechaExamen">
+      <select class="form-select margenes padding" name="fechaExamen" id="fechaExamen">
         <?php
         $a = 0;
         while ($a < $cantidadFechas) {
@@ -135,6 +128,10 @@ $cantidadFechas = count($listadoFechasExamenes);
         }
         ?>
       </select>
+      </div>
+      
+      <div class="col-12 col-md-6">
+      <br>
       <input type="hidden" name="idM" value=<?php echo $idMateria; ?> />
       <?php if ($habilitado == true) { ?>
         <button type="submit" id="btnSolicitar" class="btn btn-primary">Solicitar</button>
@@ -142,8 +139,12 @@ $cantidadFechas = count($listadoFechasExamenes);
         <label>Ya hay solicitudes en proceso o aprobadas.</label>
       <?php } ?>
     </form>
+      </div>
 
-  </fieldset>
+    </div>
+  </div>
+
+  
   <div class="container mt-5">
 
     <!-- FORM CANCELAR -->

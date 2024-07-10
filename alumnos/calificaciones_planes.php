@@ -92,9 +92,9 @@ while ($b < $cantidadMaterias) {
           <h4>Progreso Carrera:</h4>
           <h6> <?php echo $listadoPlanes[0]['Plan']; ?></h6>
 
-          <!--        ESTADISTICCASSSSSSSSSSSSSSSSSSS        -->
+          <!--        ESTADISTICASSSSSSSSSSSSSSSSSSS        -->
 
-          <div><canvas id="myPieChart"></canvas></div>
+          <div class="estadisticas"><canvas id="myPieChart"></canvas></div>
 
         </div>
         <div class="card col-md-8 margenes padding">
@@ -107,7 +107,7 @@ while ($b < $cantidadMaterias) {
             <input type="hidden" name="nombreP" id="nombreP">
 
             <!-- TABLA DE PLANES -->
-            <table class="table table-borderless ">
+            <table class="tabla-calificaciones-planes ">
               <thead>
                 <tr>
                   <th scope="col" style="display:none;">idPlan</th>

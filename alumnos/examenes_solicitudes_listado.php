@@ -103,5 +103,8 @@ $cantidad = count($listadoSolicitudes);
       </tbody>
     </table>
   </div></div></div>
+
+  <?php include '../funciones/footer.html'; ?>
+
 </body>
 </html>
