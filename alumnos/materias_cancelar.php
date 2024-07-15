@@ -2,7 +2,7 @@
 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-include '../funciones/pruebaSession.php';
+//include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 

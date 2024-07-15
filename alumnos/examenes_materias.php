@@ -66,7 +66,7 @@ $cantidad = count($listadoMaterias);
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Carreras</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Inscripción a exámenes</a></li>
   <li class="breadcrumb-item active">Materias</li>
 </ol>
 

@@ -79,7 +79,7 @@ while ($b < $cantidadMaterias) {
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item active">Carreras</li>
+  <li class="breadcrumb-item active">Inscripción a cursado</li>
 </ol>
       <div class="row">
 
@@ -99,7 +99,7 @@ while ($b < $cantidadMaterias) {
         </div>
         <div class="card col-md-8 margenes padding">
           <br>
-          <h3>Carrera</h3>
+          <h3>Seleccione carrera</h3>
 
           <!-- FORM VER PLAN -->
           <form id="envio" method="post">

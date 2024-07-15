@@ -2,7 +2,7 @@
 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-include '../funciones/pruebaSession.php';
+//include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -16,4 +16,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Si no es una solicitud POST, redirigir o manejar de otra manera
     echo "Error: Método no permitido.";
 }
-?>

@@ -43,8 +43,8 @@ $cantidad = count($listadoSolicitudes);
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Carreras</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_materias.php">Materias</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/materias_planes.php">Inscripción a cursado</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/materias_materias.php">Materias</a></li>
   <li class="breadcrumb-item active">Solicitudes</li>
 </ol>
 <div class="card padding col-12">
