@@ -107,7 +107,7 @@ while ($b < $cantidadMaterias) {
             <input type="hidden" name="nombreP" id="nombreP">
 
             <!-- TABLA DE PLANES -->
-            <table class="tabla-calificaciones-planes ">
+            <table class=" table tabla-calificaciones-planes table-borderless">
               <thead>
                 <tr>
                   <th scope="col" style="display:none;">idPlan</th>

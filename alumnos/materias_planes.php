@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $_SESSION['idP'] = $idP;
     $_SESSION['nombreP'] = $nombreP;
 
-    header("Location: ../alumnos/examenes_materias.php");
+    header("Location: ../alumnos/materias_materias.php");
     exit;
   }
 }

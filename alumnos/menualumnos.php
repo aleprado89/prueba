@@ -258,8 +258,9 @@ $conn->close();
         
         if (inscCursDesde <= fechaActual && inscCursHasta>= fechaActual) {
           //codigo para ingresar al formulario de la inscripcion
-          $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
-          $('#inscModal').modal('show');
+          window.location.href = 'materias_planes.php';
+        //  $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
+         // $('#inscModal').modal('show');
         }
         else {
             // Código para abrir el modal que dice inscripcion cerrada
