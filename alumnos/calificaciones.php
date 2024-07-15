@@ -12,7 +12,7 @@ $nombrePlan = $_SESSION['nombreP'];
 
 $idCursoPredeterminado = " ";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $idCursoPredeterminado = $_POST['curso'];
+  $idCursoPredeterminado = $_POST['curso'];  
 }
 
 if ($idCursoPredeterminado == " ")

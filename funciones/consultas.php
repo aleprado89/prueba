@@ -91,11 +91,11 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
 }
 
 //Datos cursado de materia de un alumno
-function cursadoMateria($conexion, $idCalificacion)
+function cursadoMateria($conexion, $idMateria, $idAlumno)
 {
     $consulta = "SELECT calificacionesterciario.* 
 from calificacionesterciario 
-where calificacionesterciario.idCalificacion = $idCalificacion";
+where calificacionesterciario.idMateria = $idMateria and calificacionesterciario.idAlumno = $idAlumno";
 
     $calif = mysqli_query($conexion, $consulta);
 

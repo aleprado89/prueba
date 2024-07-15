@@ -17,7 +17,7 @@ $listadoExamenes = buscarExamenes($conn, $idAlumno, $idMateria);
 $cantidad = count($listadoExamenes);
 
 $datosCursado = array();
-$datosCursado = cursadoMateria($conn, $idCalificacion);
+$datosCursado = cursadoMateria($conn, $idMateria, $idAlumno);
 ?>
 
 <head>
@@ -63,22 +63,72 @@ $datosCursado = cursadoMateria($conn, $idCalificacion);
         </tr>
       </thead>
 
-      <tbody>
-
-     
-    <tr>
-        <td>Parcial 1</td>
-        <td class= "text-center">8.5</td>
-    </tr>
-    <tr>
-        <td>Parcial 2</td>
-        <td class= "text-center">9.2</td>
-    </tr>
-    <tr>
-        <td>Parcial 3</td>
-        <td class= "text-center">7.8</td>
-    </tr>
-
+      <tbody>     
+    
+      <tr>
+        <td>Parcial 1°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n1"]; ?></td>
+      </tr>
+      <tr>
+        <td>R.1°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r1"]; ?></td>
+      </tr>
+      <tr>
+        <td>Parcial 2°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n2"]; ?></td>
+      </tr>
+      <tr>
+        <td>Recuperatorio 2°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r2"]; ?></td>
+      </tr>
+      <tr>
+        <td>Parcial 3°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n3"]; ?></td>
+      </tr>
+      <tr>
+        <td>Recuperatorio 3°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r3"]; ?></td>
+      </tr>
+      <tr>
+        <td>Parcial 4°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n4"]; ?></td>
+      </tr>
+      <tr>
+        <td>Recuperatorio 4°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r4"]; ?></td>
+      </tr>
+      <tr>
+        <td>Parcial 5°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n5"]; ?></td>
+      </tr>
+      <tr>
+        <td>Recuperatorio 5°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r5"]; ?></td>
+      </tr>
+      <tr>
+        <td>Parcial 6°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n6"]; ?></td>
+      </tr>
+      <tr>
+        <td>Recuperatorio 6°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r6"]; ?></td>
+      </tr>
+      <tr>
+        <td>Parcial 7°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n7"]; ?></td>
+      </tr>
+      <tr>
+        <td>Recuperatorio 7°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r7"]; ?></td>
+      </tr>
+      <tr>
+        <td>Parcial 8°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["n8"]; ?></td>
+      </tr>
+      <tr>
+        <td>Recuperatorio 8°</td>
+        <td class= "text-center"><?php echo $datosCursado[0]["r8"]; ?></td>
+      </tr>
 
       </tbody>
     </table>
