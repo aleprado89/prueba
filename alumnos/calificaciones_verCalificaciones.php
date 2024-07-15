@@ -15,6 +15,9 @@ $nombreMateria = $_GET['nombreM'];
 $listadoExamenes = array();
 $listadoExamenes = buscarExamenes($conn, $idAlumno, $idMateria);
 $cantidad = count($listadoExamenes);
+
+$datosCursado = array();
+$datosCursado = cursadoMateria($conn, $idCalificacion);
 ?>
 
 <head>

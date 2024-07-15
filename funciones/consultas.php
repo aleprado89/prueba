@@ -1,5 +1,6 @@
 <?php
 
+//Estado de Cursado de un alumno por Plan
 function estadoPlan($conexion, $idAlumno, $idPlan, $cicloLectivo)
 {
     $consulta = "SELECT * FROM materiaterciario inner join curso 
@@ -25,6 +26,7 @@ where materiaterciario.idPlan = $idPlan and materiaterciario.idCicloLectivo =
     return $listadoCurricula;
 }
 
+//Calificaciones de un alumno por Plan
 function buscarMaterias($conexion, $idAlumno, $idPlan)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
@@ -59,6 +61,7 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
                 $examen = $ex["calificacion"];
             }
 
+            $listadoCalificaciones[$i]['idCalificacion'] = $data['idCalificacion'];
             $listadoCalificaciones[$i]['idMateria'] = $data['idMateria'];
             $listadoCalificaciones[$i]['Materia'] = $data['nombreMateria'];
             $listadoCalificaciones[$i]['Curso'] = $data['nombreCurso'];
@@ -87,6 +90,47 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
     return $listadoCalificaciones;
 }
 
+//Datos cursado de materia de un alumno
+function cursadoMateria($conexion, $idCalificacion)
+{
+    $consulta = "SELECT calificacionesterciario.* 
+from calificacionesterciario 
+where calificacionesterciario.idCalificacion = $idCalificacion";
+
+    $calif = mysqli_query($conexion, $consulta);
+
+    $cursadoMateria = array();
+    $i = 0;
+    if (!empty($calif)) {
+        while ($data = mysqli_fetch_array($calif)) {            
+
+            $cursadoMateria[$i]['idCalificacion'] = $data['idCalificacion'];
+            $cursadoMateria[$i]['idMateria'] = $data['idMateria'];
+            $cursadoMateria[$i]['n1'] = $data['n1'];
+            $cursadoMateria[$i]['n2'] = $data['n2'];
+            $cursadoMateria[$i]['n3'] = $data['n3'];
+            $cursadoMateria[$i]['n4'] = $data['n4'];
+            $cursadoMateria[$i]['n5'] = $data['n5'];
+            $cursadoMateria[$i]['n6'] = $data['n5'];
+            $cursadoMateria[$i]['n7'] = $data['n5'];
+            $cursadoMateria[$i]['n8'] = $data['n5'];
+            $cursadoMateria[$i]['r1'] = $data['n5'];
+            $cursadoMateria[$i]['r2'] = $data['n5'];
+            $cursadoMateria[$i]['r3'] = $data['n5'];
+            $cursadoMateria[$i]['r4'] = $data['n5'];
+            $cursadoMateria[$i]['r5'] = $data['n5'];
+            $cursadoMateria[$i]['r6'] = $data['n5'];
+            $cursadoMateria[$i]['r7'] = $data['n5'];
+            $cursadoMateria[$i]['r8'] = $data['n5'];
+            $cursadoMateria[$i]['Asistencia'] = $data['asistencia'];
+            $cursadoMateria[$i]['Estado'] = $data['estadoCursado'];
+            $i++;
+        }
+    }
+    return $cursadoMateria;
+}
+
+//Listado Cursos Predeterminados por Plan
 function buscarCursoPredeterminado($conexion, $idPlan)
 {
     $consulta = "SELECT *, cursospredeterminado.nombre as nombreCP FROM `cursospredeterminado` inner join curso on
@@ -107,6 +151,7 @@ function buscarCursoPredeterminado($conexion, $idPlan)
     return $listadoCursosP;
 }
 
+//Buscar último curso Matriculado
 function buscarCursoMatriculado($conexion, $idPlan, $idAlumno)
 {
     $consulta = "SELECT cursospredeterminado.idcursopredeterminado FROM `cursospredeterminado` inner join curso on
@@ -127,6 +172,7 @@ function buscarCursoMatriculado($conexion, $idPlan, $idAlumno)
     return $cursosM;
 }
 
+//Calificaciones de un alumno por Plan y Curso
 function buscarMateriasCurso($conexion, $idAlumno, $idPlan, $idCursoPredeterminado)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
@@ -191,6 +237,7 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
     return $listadoCalificaciones;
 }
 
+//Examenes de un alumno por Materia
 function buscarExamenes($conexion, $idAlumno, $idMateria)
 {
     $consulta = "SELECT * from inscripcionexamenes inner join fechasexamenes
@@ -213,6 +260,7 @@ where inscripcionexamenes.idAlumno = $idAlumno and materiaterciario.idUnicoMater
     return $listadoExamenes;
 }
 
+//Planes de un alumno
 function buscarPlanes($conexion, $idAlumno)
 {
     $consulta = "SELECT plandeestudio.idPlan, plandeestudio.nombre from matriculacion inner join plandeestudio
@@ -234,6 +282,7 @@ group by idPlan";
     return $listadoPlanes;
 }
 
+//Listado solicitudes a examen de un alumno por Plan
 function buscarSolicitudesExamen($conexion, $idAlumno, $idPlan, $idCicloLectivo)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from inscripcionexamenes_web inner join fechasexamenes
@@ -273,6 +322,7 @@ and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo";
     return $listadoSolicitudesExamenes;
 }
 
+//Exite solicitud a examen
 function existeSolicitudExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idTurno)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from inscripcionexamenes_web inner join fechasexamenes
@@ -315,6 +365,7 @@ and fechasexamenes.idTurno = $idTurno";
     return $listadoSolicitudesExamenes;
 }
 
+//Listado de fechas a examen por materia y turno
 function buscarFechasExamenTurno($conexion, $idMateria, $nombreCurso, $idCicloLectivo, $idTurno)
 {
     $consulta = "SELECT * from fechasexamenes inner join materiaterciario
@@ -341,6 +392,7 @@ and fechasexamenes.idTurno = $idTurno";
     return $listadoFechasExamenes;
 }
 
+//Generar solicitud a examen
 function solicitarExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen)
 {
     $timestamp = time();
@@ -353,6 +405,7 @@ function solicitarExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idF
     mysqli_query($conexion, $consulta);
 }
 
+//Cancelar solicitud a examen
 function cancelarExamen($conexion, $idInscripcionWeb)
 {
     $consulta = "update inscripcionexamenes_web
