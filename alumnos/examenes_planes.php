@@ -57,7 +57,7 @@ while ($b < $cantidadMaterias) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planes</title>
+  <title>Carreras</title>
   <!-- Bootstrap CSS -->
   <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
@@ -79,7 +79,7 @@ while ($b < $cantidadMaterias) {
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item active">Carreras</li>
+  <li class="breadcrumb-item active">Inscripción a exámenes</li>
 </ol>
       <div class="row">
 
@@ -94,12 +94,12 @@ while ($b < $cantidadMaterias) {
 
           <!--        ESTADISTICCASSSSSSSSSSSSSSSSSSS        -->
 
-          <div><canvas id="myPieChart"></canvas></div>
+          <div class="estadisticas"><canvas id="myPieChart"></canvas></div>
 
         </div>
         <div class="card col-md-8 margenes padding">
           <br>
-          <h3>Carrera</h3>
+          <h3>Seleccione carrera</h3>
 
           <!-- FORM VER PLAN -->
           <form id="envio" method="post">
@@ -107,7 +107,7 @@ while ($b < $cantidadMaterias) {
             <input type="hidden" name="nombreP" id="nombreP">
 
             <!-- TABLA DE PLANES -->
-            <table class="table table-borderless ">
+            <table class="table tabla-calificaciones-planes table-borderless">
               <thead>
                 <tr>
                   <th scope="col" style="display:none;">idPlan</th>
@@ -134,7 +134,7 @@ while ($b < $cantidadMaterias) {
                       <?php echo $Plan ?>
                     </td>
                     <td><button type="submit" name="submitVer" class="btn btn-primary ver-btn">Ver
-                        Calificaciones</button></td>
+                        Materias</button></td>
                   </tr>
 
                   <?php
@@ -196,6 +196,10 @@ while ($b < $cantidadMaterias) {
         });
       });
     </script>
+    
+  </div>
+
+  <?php include '../funciones/footer.html'; ?>
 
 </body>
 

@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $_SESSION['idP'] = $idP;
     $_SESSION['nombreP'] = $nombreP;
 
-    header("Location: ../alumnos/calificaciones.php");
+    header("Location: ../alumnos/materias_materias.php");
     exit;
   }
 }
@@ -79,7 +79,7 @@ while ($b < $cantidadMaterias) {
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item active">Carreras</li>
+  <li class="breadcrumb-item active">Inscripción a cursado</li>
 </ol>
       <div class="row">
 
@@ -92,14 +92,14 @@ while ($b < $cantidadMaterias) {
           <h4>Progreso Carrera:</h4>
           <h6> <?php echo $listadoPlanes[0]['Plan']; ?></h6>
 
-          <!--        ESTADISTICASSSSSSSSSSSSSSSSSSS        -->
+          <!--        ESTADISTICCASSSSSSSSSSSSSSSSSSS        -->
 
           <div class="estadisticas"><canvas id="myPieChart"></canvas></div>
 
         </div>
         <div class="card col-md-8 margenes padding">
           <br>
-          <h3>Carrera</h3>
+          <h3>Seleccione carrera</h3>
 
           <!-- FORM VER PLAN -->
           <form id="envio" method="post">
@@ -107,7 +107,7 @@ while ($b < $cantidadMaterias) {
             <input type="hidden" name="nombreP" id="nombreP">
 
             <!-- TABLA DE PLANES -->
-            <table class=" table tabla-calificaciones-planes table-borderless">
+            <table class="table tabla-calificaciones-planes table-borderless">
               <thead>
                 <tr>
                   <th scope="col" style="display:none;">idPlan</th>
@@ -134,7 +134,7 @@ while ($b < $cantidadMaterias) {
                       <?php echo $Plan ?>
                     </td>
                     <td><button type="submit" name="submitVer" class="btn btn-primary ver-btn">Ver
-                        Calificaciones</button></td>
+                        Materias</button></td>
                   </tr>
 
                   <?php
@@ -147,8 +147,6 @@ while ($b < $cantidadMaterias) {
         </div>
       </div>
     </div>
-
-
 
     <script>
 
@@ -198,7 +196,7 @@ while ($b < $cantidadMaterias) {
         });
       });
     </script>
-
+    
   </div>
 
   <?php include '../funciones/footer.html'; ?>

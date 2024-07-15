@@ -23,7 +23,7 @@ $datosCursado = cursadoMateria($conn, $idCalificacion);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exámenes</title>
+  <title>Ver calificaciones</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -129,18 +129,13 @@ $datosCursado = cursadoMateria($conn, $idCalificacion);
       </div>
 </div>
 
-<footer>
-  <div class="container-fluid">
-
-    <p> Desarrollado por  <a target="_blank"  style="text-decoration: none; color:#646261;" href="https://web.sistemasescolares.com.ar"  onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'">Sistemas escolares</a></p>
-  
-  </div>
-</footer>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
+
+  <?php include '../funciones/footer.html'; ?>
 
 </body>
 

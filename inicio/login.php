@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulario de Login</title>
+  <title>Alumnos - Inicio de sesión </title>
     <!-- Bootswatch Material theme -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <!-- <link rel="stylesheet" href="../css/bootstrap.min.css"> -->
@@ -19,9 +19,8 @@
       <div class="card">
          <!-- Agregar la imagen centrada -->
       <img src="../img/logo merce.jpg" class="mx-auto d-block" alt="logo" style="max-width: 30%; height: auto;">
-        <div class="card-header">
-         
-          <h3 class="text-center">Iniciar Sesión</h3>
+        <div>
+          <h3 class="text-center">Inicio de sesión</h3>
         </div>
         <div class="card-body">
           <form id="loginForm" method="POST" action="loginResult.php" class="was-validated" >

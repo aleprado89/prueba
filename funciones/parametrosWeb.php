@@ -34,5 +34,3 @@ if (!empty($colegio)) {
         $i++;
     }
 }
-
-?>

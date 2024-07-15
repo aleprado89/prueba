@@ -9,7 +9,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idInscripcionWeb = $_POST["idInscripcionWeb"];    
     cancelarExamen($conn, $idInscripcionWeb);
 
-    header("refresh:3; url=../alumnos/examenes_solicitar.php");
+    header("refresh:3; url=../alumnos/materias_solicitar.php");
     exit();
 
 } else {

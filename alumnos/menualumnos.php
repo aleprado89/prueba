@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulario de Login</title>
+  <title>Menú de alumnos</title>
     <!-- Bootswatch Material theme -->
     <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
@@ -64,21 +64,20 @@
                   </div>
 
                   
+            <!-- Columna en la mitad derecha de la pantalla -->
 
         <div class="card col-md-7 custom-card ">
         <div class="col-md-10 offset-md-1">
-            <!-- Columna en la mitad derecha de la pantalla -->
             <h3 class="text-center"style="margin-top:5%;margin-bottom:1%;"><?php echo "Ciclo Lectivo: ".$_SESSION['anioPlataformaAlu']; ?></h3>
-           <br> <div class="row elemento" >
+           <br> <br><div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
                       <a href="calificaciones_planes.php" class="card-link">
-                      <div class="card-header"></div>
                       <div class="card-body">
                         <h4 class="card-title text-center">Consulta de calificaciones</h4>
-                        <div class="card-header text-center">
-                          <i class="bi bi-award icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                        <div class="text-center">
+                          <i class="bi bi-award icono" style="font-size: 3.2rem; text-shadow: none;"></i>
                         </div>
                       </div></a>
                   </div>                </div>
@@ -86,29 +85,26 @@
                     <!-- Segunda columna de la fila superior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
                       <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
-
-                      <div class="card-header"></div>
                       <div class="card-body">
                         <h4 class="card-title text-center">Inscripciones a exámenes</h4>
-                        <div class="card-header text-center">
-                          <i class="bi bi-calendar-week icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                        <div class="text-center">
+                          <i class="bi bi-calendar-week icono" style="font-size: 3.2rem; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>
                   </div>                 
                  </div>
             </div>
+            
             <div class="row">
                 <div class="col-md-6">
                     <!-- Primera columna de la fila inferior -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
                       <a href="#" onclick="verificarFechaInscripcionCursado()" class="card-link">
-
-                      <div class="card-header"></div>
                       <div class="card-body">
                         <h4 class="card-title text-center">Inscripciones a cursado de materias</h4>
-                        <div class="card-header text-center">
-                          <i class="bi bi-book icono" style="font-size: 2.8rem ; text-shadow: none;"></i>
+                        <div class="text-center">
+                          <i class="bi bi-book icono" style="font-size: 3.2rem ; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>
@@ -124,11 +120,10 @@ if($aluDebeFinal==1)
 {
   echo '<div class="card mx-auto" style="background-color: #739FA5; margin-bottom: 2%;">';
 echo '<a href="#" class="card-link">';
-echo '<div class="card-header"></div>';
 echo '<div class="card-body">';
 echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
-echo '<div class="card-header text-center">';
-echo '<i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>';
+echo '<div class="text-center">';
+echo '<i class="bi bi-mortarboard icono" style="font-size: 3.2rem; text-shadow: none;"></i>';
 echo '</div>';
 echo '</div>';
 echo '</a>';
@@ -138,11 +133,10 @@ echo '</div>';
 else 
 {
   echo '<div class="card mx-auto" style="background-color: #7A7A7A; margin-bottom: 2%;">';
-  echo '<div class="card-header"></div>';
   echo '<div class="card-body">';
   echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
-  echo '<div class="card-header text-center">';
-  echo '<i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>';
+  echo '<div class="text-center">';
+  echo '<i class="bi bi-mortarboard icono" style="font-size: 3.2rem; text-shadow: none;"></i>';
   echo '</div>';
   echo '</div>';
   echo '</div>';
@@ -186,16 +180,7 @@ else
  
 </div>
 
-<!--        Pie de página        -->
-
-
-<footer>
-  <div class="container-fluid">
-
-    <p> Desarrollado por  <a target="_blank"  style="text-decoration: none;color:#646261;" href="https://web.sistemasescolares.com.ar"  onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'">Sistemas escolares</a></p>
-  
-  </div>
-</footer>
+<?php include '../funciones/footer.html'; ?>
 
 
 <!--           FUNCIONES     y SCRIPTS        -->
@@ -273,8 +258,9 @@ $conn->close();
         
         if (inscCursDesde <= fechaActual && inscCursHasta>= fechaActual) {
           //codigo para ingresar al formulario de la inscripcion
-          $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
-          $('#inscModal').modal('show');
+          window.location.href = 'materias_planes.php';
+        //  $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
+         // $('#inscModal').modal('show');
         }
         else {
             // Código para abrir el modal que dice inscripcion cerrada
@@ -300,7 +286,7 @@ $conn->close();
 <!-- Iconos bootstrap para usar: 
 mortarboard 
 mortarboard-fill (son sombreritos de egresado)
-
+ostia
 calendar-check
 calendar-event
 card-checklist (calif)

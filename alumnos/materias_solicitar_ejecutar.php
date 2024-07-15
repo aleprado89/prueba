@@ -13,11 +13,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idMateria = $_POST['idM'];
     solicitarExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $idFechaSeleccionada);
 
-    header("refresh:3; url=../alumnos/examenes_solicitar.php");
+    header("refresh:3; url=../alumnos/materias_solicitar.php");
     exit();
 
 } else {
     // Si no es una solicitud POST, redirigir o manejar de otra manera
     echo "Error: Método no permitido.";
 }
-?>
+ 

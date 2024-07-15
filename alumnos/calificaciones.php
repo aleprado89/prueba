@@ -207,6 +207,7 @@ $cantidad = count($listadoCalificaciones);
     </table>
   </div>
 </div>
+
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>
@@ -236,6 +237,9 @@ $cantidad = count($listadoCalificaciones);
     }
   });
   </script>
+  
+ 
+ <?php include '../funciones/footer.html'; ?>
 
 </body>
 

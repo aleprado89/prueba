@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   //BOTON LISTADO SOLICITUDES
   if (isset($_POST['submitVer'])) {
-    header("Location: ../alumnos/examenes_solicitudes_listado.php");
+    header("Location: ../alumnos/materias_solicitudes_listado.php");
     exit;
   }
 
@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $_SESSION['nombreM'] = $nombreM;
     $_SESSION['nombreC'] = $nombreC;
 
-    header("Location: ../alumnos/examenes_solicitar.php");
+    header("Location: ../alumnos/materias_solicitar.php");
     exit;
   }
 }
@@ -66,7 +66,7 @@ $cantidad = count($listadoMaterias);
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Inscripción a exámenes</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/materias_planes.php">Inscripción a cursado</a></li>
   <li class="breadcrumb-item active">Materias</li>
 </ol>
 

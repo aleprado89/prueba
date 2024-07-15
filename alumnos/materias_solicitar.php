@@ -11,13 +11,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   //BOTON VOLVER
   if (isset($_POST['submitVolver'])) {
-    header("Location: ../alumnos/examenes_materias.php");
+    header("Location: ../alumnos/materias_materias.php");
     exit;
   }
 
   //BOTON CANCELAR
   if (isset($_POST['submitCancelar'])) {
-    header("Location: ../alumnos/examenes_cancelar.php");
+    header("Location: ../alumnos/materias_cancelar.php");
     exit;
   }
 }
@@ -81,8 +81,8 @@ $cantidadFechas = count($listadoFechasExamenes);
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Inscripción a exámenes</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_materias.php">Materias</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/materias_planes.php">Inscripción a cursado</a></li>
+  <li class="breadcrumb-item"><a href="/prueba/alumnos/materias_materias.php">Materias</a></li>
   <li class="breadcrumb-item active">Solicitar exámen</li>
 </ol>
 
