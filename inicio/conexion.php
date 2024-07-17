@@ -7,9 +7,9 @@ $dbname = "sesystem_pruebas";
 
 //configuración para pruebas en servidor web sesystem
 /*$servername = "localhost";
-$username = "sesystem_pruebas";
+$username = "u577894275_se_system";
 $password = "Srsr4065.pase";
-$dbname = "sesystem_pruebas";*/
+$dbname = "u577894275_se_system";*/
 
 // Crear conexión
 $conn = new mysqli($servername, $username, $password, $dbname);

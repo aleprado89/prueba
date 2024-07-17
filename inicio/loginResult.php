@@ -1,5 +1,6 @@
 <?php
-include 'conexion.php';
+  session_start();
+  include 'conexion.php';
 
 // Obtener los datos del formulario
 $username = $_POST['username'];
@@ -14,7 +15,6 @@ $result = $conn->query($sql);
 // Verificar si se encontró un registro en la base de datos
 if ($result->num_rows > 0) {
   // Usuario y contraseña válidos
-  session_start();
 //VARIABLES SESSION TABLA PERSONA Y PERSONAL
   while($row = $result->fetch_assoc()) {
     $_SESSION['doc_nombre'] = $row["nombre"];
