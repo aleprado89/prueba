@@ -5,6 +5,7 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 //include '../funciones/pruebaSession.php';
 
+
 $idAlumno = $_SESSION['alu_idAlumno'];
 $idPlan = $_SESSION['idP'];
 $nombreAlumno = $_SESSION['alu_nombre']." ".$_SESSION['alu_apellido'];
@@ -59,7 +60,7 @@ $cantidad = count($listadoCalificaciones);
 
 <body>
 
-<?php include '../funciones/menu.html'; ?>
+<?php include '../funciones/menu.php'; ?>
 
 <div class="container-fluid fondo">
 <br>
@@ -106,7 +107,13 @@ $cantidad = count($listadoCalificaciones);
     </form>
   </div>
 </div>
-  
+<br>
+<div class="text-center">
+   <!-- BOTON VER LISTADO CALIFICACIONES -->
+           <a href="../reportes/PDFcalificacionesAlumno.php" target="_blank">
+        <button class="btn btn-primary">Imprimir Calificaciones</button>
+    </a>
+      </div>
 </div>
 
    

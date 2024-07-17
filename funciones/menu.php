@@ -1,7 +1,8 @@
+
 <nav class="navbar navbar-expand-lg " data-bs-theme="light">
     <div class="container ">
       <div class="d-flex flex-column align-items-center centrarlogomenu ">
-        <img src="../img/logo merce.jpg" class="est-logo img-fluid mx-auto" alt="logo">
+        <img src="<?php echo $_SESSION['membrete']; ?>" class="est-logo img-fluid mx-auto" alt="logo">
       </div>
       <button class="navbar-toggler margenbottom ms-auto" type="button" data-bs-toggle="collapse"
         data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"

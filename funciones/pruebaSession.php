@@ -10,4 +10,3 @@ $_SESSION['colegio'] ="Nombre Colegio";
 $_SESSION['idCiclo'] = 10;  
 $_SESSION['idP'] = 22;
 $_SESSION['nombreP'] = "Nombre Plan";
-?>

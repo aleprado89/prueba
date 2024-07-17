@@ -59,7 +59,7 @@ $cantidad = count($listadoMaterias);
 
 </head>
 <body>
-  <?php include '../funciones/menu.html'; ?>
+  <?php include '../funciones/menu.php'; ?>
 
 <div class="container-fluid fondo">
   <br>

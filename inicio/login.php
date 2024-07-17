@@ -1,6 +1,8 @@
 <?php
-  session_start();?>
-  <!DOCTYPE html>
+  session_start();
+  $_SESSION['membrete']='http://localhost/prueba/img/logo merce.jpg';
+  ?>
+    <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -18,7 +20,7 @@
       
       <div class="card">
          <!-- Agregar la imagen centrada -->
-      <img src="../img/logo merce.jpg" class="mx-auto d-block" alt="logo" style="max-width: 30%; height: auto;">
+      <img src="<?php echo $_SESSION['membrete']; ?>" class="mx-auto d-block" alt="logo" style="max-width: 30%; height: auto;">
         <div>
           <h3 class="text-center">Inicio de sesión</h3>
         </div>
