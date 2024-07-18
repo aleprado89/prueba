@@ -78,7 +78,7 @@ while ($b < $cantidadMaterias) {
   <br>
   <div class="container">
   <ol class="breadcrumb">
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
+  <li class="breadcrumb-item"><a href="/se/prueba/alumnos/menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item active">Inscripción a exámenes</li>
 </ol>
       <div class="row">
