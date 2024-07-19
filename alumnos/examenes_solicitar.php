@@ -80,9 +80,9 @@ $cantidadFechas = count($listadoFechasExamenes);
   <br>
   <div class="container">
   <ol class="breadcrumb">
-  <li class="breadcrumb-item"><a href="/se/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/se/prueba/alumnos/examenes_planes.php">Inscripción a exámenes</a></li>
-  <li class="breadcrumb-item"><a href="/se/prueba/alumnos/examenes_materias.php">Materias</a></li>
+  <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
+  <li class="breadcrumb-item"><a href="examenes_planes.php">Inscripción a exámenes</a></li>
+  <li class="breadcrumb-item"><a href="examenes_materias.php">Materias</a></li>
   <li class="breadcrumb-item active">Solicitar exámen</li>
 </ol>
 

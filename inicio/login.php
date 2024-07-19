@@ -1,8 +1,16 @@
 <?php
   session_start();
-  $_SESSION['logo']='../img/logo merce.jpg';
+  $_SESSION['idColegio']=1;
+  $_SESSION['logo']='../img/logo_banfield.jpg';
   $_SESSION['membrete']='https://sesystem.com.ar/se/prueba/img/membrete_banfield.png';
-  ?>
+  //busco el nombre colegio segun el id para crear la variable de sesion
+  include '../inicio/conexion.php';
+$sql = "SELECT nombreColegio FROM colegio WHERE idColegio=".$_SESSION['idColegio']; 
+$resultado = $conn->query($sql);
+$fila = $resultado->fetch_assoc();
+$nombre = $fila["nombreColegio"];
+$_SESSION['nombreColegio']=$nombre;
+    ?>
     <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,8 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Alumnos - Inicio de sesión </title>
     <!-- Bootswatch Material theme -->
+    <!-- <link rel="stylesheet" href="../css/bootstrap.min.css"> -->
+
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
-  <!-- <link rel="stylesheet" href="../css/bootstrap.min.css"> -->
 </head>
 <body>
 
@@ -19,10 +28,11 @@
   <div class="row justify-content-center">
     <div class="col-md-5">
       
-      <div class="card">
+      <div class="card"><br>
          <!-- Agregar la imagen centrada -->
-      <img src="<?php echo $_SESSION['logo']; ?>" class="mx-auto d-block" alt="logo" style="max-width: 30%; height: auto;">
+      <img src="<?php echo $_SESSION['logo']; ?>" class="mx-auto d-block " alt="logo" style="max-width: 40%; height: auto;">
         <div>
+          <br>
           <h3 class="text-center">Inicio de sesión</h3>
         </div>
         <div class="card-body">
