@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="container-fluid text-center fondo padding-bottom" >
+    <div class="container-fluid text-center fondo padding-bottom margenbottom2" >
     
 <div class="container" style="margin-top: 5%; ">
 
@@ -47,10 +47,10 @@
                 <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola<?php echo " ".$_SESSION['alu_nombre']." ".$_SESSION["alu_apellido"]; ?></h4>
                 <br>      
                 
-                <div class="alert alert-dismissible alert-secondary">
+                <div class="alert alert-dismissible alert-danger">
   <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  <h4 style="color:#333333;">Atención!</h4>
-  <p class="mb-0">Inscripciones a Cursado: Cerradas</a>.</p>
+  <h4 style="color:#333333;">Inscripciones:</h4>
+  <p class="mb-0">Las inscripciones a exámenes y cursado están cerradas.</a></p>
 </div> <br>
 <p class="card-text" style="margin-bottom: 20%;">Aquí puedes consultar tus calificaciones y asistencias,
                   actualizar tus datos personales y realizar inscripciones. 
@@ -124,29 +124,23 @@
 <?php
 //consulta para saber si se debe mostrar el boton de alumnos que solo deben finales
 //........
-$aluDebeFinal=1;
+$aluDebeFinal=$_SESSION['aluDebeFinal'];
 if($aluDebeFinal==1)
 {
 echo '<div class="col-md-12">';
- echo '<div class="card mx-auto" style="background-color: #739FA5; margin-bottom: 2%;margin-top: 2%;">';
+echo '<div class="card mx-auto" style="background-color: #739FA5; ">';
 echo '<a href="#" class="card-link">';
 echo '<div class="card-body">';
 echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
 echo '<div class="text-center">';
-echo '<i class="bi bi-mortarboard icono" style="font-size: 1.8rem; text-shadow: none;"></i>';
+echo '<i class="bi bi-mortarboard icono" style="font-size: 3.2rem; text-shadow: none;"></i>';
 echo '</div>';
 echo '</div>';
 echo '</a>';
 echo '</div>';
 echo '</div>';
-
-
 }
-
 ?>
-                    
-                
-                
             </div>
         </div>
       </div>
@@ -181,7 +175,7 @@ echo '</div>';
  
 </div>
 
-<?php include '../funciones/footer.html'; ?>
+
 
 
 <!--           FUNCIONES     y SCRIPTS        -->
@@ -271,34 +265,55 @@ $conn->close();
       }
     </script>
 
+<!-- Agrega este script al final de tu archivo HTML, antes de cerrar el body -->
+<script>
+    <?php
+    include '../inicio/conexion.php';
 
+    // Realiza tu consulta MySQL para obtener un valor
+    $sql = "SELECT inscCursDesde, inscCursHasta, inscExamDesde, inscExamHasta FROM colegio WHERE idColegio =" . $_SESSION['idColegio'];
+    $resultado = $conn->query($sql);
+    if ($resultado->num_rows > 0) {
+        $fila = $resultado->fetch_assoc();
+        $fechaInscCursDesde = $fila['inscCursDesde'];
+        $fechaInscCursHasta = $fila['inscCursHasta'];
+        $fechaInscExamDesde = $fila['inscExamDesde'];
+        $fechaInscExamHasta = $fila['inscExamHasta'];
+    } else {
+        $fechaInscCursDesde = null;
+        $fechaInscCursHasta = null;
+        $fechaInscExamDesde = null;
+        $fechaInscExamHasta = null;
+    }
+    $conn->close();
+    $fechaActual = date('Y-m-d H:i:s');
     
+     if ($fechaInscExamDesde <= $fechaActual && $fechaInscExamHasta >= $fechaActual && $fechaInscCursDesde <= $fechaActual && $fechaInscCursHasta >= $fechaActual) {
+      echo 'var alertDiv = document.querySelector(".alert");'; // Selecciona el elemento <div> con la clase alert
+       echo 'alertDiv.classList.remove("alert-danger");'; // Elimina la clase alert-secondary
+       echo 'alertDiv.classList.add("alert-success");'; // Agrega la clase alert-danger
+       echo 'alertDiv.querySelector("h4").textContent = "¡Atención!";'; // Modifica el texto del título
+      echo 'alertDiv.querySelector("p").textContent = "Las inscripciones a exámenes y cursado están abiertas";'; // Modifica el texto del contenido
+   }else
+    if ($fechaInscCursDesde <= $fechaActual && $fechaInscCursHasta >= $fechaActual) {
+        echo 'var alertDiv = document.querySelector(".alert");'; // Selecciona el elemento <div> con la clase alert
+        echo 'alertDiv.classList.remove("alert-danger");'; // Elimina la clase alert-secondary
+        echo 'alertDiv.classList.add("alert-success");'; // Agrega la clase alert-danger
+        echo 'alertDiv.querySelector("h4").textContent = "¡Atención!";'; // Modifica el texto del título
+        echo 'alertDiv.querySelector("p").textContent = "Las inscripciones a cursado están abiertas";'; // Modifica el texto del contenido
+    
+  }else    
+    if ($fechaInscExamDesde <= $fechaActual && $fechaInscExamHasta >= $fechaActual) {
+      
+        echo 'var alertDiv = document.querySelector(".alert");'; // Selecciona el elemento <div> con la clase alert
+        echo 'alertDiv.classList.remove("alert-danger");'; // Elimina la clase alert-secondary
+        echo 'alertDiv.classList.add("alert-success");'; // Agrega la clase alert-danger
+        echo 'alertDiv.querySelector("h4").textContent = "¡Atención!";'; // Modifica el texto del título
+        echo 'alertDiv.querySelector("p").textContent = "Las inscripciones a exámenes están abiertas";'; // Modifica el texto del contenido
+    }
+    ?>
+</script>    
+<?php include '../funciones/footer.html'; ?>
 </body>
-
-
-
-
 </html>
 
-
-
-
-
-<!-- Iconos bootstrap para usar: 
-mortarboard 
-mortarboard-fill (son sombreritos de egresado)
-ostia
-calendar-check
-calendar-event
-card-checklist (calif)
-
-adward (calif)
-award-fill
-
-person-gear
-person-fill-gear (actualizacion de datos)
-
-
-
-
--->

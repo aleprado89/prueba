@@ -1,6 +1,7 @@
 <?php
   session_start();
   $_SESSION['idColegio']=1;
+  $_SESSION['aluDebeFinal']=1;
   $_SESSION['logo']='../img/logo_banfield.jpg';
   $_SESSION['membrete']='https://sesystem.com.ar/se/prueba/img/membrete_banfield.png';
   //busco el nombre colegio segun el id para crear la variable de sesion

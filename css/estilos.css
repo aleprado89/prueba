@@ -196,3 +196,8 @@ th, td {
 
 }
 
+@media only screen and (max-width: 380px) {/*TAMAÑO CELULARES CHIQUITOS*/
+  .margenbottom2{
+    margin-bottom: 100px;
+}
+}
