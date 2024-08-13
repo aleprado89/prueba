@@ -231,19 +231,20 @@ $conn->close();
  
 <script>
     // Cargar  valores en los input
-    document.getElementById('sexo').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('fechaNac').value = '<?php echo addslashes($select_nacionalidad); ?>';
+    document.getElementById('sexo').value = '<?php echo addslashes($select_sexo); ?>';
+    document.getElementById('fechaNac').value = '<?php echo addslashes($select_fechaNac); ?>';
     document.getElementById('nacionalidad').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('lugarNac').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('provincia').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('ciudad').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('direccion').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('barrio').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('codigoPostal').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('mail').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('mailInstitucional').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('telefono').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('celular').value = '<?php echo addslashes($select_nacionalidad); ?>';
+    document.getElementById('lugarNac').value = '<?php echo addslashes($select_lugarNac); ?>';
+    document.getElementById('provincia').value = '<?php echo addslashes($select_provincia); ?>';
+    document.getElementById('ciudad').value = '<?php echo addslashes($select_ciudad); ?>';
+    document.getElementById('direccion').value = '<?php echo addslashes($select_direccion); ?>';
+    document.getElementById('barrio').value = '<?php echo addslashes($select_barrio); ?>';
+    document.getElementById('codigoPostal').value = '<?php echo addslashes($select_codigoPostal); ?>';
+    document.getElementById('mail').value = '<?php echo addslashes($select_mail); ?>';
+    document.getElementById('mailInstitucional').value = '<?php echo addslashes($select_mailInstitucional); ?>';
+    document.getElementById('telefono').value = '<?php echo addslashes($select_telefono); ?>';
+    document.getElementById('celular').value = '<?php echo addslashes($select_celular); ?>';
+    document.getElementById('telefonoEmergencia').value = '<?php echo addslashes($select_telefonoEmergencia); ?>';
 
 </script>
 </body>
