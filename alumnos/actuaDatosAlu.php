@@ -103,7 +103,8 @@ function validarDato($dato) {
         $_SESSION['message']=$_SESSION['message']. "Error al mover el archivo. ";
       }
   }} else {
-    $_SESSION['message']=$_SESSION['message']. "No se ha subido ningún archivo o hubo un error en la carga. ";
+    $_SESSION['message']=$_SESSION['message']. "No se ha subido ningún archivo. ";
+    $rutaDestino=$select_FotoCarnet;
   }
   
 
@@ -160,7 +161,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
 </ol>
 
   <div class="card padding col-12">
-    <h5><?php echo  "Alumno: ".$nombreAlumno." - DNI:".$select_dni; ?> </h5>
+    <h5><?php echo  "Alumno: ".$nombreAlumno." - DNI: ".$select_dni; ?> </h5>
   </div>
   <br>
   <div class="card padding "> 
@@ -253,7 +254,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
         </button>
       </div>
       <div class="modal-body">
-      <p id="loginMessage"></p>
+      <p id="message"></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
@@ -263,16 +264,13 @@ exit(); // Asegúrate de llamar a exit() después de header()
 </div>
 
 
- <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-<script src="../js/jquery-3.7.1.slim.min.js"></script>
-  <script src="../js/popper.min.js"></script>
-  <script src="../js/bootstrap.min.js"></script>
+
 <!-- JavaScript para mostrar el modal -->
 <script>
 $(document).ready(function() {
     <?php
     if (isset($_SESSION['message'])) {
-        echo '$("#loginMessage").text("' . addslashes($_SESSION['message']) . '");';
+        echo '$("#message").text("' . addslashes($_SESSION['message']) . '");';
         echo '$("#messageModal").modal("show");';
         unset($_SESSION['message']); // Limpiar el mensaje después de mostrarlo
     }
