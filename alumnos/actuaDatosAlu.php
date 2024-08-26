@@ -5,8 +5,9 @@ include '../inicio/conexion.php';
 //include '../funciones/pruebaSession.php';
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'].", ".$_SESSION['alu_nombre'];
+$message="";
 
-$sql = "select p.dni,p.sexo,p.fechaNac,p.nacionalidad,p.lugarNac,p.provincia,p.ciudad,p.direccion,p.barrio,p.codigoPostal,
+$sql = "select p.dni,p.FotoCarnet,p.sexo,p.fechaNac,p.nacionalidad,p.lugarNac,p.provincia,p.ciudad,p.direccion,p.barrio,p.codigoPostal,
 p.mail,a.mailInstitucional,p.telefono,p.celular,p.telefonoEmergencia from persona p INNER JOIN alumnosterciario a ON p.idPersona=a.idPersona
 WHERE a.idAlumno=?"; 
 $stmt = $conn->prepare($sql);
@@ -17,6 +18,7 @@ $result = $stmt->get_result();
 
 if ($row = $result->fetch_assoc()) {
     $select_dni = $row['dni'];
+    $select_FotoCarnet = $row['FotoCarnet'];
     $select_sexo = $row['sexo'];
     $select_fechaNac= $row['fechaNac'];
     $select_nacionalidad = $row['nacionalidad'];
@@ -31,9 +33,8 @@ if ($row = $result->fetch_assoc()) {
     $select_telefono=$row['telefono'];
     $select_celular=$row['celular'];
     $select_telefonoEmergencia=$row['telefonoEmergencia'];
-
 } else {
-    echo "No se encontró el registro.";
+    $message=$message. " No se encontró el registro del alumno. ";
 }
 
 // Cerrar la conexión
@@ -61,6 +62,7 @@ function validarDato($dato) {
 }
     // Obtiene y valida los datos del formulario 
     $fechaNac = validarDato($_POST['fechaNac']);
+    $FotoCarnet = validarDato($_POST['fotoCarnet']);
     $nacionalidad = validarDato($_POST['nacionalidad']);
     $sexo = validarDato($_POST['sexo']);
     $lugarNacimiento = validarDato($_POST['lugarNacimiento']);
@@ -85,23 +87,23 @@ function validarDato($dato) {
       $tamañoMaximo = 4 * 1024 * 1024; // 4 MB en bytes
 
         if ($_FILES['fotoCarnet']['size'] > $tamañoMaximo) {
-            echo "El archivo es demasiado grande. El tamaño máximo permitido es de 2 MB.";
+          $_SESSION['message']=$_SESSION['message']. "El archivo es demasiado grande. El tamaño máximo permitido es de 4 MB. ";
         }else if (!in_array($extension, $formatosPermitidos)) {
-          echo "Formato de archivo no permitido. Los formatos permitidos son: " . implode(", ", $formatosPermitidos);
+          $_SESSION['message']=$_SESSION['message']. "Formato de archivo no permitido. Los formatos permitidos son: " . implode(", ", $formatosPermitidos).". ";
       }    else {
            
       // Define la carpeta de destino (asegúrate de que exista y tenga permisos de escritura)
       $carpetaDestino = '../fotosPersonas/'; // Cambia esto a la ruta de tu carpeta
-      $rutaDestino = $carpetaDestino . basename($nombreArchivo);
+      $rutaDestino = $carpetaDestino . $select_dni.'.'.$extension;
 
       // Mueve el archivo a la carpeta de destino
       if (move_uploaded_file($rutaTemporal, $rutaDestino)) {
-          echo "El archivo se ha guardado correctamente en: " . $rutaDestino;
+          //$_SESSION['message']=$_SESSION['message']. "El archivo se ha guardado correctamente en: " . $rutaDestino." ";
       } else {
-          echo "Error al mover el archivo.";
+        $_SESSION['message']=$_SESSION['message']. "Error al mover el archivo. ";
       }
   }} else {
-      echo "No se ha subido ningún archivo o hubo un error en la carga.";
+    $_SESSION['message']=$_SESSION['message']. "No se ha subido ningún archivo o hubo un error en la carga. ";
   }
   
 
@@ -109,19 +111,21 @@ function validarDato($dato) {
     include '../inicio/conexion.php';
 // Realizar la consulta para actualizar datos
 $sql = "UPDATE persona p INNER JOIN alumnosterciario a ON p.idPersona=a.idPersona
-SET p.fechaNac='".$fechaNac."', p.nacionalidad='".$nacionalidad."',p.sexo='".$sexo."',
+SET p.fechaNac='".$fechaNac."',p.FotoCarnet='".$rutaDestino."', p.nacionalidad='".$nacionalidad."',p.sexo='".$sexo."',
 p.lugarNac='".$lugarNacimiento."',p.provincia='".$provincia."',p.ciudad='".$ciudad."',
 p.direccion='".$direccion."',p.barrio='".$barrio."',p.codigoPostal='".$codigoPostal."',
 p.mail='".$mail."',a.mailInstitucional='".$mailInstitucional."',p.telefono='".$telefono."',
 p.celular='".$celular."',p.telefonoEmergencia='".$telefonoEmergencia."'
 WHERE a.idAlumno=".$idAlumno; 
 if ($conn->query($sql) === TRUE) {
-  echo "Registro actualizado correctamente";
+  $_SESSION['message']=$_SESSION['message']. "El registro se ha actualizado. ";
 } else {
-  echo "Error al actualizar el registro: " . $conn->error;
+  $_SESSION['message']=$_SESSION['message']. "Error al actualizar el registro: " . $conn->error;
 }
 $conn->close();
-
+// Redirigir a la misma página para refrescar el formulario
+header("Location: " . $_SERVER['PHP_SELF']);
+exit(); // Asegúrate de llamar a exit() después de header()
 }
 ?>
 <!DOCTYPE html>
@@ -156,65 +160,72 @@ $conn->close();
 </ol>
 
   <div class="card padding col-12">
-    <h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>
+    <h5><?php echo  "Alumno: ".$nombreAlumno." - DNI:".$select_dni; ?> </h5>
   </div>
   <br>
   <div class="card padding "> 
-  <h3>Identidad:</h3>
+  <h3>Datos personales</h3>
   <div class="row">
   <div class="col-md-5">
   <form method="post" enctype="multipart/form-data">
-  <label for="fechaNac">Fecha de Nacimiento:</label>
+  <label for="fechaNac" >Fecha de Nacimiento:</label>
             <input type="date" class="form-control" id="fechaNac" name="fechaNac">
+            <br>
             <label for="nacionalidad">Nacionalidad:</label>
             <input type="text" class="form-control" id="nacionalidad" name="nacionalidad">
   </div>
   <div class="col-md-5 offset-md-1">
             <label for="sexo">Sexo:</label>
             <select class="form-control" id="sexo" name="sexo">
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
+                    <option value="Masculino">M</option>
+                    <option value="Femenino">F</option>
                     <option value="Otro">Otro</option>
-                </select>            <label for="fotoCarnet">Foto Carnet:</label>
+                </select> 
+                    <br>
+                       <label for="fotoCarnet">Foto Carnet:</label>
+                <?php if (!empty($select_FotoCarnet)): ?><br>
+    <img>Archivo actual: <img src=<?php echo $select_FotoCarnet; ?> width="50px"></img>  </php>
+<?php endif; ?>
             <input type="file" class="form-control" id="fotoCarnet" name="fotoCarnet">
+            
   </div>
   </div>
                    
   </div><br>
   <div class="card padding  "> 
-  <h3>Ubicacion:</h3>
+  <h3>Datos de domicilio</h3>
   <div class="row">
   <div class="col-md-5">
             <label for="lugarNacimiento">Lugar de Nacimiento:</label>
-            <input type="text" class="form-control" id="lugarNacimiento" name="lugarNacimiento">
+            <input type="text" class="form-control" id="lugarNacimiento" name="lugarNacimiento"><br>
             <label for="provincia">Provincia:</label>
-            <input type="text" class="form-control" id="provincia" name="provincia">
+            <input type="text" class="form-control" id="provincia" name="provincia"><br>
             <label for="ciudad">Ciudad:</label>
-            <input type="text" class="form-control" id="ciudad" name="ciudad">
+            <input type="text" class="form-control" id="ciudad" name="ciudad"><br>
             </div> 
             <div class="col-md-5 offset-md-1">
             <label for="direccion">Direccion:</label>
-            <input type="text" class="form-control" id="direccion" name="direccion">
+            <input type="text" class="form-control" id="direccion" name="direccion"><br>
             <label for="barrio">Barrio:</label>
-            <input type="text" class="form-control" id="barrio" name="barrio">
+            <input type="text" class="form-control" id="barrio" name="barrio"><br>
             <label for="codigoPostal">Código Postal:</label>
-            <input type="text" class="form-control" id="codigoPostal" name="codigoPostal">
+            <input type="text" class="form-control" id="codigoPostal" name="codigoPostal"><br>
             </div></div>
   </div><br>
   <div class="card padding  "> 
-  <h3>Contacto:</h3>
+  <h3>Datos de contacto</h3>
   <div class="row">
   <div class="col-md-5">
             <label for="mail">Mail:</label>
-            <input type="email" class="form-control" id="mail" name="mail">
+            <input type="email" class="form-control" id="mail" name="mail"><br>
             <label for="mailInstitucional">Mail Institucional:</label>
-            <input type="email" class="form-control" id="mailInstitucional" name="mailInstitucional">
+            <input type="email" class="form-control" id="mailInstitucional" name="mailInstitucional"><br>
             </div> 
             <div class="col-md-5 offset-md-1">
             <label for="telefono">Teléfono:</label>
-            <input type="text" class="form-control" id="telefono" name="telefono">
+            <input type="text" class="form-control" id="telefono" name="telefono"><br>
             <label for="celular">Celular:</label>
-            <input type="text" class="form-control" id="celular" name="celular">
+            <input type="text" class="form-control" id="celular" name="celular"><br>
             <label for="telefonoEmergencia">Teléfono de Emergencia:</label>
             <input type="text" class="form-control" id="telefonoEmergencia" name="telefonoEmergencia">          
   </div></div></div><br>
@@ -228,13 +239,53 @@ $conn->close();
  </div>
 </div>
 <?php include '../funciones/footer.html'; ?>
+
+
+
+<!-- Modal -->
+<div class="modal" id="messageModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Atención!</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <p id="loginMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+ <!-- Bootstrap JS y jQuery (necesario para el modal) -->
+<script src="../js/jquery-3.7.1.slim.min.js"></script>
+  <script src="../js/popper.min.js"></script>
+  <script src="../js/bootstrap.min.js"></script>
+<!-- JavaScript para mostrar el modal -->
+<script>
+$(document).ready(function() {
+    <?php
+    if (isset($_SESSION['message'])) {
+        echo '$("#loginMessage").text("' . addslashes($_SESSION['message']) . '");';
+        echo '$("#messageModal").modal("show");';
+        unset($_SESSION['message']); // Limpiar el mensaje después de mostrarlo
+    }
+    ?>
+});
+</script>
  
 <script>
     // Cargar  valores en los input
     document.getElementById('sexo').value = '<?php echo addslashes($select_sexo); ?>';
     document.getElementById('fechaNac').value = '<?php echo addslashes($select_fechaNac); ?>';
     document.getElementById('nacionalidad').value = '<?php echo addslashes($select_nacionalidad); ?>';
-    document.getElementById('lugarNac').value = '<?php echo addslashes($select_lugarNac); ?>';
+    document.getElementById('lugarNacimiento').value = '<?php echo addslashes($select_lugarNac); ?>';
     document.getElementById('provincia').value = '<?php echo addslashes($select_provincia); ?>';
     document.getElementById('ciudad').value = '<?php echo addslashes($select_ciudad); ?>';
     document.getElementById('direccion').value = '<?php echo addslashes($select_direccion); ?>';
