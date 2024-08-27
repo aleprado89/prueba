@@ -83,7 +83,6 @@ function validarDato($dato) {
        $rutaTemporal = $_FILES['fotoCarnet']['tmp_name'];
        $formatosPermitidos = ['jpg', 'jpeg', 'png']; // Formatos permitidos
 
-
       $tamañoMaximo = 4 * 1024 * 1024; // 4 MB en bytes
 
         if ($_FILES['fotoCarnet']['size'] > $tamañoMaximo) {
@@ -94,7 +93,7 @@ function validarDato($dato) {
            
       // Define la carpeta de destino (asegúrate de que exista y tenga permisos de escritura)
       $carpetaDestino = '../fotosPersonas/'; // Cambia esto a la ruta de tu carpeta
-      $rutaDestino = $carpetaDestino . $select_dni.'.'.$extension;
+      $rutaDestino = $carpetaDestino . $select_dni." ".date('Y-m-d H-i-s').'.'.$extension;
 
       // Mueve el archivo a la carpeta de destino
       if (move_uploaded_file($rutaTemporal, $rutaDestino)) {
