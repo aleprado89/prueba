@@ -100,6 +100,9 @@ min-height: 650px;
 
 @media only screen and (max-width: 767px) {/*TAMAÑO CELULARES*/
 
+ .form-control{
+  text-align: left;
+ }
   .estadisticas{
     margin-left: 15%;
     margin-top: 15%;

@@ -65,6 +65,12 @@ function validarDato($dato) {
     $FotoCarnet = validarDato($_POST['fotoCarnet']);
     $nacionalidad = validarDato($_POST['nacionalidad']);
     $sexo = validarDato($_POST['sexo']);
+    if($sexo=="Masculino")
+    $sexo="M";
+  else if($sexo=="Femenino")
+  $sexo="F";
+else if($sexo=="Otro")
+$sexo="O";
     $lugarNacimiento = validarDato($_POST['lugarNacimiento']);
     $provincia = validarDato($_POST['provincia']);
     $ciudad = validarDato($_POST['ciudad']);
@@ -177,14 +183,14 @@ exit(); // Asegúrate de llamar a exit() después de header()
   <div class="col-md-5 offset-md-1">
             <label for="sexo">Sexo:</label>
             <select class="form-control" id="sexo" name="sexo">
-                    <option value="Masculino">M</option>
-                    <option value="Femenino">F</option>
-                    <option value="Otro">Otro</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                    <option value="O">Otro</option>
                 </select> 
                     <br>
                        <label for="fotoCarnet">Foto Carnet:</label>
                 <?php if (!empty($select_FotoCarnet)): ?><br>
-    <img>Archivo actual: <img src=<?php echo $select_FotoCarnet; ?> width="50px"></img>  </php>
+    <img>Archivo actual: <img src='<?php echo $select_FotoCarnet; ?>' width="50px"></img>  </php>
 <?php endif; ?>
             <input type="file" class="form-control" id="fotoCarnet" name="fotoCarnet">
             
@@ -230,7 +236,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
             <input type="text" class="form-control" id="telefonoEmergencia" name="telefonoEmergencia">          
   </div></div></div><br>
   <div class="text-center">
-  <button type="submit" name="submit">Guardar</button>
+  <button type="submit" class="btn btn-primary" name="submit">Guardar</button>
   </form>
   <!-- <a href="#" onclick="guardarDatos(); return false;">
     <button class="btn btn-primary">Guardar</button>
@@ -247,7 +253,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Atención!</h5>
+        <h5 class="modal-title">Atención</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
           <span aria-hidden="true"></span>
         </button>
@@ -256,7 +262,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
       <p id="message"></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
       </div>
     </div>
   </div>
