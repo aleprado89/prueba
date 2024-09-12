@@ -130,6 +130,67 @@ where calificacionesterciario.idMateria = $idMateria and calificacionesterciario
     return $cursadoMateria;
 }
 
+//Materias que adeuda de un alumno por Plan y Curso
+function buscarMateriasAdeuda($conexion, $cicloLectivo, $idAlumno, $idPlan)
+{
+    $consulta = "SELECT materiaterciario.*, curso.nombre as nombreCurso FROM materiaterciario 
+    inner join curso on materiaterciario.idCurso = curso.idCurso WHERE materiaterciario.idPlan = $idPlan 
+    AND materiaterciario.idCicloLectivo = (select idciclolectivo from ciclolectivo where anio = $cicloLectivo)       
+    and idUnicoMateria not in 
+    (
+    select m1.idUnicoMateria
+    from calificacionesterciario c1 inner join 
+    materiaterciario m1 on c1.idMateria = m1.idMateria inner join
+    matriculacionmateria mt1 on c1.idMateria = mt1.idMateria
+    where m1.idUnicoMateria = materiaterciario.idUnicoMateria
+    and c1.idAlumno = $idAlumno
+    and mt1.idAlumno = $idAlumno
+    and
+    ( 
+    (
+    c1.materiaAprobada = 1 or 
+    mt1.estado = 'Aprobación PreSistema' or 
+    mt1.estado = 'Regularidad PreSistema' or
+    mt1.estado = 'Aprobación por Equivalencia' or 
+    mt1.estado = 'Aprobación por Pase'
+    ) 
+    or
+    (
+    c1.estadoCursado != 'Libre' and
+    c1.estadoCursado != 'Libre (Abandonó)' and
+    c1.estadoCursado != 'Libre - S/Asist' and
+    c1.estadoCursado != 'Libre - S/Asist (Abandonó)' and
+    c1.estadoCursado != 'Pendiente' and
+    c1.estadoCursado != 'Pendiente (Abandonó)' and
+    c1.estadoCursado != 'Pendiente - S/Asist' and
+    c1.estadoCursado != 'Pendiente - S/Asist (Abandonó)' and
+    c1.estadoCursado != 'Recursa' and
+    c1.estadoCursado != 'Recursa (Abandonó)' and
+    c1.estadoCursado != 'Recursa - S/Asist' and
+    c1.estadoCursado != 'Recursa - S/Asist (Abandonó)' and
+    c1.estadoCursado != 'Desaprob./Recurs. PreSistema'
+    )
+    or (c1.estadoCursado is null)
+    )
+    )
+    order by curso.idcursopredeterminado, materiaterciario.ubicacion";
+
+    $mat = mysqli_query($conexion, $consulta);
+
+    $listadoMaterias = array();
+    $i = 0;
+    if (!empty($mat)) {
+        while ($data = mysqli_fetch_array($mat)) {           
+
+            $listadoMaterias[$i]['idMateria'] = $data['idMateria'];
+            $listadoMaterias[$i]['Materia'] = $data['nombre'];  
+            $listadoMaterias[$i]['Curso'] = $data['nombreCurso'];           
+            $i++;
+        }
+    }
+    return $listadoMaterias;
+}
+
 //Listado Cursos Predeterminados por Plan
 function buscarCursoPredeterminado($conexion, $idPlan)
 {
@@ -412,4 +473,82 @@ function cancelarExamen($conexion, $idInscripcionWeb)
     set estado = '4' where id_Inscripcion_web = $idInscripcionWeb";
 
     mysqli_query($conexion, $consulta);
+}
+
+//Listado solicitudes a materia de un alumno por Plan
+function buscarSolicitudesMateria($conexion, $idAlumno, $idPlan, $idCicloLectivo)
+{
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from matriculacionmateria_web inner join materiaterciario
+on matriculacionmateria_web.idMateria = materiaterciario.idMateria
+where matriculacionmateria_web.idAlumno = $idAlumno and materiaterciario.idPlan = $idPlan
+and matriculacionmateria_web.idcicloLectivo = $idCicloLectivo";
+
+    $sol = mysqli_query($conexion, $consulta);
+
+    $listadoSolicitudesMateria = array();
+    $i = 0;
+    if (!empty($sol)) {
+        while ($data = mysqli_fetch_array($sol)) {
+            $listadoSolicitudesMateria[$i]['idMatriculacionWeb'] = $data['id_matriculacion_web'];
+            $listadoSolicitudesMateria[$i]['Materia'] = $data['nombreMateria'];            
+            if ($data['estado'] == '1') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Pendiente";
+            }
+            if ($data['estado'] == '2') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Aprobada";
+            }
+            if ($data['estado'] == '3') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Rechazada";
+            }
+            if ($data['estado'] == '4') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Cancelada";
+            }
+            if ($data['estado'] == '5') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Aprobada";
+            }
+            $listadoSolicitudesMateria[$i]['Observaciones'] = $data['observaciones'];
+            $i++;
+        }
+    }
+    return $listadoSolicitudesMateria;
+}
+
+//Exite solicitud a materia
+function existeSolicitudMateria($conexion, $idAlumno, $idMateria, $idCicloLectivo)
+{
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from matriculacionmateria_web inner join materiaterciario
+on matriculacionmateria_web.idMateria = materiaterciario.idMateria
+where matriculacionmateria_web.idAlumno = $idAlumno 
+and materiaterciario.idUnicoMateria = 
+(Select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = $idMateria)
+and matriculacionmateria_web.idcicloLectivo = $idCicloLectivo";
+
+    $sol = mysqli_query($conexion, $consulta);
+
+    $listadoSolicitudesMateria = array();
+    $i = 0;
+    if (!empty($sol)) {
+        while ($data = mysqli_fetch_array($sol)) {
+            $listadoSolicitudesMateria[$i]['idMatriculacionWeb'] = $data['id_matriculacion_web'];
+            $listadoSolicitudesMateria[$i]['Materia'] = $data['nombreMateria'];
+            if ($data['estado'] == '1') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Pendiente";
+            }
+            if ($data['estado'] == '2') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Aprobada";
+            }
+            if ($data['estado'] == '3') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Rechazada";
+            }
+            if ($data['estado'] == '4') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Cancelada";
+            }
+            if ($data['estado'] == '5') {
+                $listadoSolicitudesMateria[$i]['Estado'] = "Aprobada";
+            }
+            $listadoSolicitudesMateria[$i]['Observaciones'] = $data['observaciones'];
+            $i++;
+        }
+    }
+    return $listadoSolicitudesMateria;
 }
