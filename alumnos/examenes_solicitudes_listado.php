@@ -36,15 +36,15 @@ $cantidad = count($listadoSolicitudes);
 </head>
 
 <body>
-<?php include '../funciones/menu.html'; ?>
+<?php include '../funciones/menu.php'; ?>
 
 <div class="container-fluid fondo">
   <br>
   <div class="container">
   <ol class="breadcrumb">
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_planes.php">Inscripción a exámenes</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/examenes_materias.php">Materias</a></li>
+  <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
+  <li class="breadcrumb-item"><a href="examenes_planes.php">Inscripción a exámenes</a></li>
+  <li class="breadcrumb-item"><a href="examenes_materias.php">Materias</a></li>
   <li class="breadcrumb-item active">Solicitudes</li>
 </ol>
 <div class="card padding col-12">

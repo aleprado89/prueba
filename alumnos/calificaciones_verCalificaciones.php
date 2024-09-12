@@ -37,15 +37,15 @@ $datosCursado = cursadoMateria($conn, $idMateria, $idAlumno);
 </head>
 
 <body>
-<?php include '../funciones/menu.html'; ?>
+<?php include '../funciones/menu.php'; ?>
 
 <div class="container-fluid fondo">
   <br>
   <div class="container">
   <ol class="breadcrumb">
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones_planes.php">Carreras</a></li>
-  <li class="breadcrumb-item"><a href="/prueba/alumnos/calificaciones.php">Materias</a></li>
+  <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
+  <li class="breadcrumb-item"><a href="calificaciones_planes.php">Carreras</a></li>
+  <li class="breadcrumb-item"><a href="calificaciones.php">Materias</a></li>
   <li class="breadcrumb-item active">Calificaciones</li>
 </ol>
 
