@@ -1,4 +1,5 @@
-<?php session_start(); 
+<?php 
+session_start(); 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
