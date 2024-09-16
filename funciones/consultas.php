@@ -552,3 +552,25 @@ and matriculacionmateria_web.idcicloLectivo = $idCicloLectivo";
     }
     return $listadoSolicitudesMateria;
 }
+
+//Generar solicitud a cursado
+function solicitarCursado($conexion, $idAlumno, $idMateria, $idCicloLectivo)
+{
+    $timestamp = time();
+    $currentDate = gmdate('Y-m-d H:i:s', $timestamp);
+
+    $consulta = "insert into matriculacionmateria_web
+    (idAlumno, idMateria, idCicloLectivo, condicion, estado, fechhora_inscri) values
+    ($idAlumno, $idMateria, $idCicloLectivo, 'Regular', 1,'$currentDate')";
+
+    $est = mysqli_query($conexion, $consulta);
+}
+
+//Cancelar solicitud a examen
+function cancelarCursado($conexion, $idMatriculacionWeb)
+{
+    $consulta = "update matriculacionmateria_web
+    set estado = '4' where id_matriculacion_web = $idMatriculacionWeb";
+
+    mysqli_query($conexion, $consulta);
+}

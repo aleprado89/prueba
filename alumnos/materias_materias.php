@@ -91,6 +91,7 @@ $cantidad = count($listadoMaterias);
         <form id="envio" method="post">
           <input type="hidden" name="idM" id="idM">
           <input type="hidden" name="nombreM" id="nombreM">
+          <input type="hidden" name="nombreC" id="nombreC">
 
           <table id="materias" class="table table-hover col-12">
             <thead>
@@ -163,7 +164,7 @@ $cantidad = count($listadoMaterias);
       });
     });
   </script>
-
+  
 
   <?php include '../funciones/footer.html'; ?>
 
