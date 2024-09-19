@@ -27,7 +27,7 @@
       </div>
       <div class="col-12 col-md-2" >
       <!-- <i class="bi bi-power"></i> -->
-      <a class="nav-link" href="#" style="display: flex; flex-direction: column; align-items: center;" onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'"><i class="bi bi-power" ></i>Cerrar Sesión</a>
+      <a class="nav-link" href="../funciones/cerrarsesion.php" style="display: flex; flex-direction: column; align-items: center;" onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'"><i class="bi bi-power" ></i>Cerrar Sesión</a>
       </div>
       </div>
       </div>
@@ -129,7 +129,7 @@ if($aluDebeFinal==1)
 {
 echo '<div class="col-md-12">';
 echo '<div class="card mx-auto" style="background-color: #739FA5; ">';
-echo '<a href="#" class="card-link">';
+echo '<a href="aluDebeFinal.php" class="card-link">';
 echo '<div class="card-body">';
 echo '<h4 class="card-title text-center">Alumnos que solo adeudan finales</h4>';
 echo '<div class="text-center">';

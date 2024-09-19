@@ -413,3 +413,64 @@ function cancelarExamen($conexion, $idInscripcionWeb)
 
     mysqli_query($conexion, $consulta);
 }
+
+//INSERTAR INTENCION DE EXAMEN (ALUMNOS QUE SOLO DEBEN FINALES)
+function insertarCursadoFinalizado($conexion, $idAlumno, $idPlan, $idCicloLectivo,$intencion)
+{
+$consulta="insert into cursadofinalizado (idAlumno,idPlan,idCicloLectivo,intencionExamen) values 
+($idAlumno,$idPlan,$idCicloLectivo,'$intencion')";
+mysqli_query($conexion, $consulta);
+}
+
+//BUSCAR IDCICLO
+function buscarIdCiclo($conexion, $anio)
+{
+$consulta="select idCiclolectivo from ciclolectivo where anio= $anio";
+$resultado=mysqli_query($conexion, $consulta);
+if ($resultado) {
+    // Obtener el ciclo lectivo
+    if ($fila = mysqli_fetch_assoc($resultado)) {
+        $idCiclolectivo = $fila['idCiclolectivo']; // Almacenar el idCiclolectivo en una variable
+    } }
+
+return $idCiclolectivo;
+}
+
+function selectCursadoFinalizadoByIdPlan($conexion,$idAlumno,$idPlan){
+    $consulta = "SELECT p.nombre as nombre,c.anio as anio,cur.intencionExamen as intencionExamen from cursadofinalizado cur INNER JOIN
+plandeestudio p ON p.idPlan=cur.idPlan INNER JOIN
+ciclolectivo c ON c.idciclolectivo=cur.idCicloLectivo
+ where cur.idAlumno=$idAlumno and cur.idPlan=$idPlan";
+    
+        $fec = mysqli_query($conexion, $consulta);
+    
+        $listadoCursadoFinalizado = array();
+        $i = 0;
+        if (!empty($fec)) {
+            while ($data = mysqli_fetch_array($fec)) {
+                $listadoCursadoFinalizado[$i]['plan'] = $data['nombre'];
+                $listadoCursadoFinalizado[$i]['anio'] = $data['anio'];
+                $listadoCursadoFinalizado[$i]['intencionExamen'] = $data['intencionExamen'];
+                $i++;
+            }
+        }
+        return $listadoCursadoFinalizado;
+}
+function updateCursadoFinalizado($conexion,$idAlumno,$idPlan,$idCicloLectivo,$intencionExamen){
+    $consulta="update cursadofinalizado set intencionExamen='$intencionExamen' where idAlumno=$idAlumno and idPlan=$idPlan and idCicloLectivo=$idCicloLectivo";
+    mysqli_query($conexion, $consulta);
+
+}
+
+function buscarIdPlan($conexion, $plan)
+{
+$consulta="select idPlan from plandeestudio where nombre= '$plan'";
+$resultado=mysqli_query($conexion, $consulta);
+if ($resultado) {
+    // Obtener el idplan
+    if ($fila = mysqli_fetch_assoc($resultado)) {
+        $idPlan = $fila['idPlan']; // Almacenar el idplan en una variable
+    } }
+
+return $idPlan;
+}

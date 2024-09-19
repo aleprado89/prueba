@@ -32,7 +32,7 @@
         </ul>
         <ul class="ms-auto" style="list-style-type: none;">
           <li class="nav-item">
-            <a class="nav-link" href="#" style="display: flex; flex-direction: column; align-items: center;"
+            <a class="nav-link" href="../funciones/cerrarsesion.php" style="display: flex; flex-direction: column; align-items: center;"
               onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'"><i
                 class="bi bi-power"></i>Cerrar Sesión</a>
           </li>

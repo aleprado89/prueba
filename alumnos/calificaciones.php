@@ -107,7 +107,7 @@ $cantidad = count($listadoCalificaciones);
     </form>
   </div>
 </div>
-<br>
+<br><br>
 <div class="text-center">
    <!-- BOTON VER LISTADO CALIFICACIONES -->
            <a href="../reportes/PDFcalificacionesAlumno.php" target="_blank">

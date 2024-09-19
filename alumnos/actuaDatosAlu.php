@@ -160,9 +160,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="calificaciones_planes.php">Carreras</a></li>
-  <li class="breadcrumb-item"><a href="calificaciones.php">Materias</a></li>
-  <li class="breadcrumb-item active">Calificaciones</li>
+   <li class="breadcrumb-item active">Actualizar datos</li>
 </ol>
 
   <div class="card padding col-12">
