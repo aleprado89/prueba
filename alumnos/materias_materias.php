@@ -2,6 +2,7 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/parametrosWeb.php';
 //include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -31,11 +32,12 @@ $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $idPlan = $_SESSION['idP'];
 $nombrePlan = $_SESSION['nombreP'];
+$cicloLectivo =  $datosColegio[0]['anioautoweb'];
 
 //FUNCIONES
 //LISTAR MATERIAS
 $listadoMaterias = array();
-$listadoMaterias = buscarMaterias($conn, $idAlumno, $idPlan);
+$listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan);
 $cantidad = count($listadoMaterias);
 ?>
 <!DOCTYPE html>
@@ -46,7 +48,7 @@ $cantidad = count($listadoMaterias);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exámenes</title>
+  <title>Materias</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -54,25 +56,26 @@ $cantidad = count($listadoMaterias);
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<!-- Bootstrap JS (necesario para el navvar) -->
-<script src="../js/bootstrap.min.js"></script> 
+  <!-- Bootstrap JS (necesario para el navvar) -->
+  <script src="../js/bootstrap.min.js"></script>
 
 </head>
+
 <body>
   <?php include '../funciones/menu.php'; ?>
 
-<div class="container-fluid fondo">
-  <br>
-  <div class="container">
-  <ol class="breadcrumb">
-  <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
-  <li class="breadcrumb-item"><a href="materias_planes.php">Inscripción a cursado</a></li>
-  <li class="breadcrumb-item active">Materias</li>
-</ol>
+  <div class="container-fluid fondo">
+    <br>
+    <div class="container">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/prueba/alumnos/menualumnos.php">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="/prueba/alumnos/materias_planes.php">Inscripción a cursado</a></li>
+        <li class="breadcrumb-item active">Materias</li>
+      </ol>
 
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
-        <h5><?php echo "Materia: " . $nombrePlan; ?></h5>
+        <h5><?php echo "Plan: " . $nombrePlan; ?></h5>
       </div>
       <br>
       <div class="text-center">
@@ -94,85 +97,38 @@ $cantidad = count($listadoMaterias);
             <thead>
               <tr class="table-primary">
                 <th scope="col" style="display:none;">idMateria</th>
-                <th scope="col" style="display:none;">Materia Completo</th>
-                <th scope="col">Materia</th>
-                <th scope="col">Curso</th>
-                <th scope="col">Estado</th>
-                <!-- <th scope="col">Calif. Final</th> -->
-                <th scope="col">Solicitar Exámen</th>
+                <th scope="col">Materia</th>  
+                <th scope="col">Curso</th>              
+                <th scope="col">Solicitar Inscripción</th>
               </tr>
             </thead>
             <tbody>
 
               <?php
 
-              //RECORRER TABLA DE CALIFICACIONES          
+              //RECORRER TABLA DE MATERIAS
               $a = 0;
               while ($a < $cantidad) {
 
-                //LIMITAR CANTIDAD DE PALABRAS DE NOMBRE MATERIA          
                 $idMateria = $listadoMaterias[$a]['idMateria'];
                 $Materia = $listadoMaterias[$a]['Materia'];
-                $MateriaCompleto = $Materia;
-                $MateriaArray = explode(" ", $Materia);
-                $cantidadPabras = count($MateriaArray);
-                $b = 0;
-                while ($b < $cantidadPabras) {
-                  if ($b == 0) {
-                    $Materia = $MateriaArray[$b];
-                  } else {
-                    $Materia = $Materia . " " . $MateriaArray[$b];
-                  }
-                  $b++;
-                  if ($b == 8) {
-                    $Materia = $Materia . "...";
-                    break;
-                  }
-                }
-
                 $Curso = $listadoMaterias[$a]['Curso'];
-                $Estado = $listadoMaterias[$a]['Estado'];
-                $CalificacionFinal = $listadoMaterias[$a]['CalificacionFinal'];
                 $a++;
                 ?>
+                <tr>
+                  <td style="display:none;" name="idM">
+                    <?php echo $idMateria ?>
+                  </td>
+                  <td name="nombreM">
+                    <?php echo $Materia ?>
+                  </td>      
+                  <td name="nombreC">
+                    <?php echo $Curso ?>
+                  </td>             
+                  <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
+                </tr>
 
-                <?php if (empty(trim($CalificacionFinal)) || $CalificacionFinal == null) { ?>
-
-                  <tr>
-                    <td style="display:none;" name="idM">
-                      <?php echo $idMateria ?>
-                    </td>
-                    <td style="display:none;" name="nombreM">
-                      <?php echo $MateriaCompleto ?>
-                    </td>
-                    <td>
-                      <?php echo $Materia ?>
-                    </td>
-                    <td name="nombreC">
-                      <?php echo $Curso ?>
-                    </td>
-                    <td>
-                      <?php echo $Estado ?>
-                    </td>
-                    
-                    <!-- <td>
-                    $calificacionFinal iba aca
-                    </td> -->
-
-                    <?php
-                    if (empty(trim($CalificacionFinal)) || $CalificacionFinal == null) { ?>
-                      <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
-                    <?php } else {
-                      ?>
-                      <td><button type="submit" name="submitSolicitar" style="display:none;"
-                          class="btn btn-primary ver-btn">Solicitar</button></td>
-                    <?php } ?>
-                  </tr>
-                  
-                  <?php
-                }
-              }
-              ?>
+                <?php } ?>
 
             </tbody>
           </table>
@@ -197,7 +153,7 @@ $cantidad = count($listadoMaterias);
           var fila = this.closest('tr');
           var idMateriaSeleccionada = fila.querySelector("td:nth-child(1)").innerText;
           var nombreMateriaCompleto = fila.querySelector("td:nth-child(2)").innerText;
-          var nombreCursoCompleto = fila.querySelector("td:nth-child(4)").innerText;
+          var nombreCursoCompleto = fila.querySelector("td:nth-child(3)").innerText;
           // Cargar Datos
           document.getElementById("idM").value = idMateriaSeleccionada;
           document.getElementById("nombreM").value = nombreMateriaCompleto;
@@ -208,7 +164,7 @@ $cantidad = count($listadoMaterias);
       });
     });
   </script>
-
+  
 
   <?php include '../funciones/footer.html'; ?>
 

@@ -1,13 +1,13 @@
 <?php
-
+session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 //include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $idInscripcionWeb = $_POST["idInscripcionWeb"];    
-    cancelarExamen($conn, $idInscripcionWeb);
+    $idMatriculacionWeb = $_POST["idMatriculacionWeb"];    
+    cancelarCursado($conn, $idMatriculacionWeb);
 
     header("refresh:3; url=../alumnos/materias_solicitar.php");
     exit();

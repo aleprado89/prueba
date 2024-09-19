@@ -1,8 +1,9 @@
-<?php session_start(); 
+<?php 
+session_start(); 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
-include '../funciones/pruebaSession.php';
+//include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 

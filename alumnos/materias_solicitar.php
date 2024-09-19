@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 
-<?php
+<?php 
+session_start(); 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
@@ -35,7 +36,7 @@ $nombreCurso = $_SESSION['nombreC'];
 //FUNCIONES
 //LISTAR SOLICITUDES
 $listadoSolicitudes = array();
-$listadoSolicitudes = existeSolicitudExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $datosColegio[0]['idTurno']);
+$listadoSolicitudes = existeSolicitudMateria($conn, $idAlumno, $idMateria, $idCicloLectivo);
 $cantidadSolicitudes = count($listadoSolicitudes);
 
 $habilitado = true;
@@ -47,11 +48,6 @@ while ($a < $cantidadSolicitudes) {
   }
   $a++;
 }
-
-//LISTAR FECHAS DISPONIBLES
-$listadoFechasExamenes = array();
-$listadoFechasExamenes = buscarFechasExamenTurno($conn, $idMateria, $nombreCurso, $idCicloLectivo, $datosColegio[0]['idTurno']);
-$cantidadFechas = count($listadoFechasExamenes);
 ?>
 
 <head>
@@ -71,7 +67,6 @@ $cantidadFechas = count($listadoFechasExamenes);
 
 </head>
 
-
 <body>
 
 <?php include '../funciones/menu.php'; ?>
@@ -83,7 +78,7 @@ $cantidadFechas = count($listadoFechasExamenes);
   <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item"><a href="materias_planes.php">Inscripción a cursado</a></li>
   <li class="breadcrumb-item"><a href="materias_materias.php">Materias</a></li>
-  <li class="breadcrumb-item active">Solicitar exámen</li>
+  <li class="breadcrumb-item active">Solicitar cursado</li>
 </ol>
 
   <div class="card padding col-12">
@@ -96,38 +91,12 @@ $cantidadFechas = count($listadoFechasExamenes);
     <h5>
       Curso: <?php echo $nombreCurso; ?>
     </h5>
-    <h5>
-      Turno: <?php echo $datosColegio[0]['nombreTurno']; ?>
-    </h5>
- 
-  <br>
 
   <div class="row col-12 ">
-    <div class="col-12 col-md-6">
-    <h5 class="padding">Fechas Disponibles</h5>
+    <div class="col-12 col-md-6">    
+    
     <!-- FORM SOLICITAR -->
-    <form action="../alumnos/examenes_solicitar_ejecutar.php" method="POST">
-      <select class="form-select margenes padding" name="fechaExamen" id="fechaExamen">
-        <?php
-        $a = 0;
-        while ($a < $cantidadFechas) {
-          $idFechaExamen = $listadoFechasExamenes[$a]['idFechaExamen'];
-          $Fecha = $listadoFechasExamenes[$a]['Fecha'];
-          $Hora = $listadoFechasExamenes[$a]['Hora'];
-          ?>
-          <option value="<?php echo $idFechaExamen; ?>">
-            <?php echo $Fecha . " " . $Hora; ?>
-          </option>
-          <?php
-          $a++;
-        }
-        if ($cantidadFechas == 0) {
-          ?>
-          <option value="" disabled selected>No hay fechas disponibles</option>
-          <?php
-        }
-        ?>
-      </select>
+    <form action="../alumnos/materias_solicitar_ejecutar.php" method="POST">      
       </div>
       
       <div class="col-12 col-md-6">
@@ -148,16 +117,15 @@ $cantidadFechas = count($listadoFechasExamenes);
   <div class="container mt-5">
 
     <!-- FORM CANCELAR -->
-    <form id="cancelar" action="../alumnos/examenes_cancelar.php" method="post">
-      <input type="hidden" name="idInscripcionWeb" id="idInscripcionWeb">
+    <form id="cancelar" action="../alumnos/materias_cancelar.php" method="post">
+      <input type="hidden" name="idMatriculacionWeb" id="idMatriculacionWeb">
 
       <table class="table table-hover">
         <caption>Solicitudes Existentes</caption>
         <thead>
           <tr class="table-primary">
-            <th scope="col" style="display:none;">idInscripcionWeb</th>
+            <th scope="col" style="display:none;">idMatriculacionWeb</th>
             <th scope="col">Materia</th>
-            <th scope="col">Fecha</th>
             <th scope="col">Estado</th>
             <th scope="col">Observaciones</th>
             <th scope="col">Cancelar</th>
@@ -170,9 +138,8 @@ $cantidadFechas = count($listadoFechasExamenes);
           //RECORRER TABLA DE SOLICITUDES        
           $a = 0;
           while ($a < $cantidadSolicitudes) {
-            $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
+            $idMatriculacionWeb = $listadoSolicitudes[$a]['idMatriculacionWeb'];
             $Materia = $listadoSolicitudes[$a]['Materia'];
-            $Fecha = $listadoSolicitudes[$a]['Fecha'];
             $Estado = $listadoSolicitudes[$a]['Estado'];
             $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
             $a++;
@@ -180,13 +147,10 @@ $cantidadFechas = count($listadoFechasExamenes);
 
             <tr class="table-info">
               <td style="display:none;">
-                <?php echo $idInscripcionWeb ?>
+                <?php echo $idMatriculacionWeb ?>
               </td>
               <td>
                 <?php echo $Materia ?>
-              </td>
-              <td>
-                <?php echo $Fecha ?>
               </td>
               <td>
                 <?php echo $Estado ?>
@@ -227,9 +191,9 @@ $cantidadFechas = count($listadoFechasExamenes);
         boton.addEventListener('click', function () {
           // Obtener los datos de la fila seleccionada
           var fila = this.closest('tr');
-          var idInscripcionWeb = fila.querySelector("td:nth-child(1)").innerText;          
+          var idMatriculacionWeb = fila.querySelector("td:nth-child(1)").innerText;          
           // Cargar Datos
-          document.getElementById("idInscripcionWeb").value = idInscripcionWeb;          
+          document.getElementById("idMatriculacionWeb").value = idMatriculacionWeb;          
           // Enviar el formulario
           document.getElementById("cancelar").submit();
         });

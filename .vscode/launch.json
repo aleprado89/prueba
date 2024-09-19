@@ -10,7 +10,7 @@
             "request": "launch",
             "name": "Launch Chrome against localhost",
             "url": "http://localhost/prueba/inicio/login.php",
-            //"url": "http://localhost/prueba/alumnos/materias_planes.php",
+            //"url": "http://localhost/prueba/alumnos/materias_materias.php",
             "webRoot": "${workspaceFolder}"
         }
     ]

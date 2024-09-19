@@ -14,7 +14,7 @@ $nombrePlan = $_SESSION['nombreP'];
 //FUNCIONES
 //LISTAR SOLICITUDES
 $listadoSolicitudes = array();
-$listadoSolicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo);
+$listadoSolicitudes = buscarSolicitudesMateria($conn, $idAlumno, $idPlan, $idCicloLectivo);
 $cantidad = count($listadoSolicitudes);
 ?>
 <!DOCTYPE html>
@@ -22,7 +22,7 @@ $cantidad = count($listadoSolicitudes);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exámenes</title>
+  <title>Materias</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -49,16 +49,15 @@ $cantidad = count($listadoSolicitudes);
 </ol>
 <div class="card padding col-12">
 <h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>
-    <h5><?php echo  "Materia: ".$nombrePlan; ?></h5>
+    <h5><?php echo  "Plan: ".$nombrePlan; ?></h5>
   </div>
   <br>
      <div class="container">
     <table class="table table-hover">
       <thead>
         <tr class="table-primary">
-          <th scope="col" style="display:none;">idInscripcionWeb</th>
+          <th scope="col" style="display:none;">idMatriculacionWeb</th>
           <th scope="col">Materia</th>
-          <th scope="col">Fecha</th>
           <th scope="col">Estado</th>
           <th scope="col">Observaciones</th>
         </tr>
@@ -70,9 +69,8 @@ $cantidad = count($listadoSolicitudes);
         //RECORRER TABLA DE SOLICITUDES        
         $a = 0;
         while ($a < $cantidad) {
-          $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
+          $idMatriculacionWeb = $listadoSolicitudes[$a]['idMatriculacionWeb'];
           $Materia = $listadoSolicitudes[$a]['Materia'];
-          $Fecha = $listadoSolicitudes[$a]['Fecha'];
           $Estado = $listadoSolicitudes[$a]['Estado'];
           $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
           $a++;
@@ -80,13 +78,10 @@ $cantidad = count($listadoSolicitudes);
 
           <tr>
             <td style="display:none;">
-              <?php echo $idInscripcionWeb ?>
+              <?php echo $idMatriculacionWeb ?>
             </td>
             <td>
               <?php echo $Materia ?>
-            </td>
-            <td>
-              <?php echo $Fecha ?>
             </td>
             <td>
               <?php echo $Estado ?>
