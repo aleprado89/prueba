@@ -4,10 +4,11 @@
 <?php
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-//include '../funciones/pruebaSession.php';
+include '../funciones/parametrosWeb.php';
 
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
+
 
 //FUNCIONES
 //LISTAR PLANES
@@ -15,25 +16,37 @@ $listadoPlanes = array();
 $listadoPlanes = buscarPlanes($conn, $idAlumno);
 $cantidad = count($listadoPlanes);
 $cursadosFinalizados=selectCursadoFinalizadoByIdPlan($conn,$idAlumno,$listadoPlanes[0]['idPlan']);
+$_SESSION['idP']=$listadoPlanes[0]['idPlan'];
+$anio=$datosColegio[0]['anioautoweb'];//toma el primer registro de colegio para sacar el anioautoweb
+$_SESSION['anio']=$anio;
 
 function boton($idPlan){
     include '../inicio/conexion.php';
-    $idCiclo=buscarIdCiclo($conn, date("Y"));
+    $idCiclo=buscarIdCiclo($conn, $anio);//date("Y") en vez de $anio eso seria para elegir el año actual
+    //la siguiente consulta insertarcursadofinalizado verifica que no tenga 
+    //ninguna otra intencion ese año y ese plan antes de agregar
     insertarCursadoFinalizado($conn,$_SESSION['alu_idAlumno'],$idPlan,$idCiclo,"SI");
 }
 // Verificamos si el boton ha sido enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['intencionExamen'])) {
     // Llamamos a la función
     $idPlan = $_POST['plan']; // Obtener el idPlan del select
+    $_SESSION['idP']= $idPlan;
     boton($idPlan);}
 // Obtener los datos del cursado finalizado por defecto
-if (isset($idPlan)) {
-    $cursadosFinalizados = selectCursadoFinalizadoByIdPlan($conn, $idAlumno,$idPlan);
-} 
+ 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['intencionExamen'])) {
     $intencionExamen = $_POST['intencionExamen']; // Obtener el nuevo valor de intención de examen
     $idPlanTabla=buscarIdPlan($conn,$_POST['plan']);
-    updateCursadoFinalizado($conn, $idAlumno,$idPlanTabla ,$_POST['anio'],$intencionExamen); // Llamar a la función para actualizar
+    $_SESSION['idP']=$idPlanTabla;
+    $idCiclo=buscarIdCiclo($conn,$_POST['anio']);
+    updateCursadoFinalizado(conexion: $conn, idAlumno: $idAlumno,idPlan: $idPlanTabla ,idCicloLectivo: $idCiclo,intencionExamen: $intencionExamen); // Llamar a la función para actualizar
+    $cursadosFinalizados = selectCursadoFinalizadoByIdPlan($conn, $idAlumno,$idPlanTabla);
+
+}
+if (isset($idPlan)) {
+    $cursadosFinalizados = selectCursadoFinalizadoByIdPlan($conn, $idAlumno,$idPlan);
+    $_SESSION['idP']=$idPlan;
 }
 ?>
 
@@ -65,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['intencionExamen'])) {
                 <h5><?php echo  "Alumno: " . $nombreAlumno; ?> </h5>
                 <div class="row">
                     <div class="col-6">
-                    <form method="post">
+                    <form method="post" id="boton">
                         <select class="form-control" id="plan" name="plan">
                             <?php                    //RECORRO ARRAY PLANES PARA LLENAR SELECT
                             $a = 0;
@@ -109,18 +122,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['intencionExamen'])) {
                             echo "<td class='text-center'>" . htmlspecialchars($cursado['plan']) . "</td>";
                             echo "<td class='text-center'>" . htmlspecialchars($cursado['anio']) . "</td>";
                             echo "<td class='text-center'>" ;
-                            echo "<form method='post' >"; // Asegúrate de que el action sea correcto
+                            echo "<form id='select' method='post' >"; // Asegúrate de que el action sea correcto
                             echo "<input type='hidden' name='plan'  value='" . htmlspecialchars($cursado['plan']) . "' />"; // Suponiendo que tienes un idCursado
                             echo "<input type='hidden' name='anio' value='" . htmlspecialchars($cursado['anio']) . "' />"; // Suponiendo que tienes un idCursado
-
                             echo "<select name='intencionExamen' class='form-control' onchange='this.form.submit()'>";
                             echo "<option value='SI'" . ($cursado['intencionExamen'] == 'SI' ? ' selected' : '') . ">SI</option>";
                             echo "<option value='NO'" . ($cursado['intencionExamen'] == 'NO' ? ' selected' : '') . ">NO</option>";
                             echo "</select>";
                             echo "</form>";
                             echo "</td>";
-                            echo "<td class='text-center'>"  . "</td>";
-                            echo "</tr>";
+                            echo "<td class='text-center'>";
+                            echo "<a href='../reportes/PDFaluDebeFinal.php' target='_blank'>";
+                            echo "<i class='bi bi-file-pdf' style='color:black;font-size: 1.5rem;'></i>"; // Bootstrap Icons
+                            // echo "<i class='fas fa-file-alt'></i>"; // Font Awesome
+                            echo "</a>";
+                            echo "</td>";                            echo "</tr>";
                         }
                     } else {
                         echo "<tr><td colspan='4' class='text-center'>No hay datos disponibles</td></tr>";

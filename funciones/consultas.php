@@ -476,11 +476,21 @@ function cancelarExamen($conexion, $idInscripcionWeb)
 }
 
 //INSERTAR INTENCION DE EXAMEN (ALUMNOS QUE SOLO DEBEN FINALES)
-function insertarCursadoFinalizado($conexion, $idAlumno, $idPlan, $idCicloLectivo,$intencion)
+function insertarCursadoFinalizado($conexion, $idAlumno, $idPlan, $idCicloLectivo, $intencion)
 {
-$consulta="insert into cursadofinalizado (idAlumno,idPlan,idCicloLectivo,intencionExamen) values 
-($idAlumno,$idPlan,$idCicloLectivo,'$intencion')";
-mysqli_query($conexion, $consulta);
+    // Consulta para verificar si ya existe un registro
+    $verifQuery = "SELECT * FROM cursadofinalizado WHERE idAlumno = $idAlumno AND idPlan = $idPlan AND idCicloLectivo = $idCicloLectivo";
+    $resultado = mysqli_query($conexion, $verifQuery);
+    
+    // Verificamos si hay registros
+    if (mysqli_num_rows($resultado) == 0) {
+        // Solo se ejecuta el INSERT si no hay registros
+        $consulta = "INSERT INTO cursadofinalizado (idAlumno, idPlan, idCicloLectivo, intencionExamen) VALUES 
+        ($idAlumno, $idPlan, $idCicloLectivo, '$intencion')";
+        
+        // Ejecutamos la consulta de inserción
+        mysqli_query($conexion, $consulta);
+    }
 }
 
 //BUSCAR IDCICLO
@@ -534,6 +544,18 @@ if ($resultado) {
     } }
 
 return $idPlan;
+}
+function buscarNombrePlan($conexion, $idPlan)
+{
+$consulta="select nombre from plandeestudio where idPlan= '$idPlan'";
+$resultado=mysqli_query($conexion, $consulta);
+if ($resultado) {
+    // Obtener el nombre
+    if ($fila = mysqli_fetch_assoc($resultado)) {
+        $plan = $fila['nombre']; // Almacenar el nombreplan en una variable
+    } }
+
+return $plan;
 }
 //Listado solicitudes a materia de un alumno por Plan
 function buscarSolicitudesMateria($conexion, $idAlumno, $idPlan, $idCicloLectivo)
