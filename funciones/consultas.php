@@ -507,11 +507,11 @@ if ($resultado) {
 return $idCiclolectivo;
 }
 
-function selectCursadoFinalizadoByIdPlan($conexion,$idAlumno,$idPlan){
+function selectCursadoFinalizadoByIdPlan($conexion,$idAlumno){
     $consulta = "SELECT p.nombre as nombre,c.anio as anio,cur.intencionExamen as intencionExamen from cursadofinalizado cur INNER JOIN
 plandeestudio p ON p.idPlan=cur.idPlan INNER JOIN
 ciclolectivo c ON c.idciclolectivo=cur.idCicloLectivo
- where cur.idAlumno=$idAlumno and cur.idPlan=$idPlan";
+ where cur.idAlumno=$idAlumno ";
     
         $fec = mysqli_query($conexion, $consulta);
     

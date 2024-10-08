@@ -124,9 +124,9 @@ p.mail='".$mail."',a.mailInstitucional='".$mailInstitucional."',p.telefono='".$t
 p.celular='".$celular."',p.telefonoEmergencia='".$telefonoEmergencia."'
 WHERE a.idAlumno=".$idAlumno; 
 if ($conn->query($sql) === TRUE) {
-  $_SESSION['message']=$_SESSION['message']. "El registro se ha actualizado. ";
+  $_SESSION['message']=$_SESSION['message']. "Datos actualizados correctamente. ";
 } else {
-  $_SESSION['message']=$_SESSION['message']. "Error al actualizar el registro: " . $conn->error;
+  $_SESSION['message']=$_SESSION['message']. "Error al actualizar los datos: " . $conn->error;
 }
 $conn->close();
 // Redirigir a la misma página para refrescar el formulario
@@ -164,7 +164,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
 </ol>
 
   <div class="card padding col-12">
-    <h5><?php echo  "Alumno: ".$nombreAlumno." - DNI: ".$select_dni; ?> </h5>
+    <h5><?php echo  "Alumno: ".$nombreAlumno." <br> DNI: ".$select_dni; ?> </h5>
   </div>
   <br>
   <div class="card padding "> 

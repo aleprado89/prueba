@@ -19,20 +19,20 @@ $cursadosFinalizados=selectCursadoFinalizadoByIdPlan($conn,$idAlumno,$listadoPla
 $_SESSION['idP']=$listadoPlanes[0]['idPlan'];
 $anio=$datosColegio[0]['anioautoweb'];//toma el primer registro de colegio para sacar el anioautoweb
 $_SESSION['anio']=$anio;
+$idCiclo=buscarIdCiclo($conn, $anio);//date("Y") en vez de $anio eso seria para elegir el año actual
+//la siguiente consulta insertarcursadofinalizado verifica que no tenga 
+//ninguna otra intencion ese año y ese plan antes de agregar
 
-function boton($idPlan){
+function boton($idPlan,$idCiclo){
     include '../inicio/conexion.php';
-    $idCiclo=buscarIdCiclo($conn, $anio);//date("Y") en vez de $anio eso seria para elegir el año actual
-    //la siguiente consulta insertarcursadofinalizado verifica que no tenga 
-    //ninguna otra intencion ese año y ese plan antes de agregar
-    insertarCursadoFinalizado($conn,$_SESSION['alu_idAlumno'],$idPlan,$idCiclo,"SI");
+        insertarCursadoFinalizado($conn,idAlumno: $_SESSION['alu_idAlumno'],idPlan: $idPlan,idCicloLectivo: $idCiclo,intencion: "SI");
 }
 // Verificamos si el boton ha sido enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['intencionExamen'])) {
     // Llamamos a la función
     $idPlan = $_POST['plan']; // Obtener el idPlan del select
     $_SESSION['idP']= $idPlan;
-    boton($idPlan);}
+    boton($idPlan, $idCiclo);}
 // Obtener los datos del cursado finalizado por defecto
  
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['intencionExamen'])) {
@@ -41,11 +41,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['intencionExamen'])) {
     $_SESSION['idP']=$idPlanTabla;
     $idCiclo=buscarIdCiclo($conn,$_POST['anio']);
     updateCursadoFinalizado(conexion: $conn, idAlumno: $idAlumno,idPlan: $idPlanTabla ,idCicloLectivo: $idCiclo,intencionExamen: $intencionExamen); // Llamar a la función para actualizar
-    $cursadosFinalizados = selectCursadoFinalizadoByIdPlan($conn, $idAlumno,$idPlanTabla);
+    $cursadosFinalizados = selectCursadoFinalizadoByIdPlan($conn, $idAlumno);
 
 }
 if (isset($idPlan)) {
-    $cursadosFinalizados = selectCursadoFinalizadoByIdPlan($conn, $idAlumno,$idPlan);
+    $cursadosFinalizados = selectCursadoFinalizadoByIdPlan($conn, $idAlumno);
     $_SESSION['idP']=$idPlan;
 }
 ?>

@@ -24,7 +24,7 @@
 
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Insc.Cursado</a>
+            <a class="nav-link" href="materias_planes.php">Insc.Cursado</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="examenes_planes.php">Insc. Exámen</a>

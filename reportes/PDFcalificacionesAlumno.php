@@ -18,9 +18,9 @@ $dompdf = new Dompdf($options);
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'].", ".$_SESSION['alu_nombre'];
 $idPlan=$_SESSION['idP'];
-
 $membrete=$_SESSION['membrete'];
 
+$nombrePlan=buscarNombrePlan($conn,$idPlan);
 $listadoCalificaciones = array();
 $listadoCalificaciones = buscarMaterias($conn, $idAlumno, $idPlan);
 $cantidad = count($listadoCalificaciones);
@@ -87,7 +87,7 @@ $html = '
     <div class="header">
 <img src="' . $membrete . '" alt="Logo">
 <h3>Estado Curricular del Alumno/a: '.$nombreAlumno.'</h3>
-        <h4>PROFESORADO DE EDUCACIÓN FÍSICA</h4>
+        <h4>'.$nombrePlan.'</h4>
          </div>
     <div class="container">
         <table>

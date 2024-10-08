@@ -88,7 +88,7 @@ while ($b < $cantidadMaterias) {
         <div class="card margenes padding col-md-3">
           <br>
           <h3>
-            <?php echo $_SESSION['alu_nombre']; ?>
+            <?php echo $nombreAlumno; ?>
           </h3>
           <h4>Progreso Carrera:</h4>
           <h6> <?php echo $listadoPlanes[0]['Plan']; ?></h6>
