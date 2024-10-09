@@ -1,5 +1,33 @@
-<?php
+<!-- //inserto el modal para crear messagesbox y luego empiezan las consultas -->
+<!-- Modal -->
+<div class="modal" id="messageModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Atención</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <p id="mensajeModal"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- Bootstrap JS y jQuery (necesario para el modal) -->
+<script src="../js/jquery-3.7.1.slim.min.js"></script>
+ <script src="../js/bootstrap.min.js"></script> 
+ <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+
+
+
+ <!--                   inicio consultas                                       -->
+<?php
 //Estado de Cursado de un alumno por Plan
 function estadoPlan($conexion, $idAlumno, $idPlan, $cicloLectivo)
 {
@@ -490,6 +518,16 @@ function insertarCursadoFinalizado($conexion, $idAlumno, $idPlan, $idCicloLectiv
         
         // Ejecutamos la consulta de inserción
         mysqli_query($conexion, $consulta);
+    }
+    else{
+
+        echo "<script type='text/javascript'>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('mensajeModal').innerText = mensaje;
+                $('#messageModal').modal('show');
+            });
+          </script>";
+       
     }
 }
 

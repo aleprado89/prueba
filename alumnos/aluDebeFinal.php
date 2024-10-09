@@ -132,11 +132,19 @@ if (isset($idPlan)) {
                             echo "</form>";
                             echo "</td>";
                             echo "<td class='text-center'>";
-                            echo "<a href='../reportes/PDFaluDebeFinal.php' target='_blank'>";
-                            echo "<i class='bi bi-file-pdf' style='color:black;font-size: 1.5rem;'></i>"; // Bootstrap Icons
-                            // echo "<i class='fas fa-file-alt'></i>"; // Font Awesome
-                            echo "</a>";
-                            echo "</td>";                            echo "</tr>";
+
+                             // Verifica si la intención de examen es "NO"
+            if ($cursado['intencionExamen'] == 'NO') {
+                // Si es "NO", no mostrar el hipervínculo
+                echo "No disponible"; // Puedes mostrar un mensaje o dejarlo vacío
+            } else {
+                // Si es "SI", mostrar el hipervínculo
+                echo "<a href='../reportes/PDFaluDebeFinal.php' target='_blank'>";
+                echo "<i class='bi bi-file-pdf' style='color:black;font-size: 1.5rem;'></i>"; // Bootstrap Icons
+                echo "</a>";
+            }
+                            echo "</td>";  
+                            echo "</tr>";
                         }
                     } else {
                         echo "<tr><td colspan='4' class='text-center'>No hay datos disponibles</td></tr>";

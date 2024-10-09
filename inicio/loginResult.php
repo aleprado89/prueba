@@ -23,15 +23,15 @@ if ($result->num_rows > 0) {
     $_SESSION['doc_legajo'] = $row["legajo"];
     $_SESSION['doc_idPersona'] = $row["idPersona"];
 
-     //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA Y CREO VARIABLES SESSION 
+     //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA DOCENTES Y CREO VARIABLES SESSION 
 
-    $sql3 = "SELECT colegio.anioautoweb,colegio.nombreColegio, ciclolectivo.idciclolectivo FROM colegio inner join ciclolectivo on
+    $sql3 = "SELECT colegio.anio_carga_notas,colegio.nombreColegio, ciclolectivo.idciclolectivo FROM colegio inner join ciclolectivo on
     colegio.anioautoweb=ciclolectivo.anio WHERE codnivel = 6"; 
     $resultado3 = $conn->query($sql3);
     
     if ($resultado3->num_rows > 0) {
       $fila = $resultado3->fetch_assoc();
-      $anioPlataforma = $fila['anioautoweb'];
+      $anioPlataforma = $fila['anio_carga_notas'];
       $colegio=$fila['nombreColegio'];
       $idciclo=$fila['idciclolectivo'];
 
@@ -66,7 +66,7 @@ if ($result2->num_rows > 0) {
     $_SESSION['alu_idAlumno'] = $row["idAlumno"];
     $_SESSION['alu_idPersona'] = $row["idPersona"];
 
-    //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA Y CREO VARIABLES SESSION 
+    //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA ALUMNOS Y CREO VARIABLES SESSION 
 
     $sql4 = "SELECT colegio.anioautoweb,colegio.nombreColegio, ciclolectivo.idciclolectivo FROM colegio inner join ciclolectivo on
     colegio.anioautoweb=ciclolectivo.anio WHERE codnivel = 6"; 
