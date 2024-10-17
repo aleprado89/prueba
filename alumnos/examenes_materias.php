@@ -2,6 +2,7 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/parametrosWeb.php';
 //include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -31,6 +32,7 @@ $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $idPlan = $_SESSION['idP'];
 $nombrePlan = $_SESSION['nombreP'];
+$idCicloLectivo = $_SESSION['idCiclo'];
 
 //FUNCIONES
 //LISTAR MATERIAS
@@ -72,7 +74,7 @@ $cantidad = count($listadoMaterias);
 
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
-        <h5><?php echo "Materia: " . $nombrePlan; ?></h5>
+        <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
       </div>
       <br>
       <div class="text-center">
@@ -160,20 +162,32 @@ $cantidad = count($listadoMaterias);
                     </td> -->
 
                     <?php
-                    if (empty(trim($CalificacionFinal)) || $CalificacionFinal == null) { ?>
-                      <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
-                    <?php } else {
-                      ?>
-                      <td><button type="submit" name="submitSolicitar" style="display:none;"
-                          class="btn btn-primary ver-btn">Solicitar</button></td>
-                    <?php } ?>
-                  </tr>
-                  
-                  <?php
-                }
-              }
-              ?>
+                      //Control Existe Solicitud
+                      $listadoSolicitudes = array();
+                      $listadoSolicitudes = existeSolicitudExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $datosColegio[0]['idTurno']);
+                      $cantidadSolicitudes = count($listadoSolicitudes);
 
+                      $habilitado = true;
+                      $b = 0;
+                      while ($b < $cantidadSolicitudes) {
+                        $Estado = $listadoSolicitudes[$b]['Estado'];
+                        if ($Estado == "Pendiente" || $Estado == "Aprobada") {
+                          $habilitado = false;
+                        }
+                      $b++;
+                      }
+                      
+                      //No existe solicitud
+                      if ($habilitado == true){
+                        if (empty(trim($CalificacionFinal)) || $CalificacionFinal == null) { ?>
+                          <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
+                        <?php } else { ?>                        
+                          <td><button type="submit" name="submitSolicitar" style="display:none;" class="btn btn-primary ver-btn">Solicitar</button></td>
+                        <?php } } else { ?>
+                          <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Ver Solicitudes</button></td>
+                        <?php } ?>
+                      </tr>                  
+                    <?php } } ?>
             </tbody>
           </table>
         </form>

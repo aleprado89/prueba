@@ -49,7 +49,7 @@ $cantidad = count($listadoSolicitudes);
 </ol>
 <div class="card padding col-12">
 <h5><?php echo  "Alumno: ".$nombreAlumno; ?> </h5>
-    <h5><?php echo  "Materia: ".$nombrePlan; ?></h5>
+    <h5><?php echo  "Carrera: ".$nombrePlan; ?></h5>
   </div>
   <br>
      <div class="container">
@@ -73,6 +73,7 @@ $cantidad = count($listadoSolicitudes);
           $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
           $Materia = $listadoSolicitudes[$a]['Materia'];
           $Fecha = $listadoSolicitudes[$a]['Fecha'];
+          $Hora = $listadoSolicitudes[$a]['Hora'];
           $Estado = $listadoSolicitudes[$a]['Estado'];
           $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
           $a++;
@@ -86,7 +87,10 @@ $cantidad = count($listadoSolicitudes);
               <?php echo $Materia ?>
             </td>
             <td>
-              <?php echo $Fecha ?>
+              <?php 
+              $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
+              $fechaFormateada = $fechaFormato->format('d-m-Y');
+              echo $fechaFormateada ?>  <?php echo $Hora ?> 
             </td>
             <td>
               <?php echo $Estado ?>

@@ -389,6 +389,7 @@ and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo";
             $listadoSolicitudesExamenes[$i]['idInscripcionWeb'] = $data['id_Inscripcion_web'];
             $listadoSolicitudesExamenes[$i]['Materia'] = $data['nombreMateria'];
             $listadoSolicitudesExamenes[$i]['Fecha'] = $data['fecha'];
+            $listadoSolicitudesExamenes[$i]['Hora'] = $data['hora'];
             if ($data['estado'] == '1') {
                 $listadoSolicitudesExamenes[$i]['Estado'] = "Pendiente";
             }
@@ -432,6 +433,7 @@ and fechasexamenes.idTurno = $idTurno";
             $listadoSolicitudesExamenes[$i]['idInscripcionWeb'] = $data['id_Inscripcion_web'];
             $listadoSolicitudesExamenes[$i]['Materia'] = $data['nombreMateria'];
             $listadoSolicitudesExamenes[$i]['Fecha'] = $data['fecha'];
+            $listadoSolicitudesExamenes[$i]['Hora'] = $data['hora'];
             if ($data['estado'] == '1') {
                 $listadoSolicitudesExamenes[$i]['Estado'] = "Pendiente";
             }

@@ -75,7 +75,7 @@ $cantidad = count($listadoMaterias);
 
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
-        <h5><?php echo "Plan: " . $nombrePlan; ?></h5>
+        <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
       </div>
       <br>
       <div class="text-center">

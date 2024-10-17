@@ -92,6 +92,9 @@ $cantidadFechas = count($listadoFechasExamenes);
       <?php echo $nombreAlumno; ?>
     </h5>
     <h5>
+      Carrera: <?php echo $nombrePlan; ?>
+    </h5>
+    <h5>
       Materia: <?php echo $nombreMateria; ?>
     </h5>
     <h5>
@@ -103,7 +106,7 @@ $cantidadFechas = count($listadoFechasExamenes);
  
   <br>
 
-  <div class="row col-12 ">
+  <div class="row col-12 " <?php if ($habilitado == false) { ?> style="display:none;" <?php } ?>>
     <div class="col-12 col-md-6">
     <h5 class="padding">Fechas Disponibles</h5>
     <!-- FORM SOLICITAR -->
@@ -117,7 +120,10 @@ $cantidadFechas = count($listadoFechasExamenes);
           $Hora = $listadoFechasExamenes[$a]['Hora'];
           ?>
           <option value="<?php echo $idFechaExamen; ?>">
-            <?php echo $Fecha . " " . $Hora; ?>
+            <?php 
+            $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
+            $fechaFormateada = $fechaFormato->format('d-m-Y');
+            echo $fechaFormateada . " " . $Hora; ?>
           </option>
           <?php
           $a++;
@@ -151,9 +157,8 @@ $cantidadFechas = count($listadoFechasExamenes);
     <!-- FORM CANCELAR -->
     <form id="cancelar" action="../alumnos/examenes_cancelar.php" method="post">
       <input type="hidden" name="idInscripcionWeb" id="idInscripcionWeb">
-
-      <table class="table table-hover">
-        <caption>Solicitudes Existentes</caption>
+      <caption>Solicitudes Generadas</caption>
+      <table class="table table-hover" <?php if ($cantidadSolicitudes == 0) { ?> style="display:none;" <?php } ?> >
         <thead>
           <tr class="table-primary">
             <th scope="col" style="display:none;">idInscripcionWeb</th>
@@ -161,7 +166,7 @@ $cantidadFechas = count($listadoFechasExamenes);
             <th scope="col">Fecha</th>
             <th scope="col">Estado</th>
             <th scope="col">Observaciones</th>
-            <th scope="col">Cancelar</th>
+            <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
@@ -174,12 +179,13 @@ $cantidadFechas = count($listadoFechasExamenes);
             $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
             $Materia = $listadoSolicitudes[$a]['Materia'];
             $Fecha = $listadoSolicitudes[$a]['Fecha'];
+            $Hora = $listadoSolicitudes[$a]['Hora'];
             $Estado = $listadoSolicitudes[$a]['Estado'];
             $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
             $a++;
             ?>
 
-            <tr class="table-info">
+            <tr>
               <td style="display:none;">
                 <?php echo $idInscripcionWeb ?>
               </td>
@@ -187,7 +193,10 @@ $cantidadFechas = count($listadoFechasExamenes);
                 <?php echo $Materia ?>
               </td>
               <td>
-                <?php echo $Fecha ?>
+                <?php 
+                $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
+                $fechaFormateada = $fechaFormato->format('d-m-Y');
+                echo $fechaFormateada ?>  <?php echo $Hora ?> 
               </td>
               <td>
                 <?php echo $Estado ?>

@@ -104,9 +104,7 @@ while ($a < $cantidadSolicitudes) {
       <input type="hidden" name="idM" value=<?php echo $idMateria; ?> />
       <?php if ($habilitado == true) { ?>
         <button type="submit" id="btnSolicitar" class="btn btn-primary">Solicitar</button>
-      <?php } else { ?>
-        <label>Ya hay solicitudes en proceso o aprobadas.</label>
-      <?php } ?>
+      <?php } ?>        
     </form>
       </div>
 
@@ -119,16 +117,16 @@ while ($a < $cantidadSolicitudes) {
     <!-- FORM CANCELAR -->
     <form id="cancelar" action="../alumnos/materias_cancelar.php" method="post">
       <input type="hidden" name="idMatriculacionWeb" id="idMatriculacionWeb">
-
-      <table class="table table-hover">
-        <caption>Solicitudes Existentes</caption>
+      
+      <caption>Solicitudes Generadas</caption>
+      <table class="table table-hover">        
         <thead>
           <tr class="table-primary">
             <th scope="col" style="display:none;">idMatriculacionWeb</th>
             <th scope="col">Materia</th>
             <th scope="col">Estado</th>
             <th scope="col">Observaciones</th>
-            <th scope="col">Cancelar</th>
+            <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
@@ -145,7 +143,7 @@ while ($a < $cantidadSolicitudes) {
             $a++;
             ?>
 
-            <tr class="table-info">
+            <tr>
               <td style="display:none;">
                 <?php echo $idMatriculacionWeb ?>
               </td>

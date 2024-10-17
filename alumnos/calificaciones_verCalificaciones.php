@@ -162,7 +162,10 @@ $datosCursado = cursadoMateria($conn, $idMateria, $idAlumno);
 
           <tr>
             <td>
-              <?php echo $Fecha ?>
+              <?php 
+              $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
+              $fechaFormateada = $fechaFormato->format('d-m-Y');
+              echo $fechaFormateada ?>
             </td>
             <td class= "text-center">
               <?php echo $Calificacion ?>
