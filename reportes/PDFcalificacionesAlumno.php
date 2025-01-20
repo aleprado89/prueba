@@ -1,8 +1,9 @@
 <?php
 session_start();
 include '../inicio/conexion.php';
+ob_start();
 include '../funciones/consultas.php';
-require_once '../vendor/autoload.php';
+ob_end_clean();require_once '../vendor/autoload.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -19,6 +20,9 @@ $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'].", ".$_SESSION['alu_nombre'];
 $idPlan=$_SESSION['idP'];
 $membrete=$_SESSION['membrete'];
+//preparo imagen para que dompdf la pueda leer
+$img = file_get_contents(__DIR__ . '/'.$membrete);
+$img_base64 = base64_encode($img);
 
 $nombrePlan=buscarNombrePlan($conn,$idPlan);
 $listadoCalificaciones = array();
@@ -85,7 +89,7 @@ $html = '
 </head>
 <body>
     <div class="header">
-<img src="' . $membrete . '" alt="Logo">
+        <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
 <h3>Estado Curricular del Alumno/a: '.$nombreAlumno.'</h3>
         <h4>'.$nombrePlan.'</h4>
          </div>

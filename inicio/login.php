@@ -7,6 +7,8 @@ $resultado = $conn->query($sql);
 $fila = $resultado->fetch_assoc();
 $nombre = $fila["nombreColegio"];
 $_SESSION['nombreColegio']=$nombre;
+$_SESSION['membrete']='../img/membrete_banfield.png';//ubicacion nombre membrete para reportes
+
     ?>
     <!DOCTYPE html>
 <html lang="es">

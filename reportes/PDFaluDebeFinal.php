@@ -1,9 +1,10 @@
 <?php
 session_start();
+include '../vendor/autoload.php';
 include '../inicio/conexion.php';
+ob_start();
 include '../funciones/consultas.php';
-require_once '../vendor/autoload.php';
-
+ob_end_clean();
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -21,6 +22,10 @@ $idPlan=$_SESSION['idP'];
 $dni=$_SESSION['alu_dni'];
 $membrete=$_SESSION['membrete'];
 
+//preparo imagen para que dompdf la pueda leer
+$img = file_get_contents(__DIR__ . '/'.$membrete);
+$img_base64 = base64_encode($img);
+//busco nombre plan
 $nombrePlan=buscarNombrePlan($conn,$idPlan);
 $anio=$_SESSION['anio'];
 
@@ -84,7 +89,7 @@ $html = '
 </head>
 <body>
     <div class="header">
-<img src="' . $membrete . '" alt="Logo">
+        <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
 <h3>SOLICITUD DE INSCRIPCIÓN A RENDIR SOLAMENTE FINALES</h3><br>
         <p>El alumno/a '.$nombreAlumno.' con dni: '.$dni.'. Solicita presentarse únicamente a rendir finales</p><br>
 <h4>Carrera:'.$nombrePlan.'<br> Ciclo Lectivo: '.$anio.'</h4>
@@ -96,6 +101,10 @@ $html = '
         
         
 // Generar el PDF
-$dompdf->loadHtml($html);
-$dompdf->render();
-$dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
+try {
+    $dompdf->loadHtml($html);
+    $dompdf->render();
+    $dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
+} catch (Exception $e) {
+    echo 'Error al generar el PDF: ' . $e->getMessage();
+}
