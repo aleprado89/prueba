@@ -696,3 +696,62 @@ function cancelarCursado($conexion, $idMatriculacionWeb)
 
     mysqli_query($conexion, $consulta);
 }
+
+//levantar ciclos lectivos
+function levantarCiclosLectivos($conexion){
+
+    $consulta = "SELECT idciclolectivo, anio FROM ciclolectivo ORDER BY anio DESC";
+    $ciclos = mysqli_query(mysql: $conexion, query: $consulta);
+    $listadoCiclos = array();
+    $i = 0;
+    if (!empty($ciclos)) {
+        while ($data = mysqli_fetch_array($ciclos)) {
+            $listadoCiclos[$i]['idCicloLectivo'] = $data['idciclolectivo'];
+            $listadoCiclos[$i]['anio'] = $data['anio'];
+            $i++;
+        }
+    }
+    return $listadoCiclos;
+}
+
+//obtener materiasxprofesor
+function obtenerMateriasxProfesor($conexion, $legajo,$idCicloLectivo,$idPlan)
+{
+    $consulta = "SELECT m.nombre,p.idMateria FROM materiaterciario m INNER JOIN profesorxmateria p
+ON m.idMateria=p.idMateria
+WHERE p.idPersonal=$legajo AND m.idCicloLectivo=$idCicloLectivo AND m.idPlan=$idPlan";
+
+    $materias = mysqli_query($conexion, $consulta);
+
+    $listadoMaterias = array();
+    $i = 0;
+    if (!empty($materias)) {
+        while ($data = mysqli_fetch_array($materias)) {
+            $listadoMaterias[$i]['idMateria'] = $data['idMateria'];
+            $listadoMaterias[$i]['Materia'] = $data['nombre'];
+            
+            $i++;
+        }
+    }
+    return $listadoMaterias;
+}
+//obtener planes de un profe segun profesorxmateria
+function buscarPlanesProfesorMateria($conexion, $legajo) 
+{
+    $consulta = "SELECT p.idPlan, p.nombre FROM profesorxmateria pm INNER JOIN materiaterciario m 
+ON m.idMateria=pm.idMateria INNER JOIN plandeestudio p ON m.idPlan = p.idPlan 
+    WHERE pm.idPersonal =$legajo GROUP BY p.nombre";
+
+    $planes = mysqli_query($conexion, $consulta);
+
+    $listadoPlanes = array();
+    $i = 0;
+    if (!empty($planes)) {
+        while ($data = mysqli_fetch_array($planes)) {
+            $listadoPlanes[$i]['idPlan'] = $data['idPlan'];
+            $listadoPlanes[$i]['nombrePlan'] = $data['nombre'];
+            $i++;
+        }
+    }
+    return $listadoPlanes;  
+}

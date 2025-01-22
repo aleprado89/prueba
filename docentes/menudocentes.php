@@ -70,11 +70,11 @@
             <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
-                    <div class="card carddoc mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
-                      <a href="#" class="card-link carddoc-link">
+                    <div class="card  mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
+                      <a href="materiaxdocente.php" class="card-link ">
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Carga de Calificaciones y Asistencias</h4>
+                        <h4 class="card-title text-center">Carga de Calificaciones Parciales</h4>
                         <div class="card-header text-center">
                           <i class="bi bi-award icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
@@ -82,12 +82,12 @@
                   </div>                </div>
                 <div class="col-md-6">
                     <!-- Segunda columna de la fila superior -->
-                    <div class="card carddoc mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" onclick="verificarFechaActasVolantes()" class="card-link carddoc-link">
+                    <div class="card  mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
+                      <a href="#" class="card-link ">
 
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Carga de Actas de Exámenes Finales</h4>
+                        <h4 class="card-title text-center">Carga de Asistencias</h4>
                         <div class="card-header text-center">
                           <i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
@@ -96,15 +96,15 @@
                   </div>               
                  </div>
             </div>
-            <!-- <div class="row">
+            <div class="row">
                 <div class="col-md-6">
-                     Primera columna de la fila inferior 
+                     <!-- Primera columna de la fila inferior  -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" onclick="verificarFechaInscripcionCursado()" class="card-link">
+                    <a href="#" onclick="verificarFechaActasVolantes()" class="card-link ">
 
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Inscripciones a cursado de materias</h4>
+                        <h4 class="card-title text-center">Carga de Actas de Exámenes Finales</h4>
                         <div class="card-header text-center">
                           <i class="bi bi-book icono" style="font-size: 2.8rem ; text-shadow: none;"></i>
                         </div>
@@ -113,8 +113,8 @@
                   </div>              
                   </div>
                 <div class="col-md-6">
-                     Segunda columna de la fila inferior 
-                    <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
+                     <!-- Segunda columna de la fila inferior  -->
+                    <!-- <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
                       <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
 
                       <div class="card-header"></div>
@@ -125,7 +125,8 @@
                         </div>
                       </div>
                       </a>
-                  </div>                </div> -->
+                  </div> -->              
+                 </div> 
             </div>
         </div>
       </div>
