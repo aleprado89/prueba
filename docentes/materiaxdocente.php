@@ -2,6 +2,7 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/parametrosWeb.php';
 
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'].", ".$_SESSION['doc_nombre'];
@@ -16,9 +17,10 @@ if (isset($_POST['idMateria'])) {
   exit;
 }
 
-// Obtener el primer ciclolectivo
-$ciclolectivos = levantarCiclosLectivos(conexion: $conn);
-$primerCiclolectivo = $ciclolectivos[0]['idCicloLectivo'];
+// Obtener el  ciclolectivo de tabla colegios para tomar predeterminado
+$primerCiclolectivo=$datosColegio[0]['anioCargaNotas'];
+// $ciclolectivos = levantarCiclosLectivos(conexion: $conn);
+// $primerCiclolectivo = $ciclolectivos[0]['idCicloLectivo'];
 
 // Obtener el primer plan
 $planes = buscarPlanesProfesorMateria($conn,$doc_legajo);
@@ -95,14 +97,27 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
 
   <div class="card padding col-12">
     <h5><?php echo  "Docente: ".$nombreDoc; ?> </h5>
-    <select name="ciclolectivo" class="form-select" id="ciclolectivo" onchange="cargarValor(this.value)">
-    <?php
+        <?php
+    $primerCicloLectivo = $datosColegio[0]['anioCargaNotas'];
+    ?>
+<select name="ciclolectivo" class="form-select" id="ciclolectivo" onchange="cargarValor(this.value)" <?php if ($_SESSION['profeModCiclo'] == 0) { echo 'disabled'; } ?>>
+<?php
         $ciclolectivos = levantarCiclosLectivos(conexion: $conn); // Llamar a la función levantarCiclosLectivos
+        $ciclolectivo_seleccionado = null;
         foreach ($ciclolectivos as $ciclolectivo) {
-          echo '<option value="' . $ciclolectivo['idCicloLectivo'] . '">' . $ciclolectivo['anio'] . '</option>';
+          if ($ciclolectivo['anio'] == $primerCicloLectivo) {
+            $ciclolectivo_seleccionado = $ciclolectivo;
+            break;
+          }
         }
-        ?>
-      </select>
+        echo '<option value="' . $ciclolectivo_seleccionado['idCicloLectivo'] . '" selected>' . $ciclolectivo_seleccionado['anio'] . '</option>';
+        foreach ($ciclolectivos as $ciclolectivo) {
+          if ($ciclolectivo['idCicloLectivo'] != $ciclolectivo_seleccionado['idCicloLectivo']) {
+            echo '<option value="' . $ciclolectivo['idCicloLectivo'] . '">' . $ciclolectivo['anio'] . '</option>';
+          }
+        }
+      ?>
+    </select>
   <br>
   <select name="plan" class="form-select" id="plan" onchange="cargarValor(this.value)">
     <?php
@@ -123,11 +138,10 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
             <th scope="col">Materias asignadas al docente</th>
           </tr>
         </thead>
-  
         <tbody>     
-      
-        <?php if (isset($materiasAsignadas)) { ?>
-          <?php foreach ($materiasAsignadas as $materia) { ?>
+        <?php
+          $materiasAsignadas = obtenerMateriasxProfesor($conn, $doc_legajo, $primerCicloLectivo, $primerPlan);
+          foreach ($materiasAsignadas as $materia) { ?>
             <tr>
               <td>
                 <a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>')">
@@ -136,7 +150,6 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
               </td>
             </tr>
           <?php } ?>
-        <?php } ?>
         </tbody>
       </table>
     </div>
@@ -182,6 +195,25 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
         }
       });
     }
+  </script>
+  <script>
+    $(document).ready(function() {
+      var ciclolectivo = $('#ciclolectivo').val();
+      var plan = $('#plan').val();
+      $.ajax({
+        type: 'POST',
+        url: 'materiaxdocente.php',
+        data: {valor: '', ciclolectivo: ciclolectivo, plan: plan},
+        success: function(data) {
+          console.log('Respuesta del servidor:', data);
+          // Reemplazar solo el contenido de la tabla
+          var tabla = $(data).filter('#tablaMaterias');
+          if (tabla.length > 0) {
+            $('#tablaMaterias').html(tabla.html());
+          }
+        }
+      });
+    });
   </script>
   
     <?php include '../funciones/footer.html'; ?>

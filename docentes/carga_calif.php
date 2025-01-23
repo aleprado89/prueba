@@ -14,7 +14,7 @@ echo $ciclolectivo;
 echo $plan;
 echo $materia;
 
-
+$alumnosCalif=obtenerCalificacionesMateria($conn,$idMateria);
 ?>
 <!DOCTYPE html>
 <html lang="es"></html>
@@ -46,23 +46,10 @@ echo $materia;
 
   <div class="card padding col-12">
     <h5><?php echo  "Docente: ".$nombreDoc; ?> </h5>
-    <select name="ciclolectivo" class="form-select" id="ciclolectivo" onchange="cargarValor(this.value)">
-    <?php
-        $ciclolectivos = levantarCiclosLectivos(conexion: $conn); // Llamar a la función levantarCiclosLectivos
-        foreach ($ciclolectivos as $ciclolectivo) {
-          echo '<option value="' . $ciclolectivo['idCicloLectivo'] . '">' . $ciclolectivo['anio'] . '</option>';
-        }
-        ?>
-      </select>
-  <br>
-  <select name="plan" class="form-select" id="plan" onchange="cargarValor(this.value)">
-    <?php
-        $planes = buscarPlanesProfesorMateria($conn,$doc_legajo); // Llamar a la función buscarPlanesProfesorMateria
-        foreach ($planes as $plan) {
-          echo '<option value="' . $plan['idPlan'] . '">' . $plan['nombrePlan'] . '</option>';
-        }
-        ?>
-      </select>
+    <h5><?php echo  "Ciclo lectivo: ".$ciclolectivo; ?> </h5>
+    <h5><?php echo  "Carrera: ".$plan; ?> </h5>
+    <h5><?php echo  "Materia: ".$materia; ?> </h5>
+    
   </div>
   
   
@@ -71,19 +58,89 @@ echo $materia;
       <table id="tablaMaterias" class="table table-hover col-12">
         <thead>
           <tr class="table-primary">
-            <th scope="col">Materias asignadas al docente</th>
+            <th scope="col">Estudiante</th>
+            <th scope="col">P1</th>
+            <th scope="col">P2</th>
+            <th scope="col">P3</th>
+            <th scope="col">P4</th>
+            <th scope="col">P5</th>
+            <th scope="col">P6</th>
+            <th scope="col">P7</th>
+            <th scope="col">IEFI</th>
+            <th scope="col">RP1</th>
+            <th scope="col">RP2</th>
+            <th scope="col">RP3</th>
+            <th scope="col">RP4</th>
+            <th scope="col">RP5</th>
+            <th scope="col">RP6</th>
+            <th scope="col">RP7</th>
+            <th scope="col">RIEFI</th>
+            <th scope="col">Estado Parcial</th>
+            <th scope="col">Asist</th>
           </tr>
         </thead>
   
         <tbody>     
       
-        <?php if (isset($materiasAsignadas)) { ?>
-          <?php foreach ($materiasAsignadas as $materia) { ?>
+        <?php if (isset($alumnosCalif)) { ?>
+          <?php foreach ($alumnosCalif as $listado) { ?>
             <tr>
               <td>
-                <a href="carga_calif.php" onclick="setMateria(<?php echo $materia['idMateria']; ?>)">
-                  <?php echo $materia['Materia']; ?>
-                </a>
+                  <?php echo $listado['apellido']."".$listado['nombre']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n1']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n2']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n3']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n4']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n5']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n6']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n7']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['n8']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r1']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r2']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r3']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r4']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r5']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r6']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r7']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['r8']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['estadoCursado']; ?>
+              </td>
+              <td>
+                  <?php echo $listado['asistencia']; ?>
               </td>
             </tr>
           <?php } ?>

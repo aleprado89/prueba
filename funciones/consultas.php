@@ -717,9 +717,26 @@ function levantarCiclosLectivos($conexion){
 //obtener materiasxprofesor
 function obtenerMateriasxProfesor($conexion, $legajo,$idCicloLectivo,$idPlan)
 {
-    $consulta = "SELECT m.nombre,p.idMateria FROM materiaterciario m INNER JOIN profesorxmateria p
-ON m.idMateria=p.idMateria
-WHERE p.idPersonal=$legajo AND m.idCicloLectivo=$idCicloLectivo AND m.idPlan=$idPlan";
+    $consulta = "SELECT m.nombre, p.idMateria 
+    FROM materiaterciario m 
+    INNER JOIN profesorxmateria p 
+    ON m.idMateria = p.idMateria
+    WHERE p.idPersonal = $legajo 
+    AND m.idCicloLectivo = $idCicloLectivo 
+    AND m.idPlan = $idPlan
+    AND (
+      p.tipo = 'Equipo Docente' 
+      OR (
+        p.tipo = 'Titular' 
+        AND (SELECT COUNT(*) FROM profesorxmateria p2 WHERE p2.idMateria = p.idMateria AND p2.tipo = 'Suplente') = 0 
+        AND (SELECT COUNT(*) FROM profesorxmateria p2 WHERE p2.idMateria = p.idMateria AND p2.tipo = 'Operador') = 0
+      ) 
+      OR (
+        p.tipo = 'Suplente' 
+        AND (SELECT COUNT(*) FROM profesorxmateria p2 WHERE p2.idMateria = p.idMateria AND p2.tipo = 'Operador') = 0
+      ) 
+      OR p.tipo = 'Operador'
+    )";
 
     $materias = mysqli_query($conexion, $consulta);
 
@@ -754,4 +771,42 @@ ON m.idMateria=pm.idMateria INNER JOIN plandeestudio p ON m.idPlan = p.idPlan
         }
     }
     return $listadoPlanes;  
+}
+
+//obtener registros decalificaciones de todos los alumnos de una materia
+function obtenerCalificacionesMateria($conexion, $idMateria){
+    $consulta = 'SELECT c.*,p.apellido,p.nombre from calificacionesterciario c inner join
+     alumnosterciario a on a.idAlumno=c.idAlumno inner join
+     persona p on p.idPersona=a.idPersona where idMateria = '.$idMateria;
+    $querycalif = mysqli_query($conexion, $consulta);   
+    $listadoMateria = array();
+    $i = 0;
+    if (!empty($querycalif)) {
+        while ($data = mysqli_fetch_array($querycalif)) {
+            $listadoMateria[$i]['idAlumno'] = $data['idAlumno'];
+            $listadoMateria[$i]['apellido'] = $data['apellido'];
+            $listadoMateria[$i]['nombre'] = $data['nombre'];
+            $listadoMateria[$i]['n1'] = $data['n1'];
+            $listadoMateria[$i]['n2'] = $data['n2'];
+            $listadoMateria[$i]['n3'] = $data['n3'];
+            $listadoMateria[$i]['n4'] = $data['n4'];
+            $listadoMateria[$i]['n5'] = $data['n5'];
+            $listadoMateria[$i]['n6'] = $data['n6'];
+            $listadoMateria[$i]['n7'] = $data['n7'];
+            $listadoMateria[$i]['n8'] = $data['n8'];
+            $listadoMateria[$i]['r1'] = $data['r1'];
+            $listadoMateria[$i]['r2'] = $data['r2'];
+            $listadoMateria[$i]['r3'] = $data['r3'];
+            $listadoMateria[$i]['r4'] = $data['r4'];
+            $listadoMateria[$i]['r5'] = $data['r5'];
+            $listadoMateria[$i]['r6'] = $data['r6'];
+            $listadoMateria[$i]['r7'] = $data['r7'];
+            $listadoMateria[$i]['r8'] = $data['r8'];
+            $listadoMateria[$i]['asistencia'] = $data['asistencia'];
+            $listadoMateria[$i]['estadoCursado'] = $data['estadoCursado'];
+
+            $i++;
+        }
+    }
+    return $listadoMateria;
 }
