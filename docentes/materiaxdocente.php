@@ -6,6 +6,16 @@ include '../funciones/consultas.php';
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'].", ".$_SESSION['doc_nombre'];
 
+//si ya seleccionó una materia, la guardo en la variable de sesión
+if (isset($_POST['idMateria'])) {
+  $_SESSION['idMateria'] = $_POST['idMateria'];
+  $_SESSION['materia'] = $_POST['materia'];
+  $_SESSION['ciclolectivo'] = $_POST['ciclolectivo'];
+  $_SESSION['plan'] = $_POST['plan'];
+  header('Location: carga_calif.php');
+  exit;
+}
+
 // Obtener el primer ciclolectivo
 $ciclolectivos = levantarCiclosLectivos(conexion: $conn);
 $primerCiclolectivo = $ciclolectivos[0]['idCicloLectivo'];
@@ -41,7 +51,7 @@ if (isset($_POST['valor'])) {
     <tbody>';
   foreach ($materiasAsignadas as $materia) {
     echo '<tr>
-      <td>'.$materia['Materia'].'</td>
+      <td><a href="#" onclick="setMateria('.$materia['idMateria'].', \''.$materia['Materia'].'\')">'.$materia['Materia'].'</a></td>
     </tr>';
   }
   echo '</tbody>
@@ -119,7 +129,11 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
         <?php if (isset($materiasAsignadas)) { ?>
           <?php foreach ($materiasAsignadas as $materia) { ?>
             <tr>
-              <td ><?php echo $materia['Materia']; ?></td>
+              <td>
+                <a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>')">
+                  <?php echo $materia['Materia']; ?>
+                </a>
+              </td>
             </tr>
           <?php } ?>
         <?php } ?>
@@ -135,7 +149,8 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
     <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/popper.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
-    <!-- obtengo el valor seleccionado del select -->
+
+    <!-- obtengo el valor seleccionado del select y actualizo la tabla html de materias-->
   <script>
     function cargarValor(valor) {
       var ciclolectivo = $('#ciclolectivo').val();
@@ -151,6 +166,19 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
           if (tabla.length > 0) {
             $('#tablaMaterias').html(tabla.html());
           }
+        }
+      });
+    }
+    //funcion para pasar idmateria,ciclolectivo y plan a la pagina carga_calif.php
+    function setMateria(idMateria, materia) {
+      var ciclolectivo = $('#ciclolectivo').find('option:selected').text();
+      var plan = $('#plan').find('option:selected').text();
+      $.ajax({
+        type: 'POST',
+        url: '<?php echo $_SERVER['PHP_SELF']; ?>',
+        data: {idMateria: idMateria, materia: materia, ciclolectivo: ciclolectivo, plan: plan},
+        success: function(data) {
+          window.location.href = 'carga_calif.php';
         }
       });
     }
