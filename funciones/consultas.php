@@ -783,6 +783,7 @@ function obtenerCalificacionesMateria($conexion, $idMateria){
     $i = 0;
     if (!empty($querycalif)) {
         while ($data = mysqli_fetch_array($querycalif)) {
+            $listadoMateria[$i]['idCalificacion'] = $data['idCalificacion'];
             $listadoMateria[$i]['idAlumno'] = $data['idAlumno'];
             $listadoMateria[$i]['apellido'] = $data['apellido'];
             $listadoMateria[$i]['nombre'] = $data['nombre'];
@@ -809,4 +810,17 @@ function obtenerCalificacionesMateria($conexion, $idMateria){
         }
     }
     return $listadoMateria;
+}
+//actualizar calificaciones docente
+function actualizarCalifDocente($conexion, $idCalif, $columna, $valor){
+  
+  $consulta = "UPDATE calificacionesterciario SET $columna = '$valor' WHERE idCalificacion = $idCalif";
+  
+  $resultado = mysqli_query($conexion, $consulta);
+  if (!$resultado) {
+    $respuesta= "Error: " . mysqli_error($conexion);
+  } else {
+    $respuesta ="Datos actualizados correctamente";
+  }
+  return $respuesta;
 }
