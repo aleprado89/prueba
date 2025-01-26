@@ -71,7 +71,7 @@
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
                     <div class="card  mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
-                      <a href="materiaxdocente.php" class="card-link ">
+                      <a href="#" onclick="cargarParametro('carga_calif.php')" class="card-link ">
                       <div class="card-header"></div>
                       <div class="card-body">
                         <h4 class="card-title text-center">Carga de Calificaciones Parciales</h4>
@@ -83,7 +83,7 @@
                 <div class="col-md-6">
                     <!-- Segunda columna de la fila superior -->
                     <div class="card  mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" class="card-link ">
+                      <a href="#" onclick="cargarParametro('carga_asist.php')"  class="card-link ">
 
                       <div class="card-header"></div>
                       <div class="card-body">
@@ -158,7 +158,7 @@
        <!--           FUNCIONES     y SCRIPTS        -->
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-<script src="../js/jquery-3.7.1.slim.min.js"></script>
+<script src="../js/jquery-3.7.1.min.js"></script>
  <script src="../js/bootstrap.min.js"></script> 
  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 
@@ -230,7 +230,22 @@ $conn->close();
         echo 'alertDiv.querySelector("p").textContent = "La carga de actas de exámenes está abierta";'; // Modifica el texto del contenido
     }
     ?>
-  
+
+    //cargo el parametro en el hipervinculo
+    function cargarParametro(parametro) {
+  // Establece la cookie con el valor de la variable de sesión
+  document.cookie = "parametro=" + parametro + "; expires=" + new Date(Date.now() + 3600000).toUTCString();
+
+  $.ajax({
+    type: 'POST',
+    url: 'materiaxdocente.php',
+    data: {parametro: parametro},
+    success: function(data) {
+      console.log('Respuesta del servidor:', data);
+      window.location.href = 'materiaxdocente.php';
+    }
+  });
+}
     </script>
     <?php include '../funciones/footer.html'; ?>
 </body>

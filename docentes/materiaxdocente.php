@@ -1,5 +1,17 @@
 <?php
 session_start();
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+ // Verifica si la cookie existe y establece la variable de sesión con su valor
+if (isset($_COOKIE['parametro'])) {
+  $_SESSION['parametro'] = $_COOKIE['parametro'];
+  $urlForm = $_SESSION['parametro'];
+} else {
+  // Si la cookie no existe, establece un valor por defecto para la variable de sesión
+  $_SESSION['parametro'] = '';
+  $urlForm = '';
+}
+}
+
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
@@ -7,13 +19,17 @@ include '../funciones/parametrosWeb.php';
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'].", ".$_SESSION['doc_nombre'];
 
+//$urlForm='carga_calif.php';
+$urlForm = $_SESSION['parametro'];
+
 //si ya seleccionó una materia, la guardo en la variable de sesión
 if (isset($_POST['idMateria'])) {
   $_SESSION['idMateria'] = $_POST['idMateria'];
   $_SESSION['materia'] = $_POST['materia'];
   $_SESSION['ciclolectivo'] = $_POST['ciclolectivo'];
   $_SESSION['plan'] = $_POST['plan'];
-  header('Location: carga_calif.php');
+  $url=$_POST['urlForm'];
+  header('Location: '.$url);
   exit;
 }
 
@@ -42,19 +58,20 @@ if (isset($_POST['valor'])) {
   $plan = $_POST['plan'];
   // Llamar a la función con el valor seleccionado
   $materiasAsignadas = obtenerMateriasxProfesor($conn,$doc_legajo,$ciclolectivo,$plan);
-  
   // Devolver los datos de la tabla en formato HTML
   echo '<table id="tablaMaterias" class="table table-hover col-12">
     <thead>
       <tr class="table-primary">
         <th scope="col">Materias asignadas al docente</th>
+        <th scope="col">Imprimir</th>
       </tr>
     </thead>
     <tbody>';
   foreach ($materiasAsignadas as $materia) {
     echo '<tr>
-      <td><a href="#" onclick="setMateria('.$materia['idMateria'].', \''.$materia['Materia'].'\')">'.$materia['Materia'].'</a></td>
-    </tr>';
+     <td><a href="#" onclick="setMateria('.$materia['idMateria'].', \''.$materia['Materia'].'\', \''.$_SESSION['parametro'].'\')">'.$materia['Materia'].'</a></td>
+     <td><a href="../reportes/calificacionesDocPDF.php?idMateria='.$materia['idMateria'].'" target="_blank"><i class="bi bi-printer"></i></a></td>
+   </tr>';
   }
   echo '</tbody>
   </table><br>';
@@ -85,14 +102,17 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
 </head>
 
 <body>
-<?php include '../funciones/menu_docente.php'; ?>
+<?php include '../funciones/menu_docente.php';?>
 
 <div class="container-fluid fondo">
   <br>
   <div class="container">
   <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="menudocentes.php">Inicio</a></li>
-    <li class="breadcrumb-item active">Carga de calificaciones parciales</li>
+  <?php if ($urlForm=='carga_calif.php') { 
+    echo '<li class="breadcrumb-item active">Carga de calificaciones parciales</li>'; } else
+    if ($urlForm=='carga_asist.php') {
+    echo '<li class="breadcrumb-item active">Carga de asistencias</li>'; } ?>
 </ol>
 
   <div class="card padding col-12">
@@ -136,16 +156,18 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
         <thead>
           <tr class="table-primary">
             <th scope="col">Materias asignadas al docente</th>
+            <th scope="col">Imprimir</th>
+
           </tr>
         </thead>
         <tbody>     
-        <?php
+        <?php 
           $materiasAsignadas = obtenerMateriasxProfesor($conn, $doc_legajo, $primerCicloLectivo, $primerPlan);
           foreach ($materiasAsignadas as $materia) { ?>
             <tr>
               <td>
-                <a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>')">
-                  <?php echo $materia['Materia']; ?>
+              <a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>', '<?php echo $_SESSION['parametro']; ?>')">
+              <?php echo $materia['Materia']; ?>
                 </a>
               </td>
             </tr>
@@ -183,15 +205,15 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
       });
     }
     //funcion para pasar idmateria,ciclolectivo y plan a la pagina carga_calif.php
-    function setMateria(idMateria, materia) {
+    function setMateria(idMateria, materia, urlForm) {
       var ciclolectivo = $('#ciclolectivo').find('option:selected').text();
       var plan = $('#plan').find('option:selected').text();
       $.ajax({
         type: 'POST',
         url: '<?php echo $_SERVER['PHP_SELF']; ?>',
-        data: {idMateria: idMateria, materia: materia, ciclolectivo: ciclolectivo, plan: plan},
+        data: {idMateria: idMateria, materia: materia, ciclolectivo: ciclolectivo, plan: plan, urlForm: urlForm},
         success: function(data) {
-          window.location.href = 'carga_calif.php';
+          window.location.href = urlForm;
         }
       });
     }

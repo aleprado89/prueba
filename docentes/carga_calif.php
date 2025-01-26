@@ -111,8 +111,13 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
   }
 });
       </script>
-
-
+<br>
+<div class="text-center">
+   <!-- BOTON VER LISTADO CALIFICACIONES -->
+           <a href="../reportes/calificacionesDocPDF.php" target="_blank">
+        <button class="btn btn-primary">Imprimir Calificaciones</button>
+    </a>
+      </div>
 
       <br>
       <div>

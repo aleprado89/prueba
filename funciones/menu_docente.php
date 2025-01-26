@@ -18,14 +18,12 @@
             </a>
           </li>
           <li class="nav-item active">
-            <a class="nav-link" href="materiaxdocente.php">Carga de calificaciones
-              <span class="visually-hidden">(current)</span>
+          <a class="nav-link" href="#" onclick="cargarParametro('carga_calif.php')">Carga de calificaciones</a>              <span class="visually-hidden">(current)</span>
             </a>
 
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="materias_planes.php">Carga de asistencia</a>
-          </li>
+          <a class="nav-link" href="#" onclick="cargarParametro('carga_asist.php')">Carga de asistencias</a>          </li>
           <li class="nav-item">
             <a class="nav-link" href="examenes_planes.php">Carga de actas</a>
           </li>
@@ -41,3 +39,18 @@
       </div>
     </div>
   </nav>
+  <script> //cargo el parametro en el hipervinculo
+    function cargarParametro(parametro) {
+  // Establece la cookie con el valor de la variable de sesión
+  document.cookie = "parametro=" + parametro + "; expires=" + new Date(Date.now() + 3600000).toUTCString();
+
+  $.ajax({
+    type: 'POST',
+    url: 'materiaxdocente.php',
+    data: {parametro: parametro},
+    success: function(data) {
+      console.log('Respuesta del servidor:', data);
+      window.location.href = 'materiaxdocente.php';
+    }
+  });
+}</script>
