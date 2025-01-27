@@ -1,6 +1,6 @@
 <?php
 
-function iniciarAnalisis($conexion, $idMateria, $idAlumno)
+function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
 {
     //DATOS COLEGIO
     $consulta = "SELECT * from colegio where nivel = 'Terciario'";
@@ -127,7 +127,17 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno)
         $cod_col
     );
 
-    return $analisis;
+    $estadoCursadoNumero = $analisis[0];
+    $estadoCursado = $analisis[1];
+
+    //Actualizar Estado
+    $consulta4 = "update calificacionesterciario
+    set estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = $estadoCursado 
+    where calificacionesterciario.idCalificacion = $idCalificacion";
+
+    $calif = mysqli_query($conexion, $consulta4);
+
+    return $estadoCursado;
 }
 
 //Datos necesarios para el analisis
