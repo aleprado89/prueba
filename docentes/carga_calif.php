@@ -44,7 +44,7 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+ 
   <!-- Bootstrap JS (necesario para el navvar) -->
   <script src="../js/bootstrap.min.js"></script>
 </head>
@@ -64,8 +64,12 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
         <h5><?php echo  "Docente: " . $nombreDoc; ?> </h5>
         <h5><?php echo  "Ciclo lectivo: " . $ciclolectivo; ?> </h5>
         <h5><?php echo  "Carrera: " . $plan; ?> </h5>
-        <h5><?php echo  "Materia: " . $materia; ?> </h5>
+        <h5><?php echo  "Materia: " . $materia; ?> </h5><br>
 
+        <p><small>* Las calificaciones se guardan automaticamente en cada modificación. Puede verificar la carga haciendo click en imprimir calificaciones.
+          <br>Valores permitidos:1-10(notas), A(ausente), a(ausente), AP(aprobado), ap(aprobado), NA(no aprobado), na(no aprobado).
+          </small></p>
+    
       </div>
 
 
@@ -79,35 +83,45 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
           var idCalificacion = celda.getAttribute('data-id');
           var nuevoValor = celda.textContent.trim(); // Agrega el método trim() aquí
 
-// Validación de caracteres permitidos
-var regex = /^[1-9]|10|a|A|AP|ap|Ap|NA|na|Na$/;
-  if (!regex.test(nuevoValor)) {
-    alert("Valor no permitido. Solo se permiten números del 1 al 10, 'a'(ausente), 'A'(ausente), 'AP'(aprobado), 'ap'(aprobado), 'Ap'(aprobado), 'NA'(no aprobado), 'na'(no aprobado) o 'Na'(no aprobado).");
-    celda.textContent = ''; // Borrar contenido de la celda
-    return;
-  }
+ // Validación de caracteres permitidos
+var valoresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'a', 'AP', 'ap', 'NA', 'na'];
 
-          $.ajax({
-            type: "POST",
-            url: "carga_calif.php",
-            data: {
-              idCalificacion: idCalificacion,
-              columna: columna,
-              nuevoValor: nuevoValor
-            },
-            success: function(respuesta) {}
-          });
-        }
+celda.onblur = function() {
+  var nuevoValor = celda.textContent.trim();
+  if (valoresPermitidos.indexOf(nuevoValor) === -1) {
+    if (nuevoValor.toUpperCase() === 'N') {
+      alert("Por favor, complete el valor con 'a' para 'na' o 'A' para 'NA'.");
+      celda.textContent = ''; // Borrar contenido de la celda
+      return;
+    } else {
+      alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A', 'a', 'AP', 'ap', 'NA', 'na'.");
+      celda.textContent = ''; // Borrar contenido de la celda
+      return;
+    }
+  }
+}
+
+$.ajax({
+  type: "POST",
+  url: "carga_calif.php",
+  data: {
+    idCalificacion: idCalificacion,
+    columna: columna,
+    nuevoValor: nuevoValor
+  },
+  success: function(respuesta) {}
+});
+}
+
         // Agregar evento de teclado a las celdas de la tabla
 $('.table td[contenteditable="true"]').on('keydown', function(e) {
   var charCode = e.which;
-  var regex = /^[1-9]|10|a|A|AP|ap|Ap|NA|na|Na$/;
+  var regex = /^[1-9]|10|a|A|AP|ap|Ap|NA|na$/;
 
   // Cancelar la inserción de caracteres no permitidos
   if (!regex.test(String.fromCharCode(charCode))) {
     e.preventDefault();
     $(this).text(''); // Borrar contenido de la celda
-
   }
 });
       </script>
@@ -118,7 +132,6 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
         <button class="btn btn-primary">Imprimir Calificaciones</button>
     </a>
       </div>
-
       <br>
       <div>
         <table id="tablaMaterias" class="table table-hover col-12">
@@ -149,7 +162,7 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
             <?php if (isset($alumnosCalif)) { ?>
               <?php foreach ($alumnosCalif as $listado) { ?>
                 <tr>
-                  <td><?php echo $listado['apellido'] . "" . $listado['nombre']; ?></td>
+                  <td><?php echo $listado['apellido'] . " " . $listado['nombre']; ?></td>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n1'])): ?>
                     <td contenteditable="true" oninput="actualizarCalif(this, 'n1')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n1']; ?>

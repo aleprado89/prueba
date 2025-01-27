@@ -824,3 +824,16 @@ function actualizarCalifDocente($conexion, $idCalif, $columna, $valor){
   }
   return $respuesta;
 }
+//funcion para actualizar asistencia
+function actualizarAsistxDocentes($conexion,$idAsistenciaTerciario,$columna,$valor){
+     $consulta = "UPDATE asistenciaterciario SET $columna = '$valor' WHERE idAsistenciaTerciario = $idAsistenciaTerciario";
+  
+  $resultado = mysqli_query($conexion, $consulta);
+  if (!$resultado) {
+    $respuesta= "Error: " . mysqli_error($conexion);
+  } else {
+    $respuesta ="Datos actualizados correctamente";
+  }
+  return $respuesta;
+
+}
