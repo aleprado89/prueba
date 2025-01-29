@@ -9,6 +9,8 @@ $idMateria = $_SESSION['idMateria'];
 $ciclolectivo = $_SESSION['ciclolectivo'];
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];
+$alumnosAsist = obtenerCalificacionesMateria($conn, $idMateria);
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -49,7 +51,23 @@ $materia = $_SESSION['materia'];
         <label for="fecha">Seleccione fecha:</label>
         <input type="date" id="fecha" name="fecha" value="<?php echo date('Y-m-d'); ?>">    
       </div>
-
+      <div>
+      <table id="tablaAsistencia" class="table table-hover col-12">
+  <thead>
+    <tr class="table-primary">
+      <th scope="col">Estudiante</th>
+      <th scope="col">Asistencia</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach ($alumnosAsist as $alumno) { ?>
+      <tr>
+        <td><?php echo $alumno['apellido'] . " " . $alumno['nombre']; ?></td>
+        <td contenteditable="true" data-id="<?php echo $alumno['id']; ?>"></td>
+      </tr>
+    <?php } ?>
+  </tbody>
+</table></div>
 
       <!-- Bootstrap JS y jQuery (necesario para el modal) -->
       <script src="../js/jquery-3.7.1.min.js"></script>
@@ -68,4 +86,22 @@ $materia = $_SESSION['materia'];
   <?php include '../funciones/footer.html'; ?>
 </body>
 
+<script>
+  $(document).ready(function() {
+    $('#tablaAsistencia td[contenteditable="true"]').on('input', function() {
+      var $this = $(this);
+      var id = $this.attr('data-id');
+      var asistencia = $this.text().trim();
+      if (asistencia.length > 5) {
+        alert('La asistencia solo puede tener hasta 5 caracteres');
+        $this.text(asistencia.substring(0, 5));
+      }
+      if (!/^[AaPp]+$/.test(asistencia)) {
+        alert('La asistencia solo puede contener letras A, a, P, p');
+        $this.text('');
+      }
+      // Aquí puedes agregar el código para enviar la asistencia al servidor
+    });
+  });
+</script>
 </html>

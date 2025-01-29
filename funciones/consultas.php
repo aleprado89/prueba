@@ -825,8 +825,8 @@ function actualizarCalifDocente($conexion, $idCalif, $columna, $valor){
   return $respuesta;
 }
 //funcion para actualizar asistencia
-function actualizarAsistxDocentes($conexion,$idAsistenciaTerciario,$columna,$valor){
-     $consulta = "UPDATE asistenciaterciario SET $columna = '$valor' WHERE idAsistenciaTerciario = $idAsistenciaTerciario";
+function actualizarAsistxDocentes($conexion,$idAlumno,$idCicloLectivo,$mes,$dia,$valor){
+     $consulta = "UPDATE asistenciaterciario SET $dia = '$valor' WHERE idAlumno = $idAlumno and idCicloLectivo=$idCicloLectivo and mes=$mes";
   
   $resultado = mysqli_query($conexion, $consulta);
   if (!$resultado) {
