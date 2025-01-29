@@ -2610,7 +2610,7 @@ function analisis_estado(
         }
 
         //Analisis Calificaciones Tipo Materia 1
-        if ($tipomateria == 1)   //Asignatura
+        if ($tipoMateria == 1)   //Asignatura
         {
 
             if ($p1 < 4 && $p1 >= 0) {
@@ -2736,7 +2736,7 @@ function analisis_estado(
         }
 
         //Analisis Calificaciones Tipo Materia 2 3
-        if ($tipomateria == 2 || $tipomateria == 3)   //Taller, Seminario
+        if ($tipoMateria == 2 || $tipoMateria == 3)   //Taller, Seminario
         {
             if ($p1 < 4 && $p1 >= 0) {
                 if ($r1 < 4) {
@@ -2861,7 +2861,7 @@ function analisis_estado(
         }
 
         //Analisis Calificaciones Tipo Materia 4
-        if ($tipomateria == 4)   //Ateneo
+        if ($tipoMateria == 4)   //Ateneo
         {
             if ($asistencia < 0 && $trabaja == 0) {
                 $asistOblig = "f";
@@ -2872,7 +2872,7 @@ function analisis_estado(
         }
 
         //Salida Analisis Tipo Materia 1
-        if ($tipomateria == 1) {
+        if ($tipoMateria == 1) {
             if ($regular == "f" || $asistOblig == "f")   //Libre
             {
                 $salida = 0;
@@ -2917,7 +2917,7 @@ function analisis_estado(
         }
 
         //Salida Analisis Tipo Materia 2 3
-        if ($tipomateria == 2 || $tipomateria == 3) {
+        if ($tipoMateria == 2 || $tipoMateria == 3) {
             if ($coloquio == "f" || $asistOblig == "f")       //Recursa
             {
                 $salida = 10;
@@ -2962,7 +2962,7 @@ function analisis_estado(
         }
 
         //Salida Analisis Tipo Materia 4
-        if ($tipomateria == 4) {
+        if ($tipoMateria == 4) {
             if ($asistOblig == "t")     //$asistencia Requerida
             {
                 $salida = 7;
