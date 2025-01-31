@@ -132,7 +132,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
 
     //Actualizar Estado
     $consulta4 = "update calificacionesterciario
-    set estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = $estadoCursado 
+    set estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = '$estadoCursado' 
     where calificacionesterciario.idCalificacion = $idCalificacion";
 
     $calif = mysqli_query($conexion, $consulta4);
@@ -3368,4 +3368,5 @@ function analisis_estado(
     //Salida (numeroEstado, textoEstado)
     return array($salida, $wanalisis);
 }
+
 ?>

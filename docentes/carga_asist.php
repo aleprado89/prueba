@@ -10,7 +10,6 @@ $ciclolectivo = $_SESSION['ciclolectivo'];
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];
 $alumnosAsist = obtenerCalificacionesMateria($conn, $idMateria);
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -103,5 +102,32 @@ $alumnosAsist = obtenerCalificacionesMateria($conn, $idMateria);
       // Aquí puedes agregar el código para enviar la asistencia al servidor
     });
   });
+//funcion para validar la fecha del select
+  function isValidDate(fecha) {
+  var date = new Date(fecha);
+  return !isNaN(date.getTime());
+}
+//funcion para mostrar alertas de que fecha esta cargando
+$(document).ready(function() {
+  var fecha = $('#fecha').val();
+  alert('Atención, la fecha seleccionada para la carga de asistencia es: ' + fecha + '. Para cargar otra fecha seleccione la fecha deseada.');
+  
+  var fechaInvalidaMostrada = false;
+  
+  $('#fecha').on('blur', function() {
+    var fecha = $(this).val();
+    if (isValidDate(fecha)) {
+      alert('Atención, la fecha seleccionada para la carga de asistencia es: ' + fecha + '. Para cargar otra fecha seleccione la fecha deseada.');
+      fechaInvalidaMostrada = false; // Resetea la variable
+    } else {
+      if (!fechaInvalidaMostrada) { // Verifica si se ha mostrado el alert de fecha inválida
+        alert('Error: La fecha ingresada es inválida. Por favor, ingrese una fecha válida.');
+        $(this).val(''); // Borra el valor del select
+        $(this).focus(); // Agrega un foco al select
+        fechaInvalidaMostrada = true; // Marca que se ha mostrado el alert de fecha inválida
+      }
+    }
+  });
+});
 </script>
 </html>

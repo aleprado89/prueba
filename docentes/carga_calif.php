@@ -21,7 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
   // Actualizar la base de datos con el nuevo valor
   $respuesta = actualizarCalifDocente($conn, $idCalificacion, $columna, $nuevoValor);
-  echo $nuevoValor;
+  //echo $nuevoValor;
+  //var_dump($respuesta);
+
+  echo $respuesta;
 
   exit;
 }
@@ -66,7 +69,7 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
         <h5><?php echo  "Carrera: " . $plan; ?> </h5>
         <h5><?php echo  "Materia: " . $materia; ?> </h5><br>
 
-        <p><small>* Las calificaciones se guardan automaticamente en cada modificación. Puede verificar la carga haciendo click en imprimir calificaciones.
+        <p><small>* Las calificaciones se guardan automaticamente en cada modificación. La celda se pinta de verde cuando la calificacion se ha guardado exitosamente. Si no se pinta de verde revise su conexion a internet.
           <br>Valores permitidos:1-10(notas), A(ausente), a(ausente), AP(aprobado), ap(aprobado), NA(no aprobado), na(no aprobado).
           </small></p>
     
@@ -84,7 +87,7 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
           var nuevoValor = celda.textContent.trim(); // Agrega el método trim() aquí
 
  // Validación de caracteres permitidos
-var valoresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'a', 'AP', 'ap', 'NA', 'na'];
+var valoresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'a', 'AP', 'ap', 'NA', 'na',''];
 
 celda.onblur = function() {
   var nuevoValor = celda.textContent.trim();
@@ -94,7 +97,7 @@ celda.onblur = function() {
       celda.textContent = ''; // Borrar contenido de la celda
       return;
     } else {
-      alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A', 'a', 'AP', 'ap', 'NA', 'na'.");
+      alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A', 'a', 'AP', 'ap', 'NA', 'na' ó vacio si no hay calificacion.");
       celda.textContent = ''; // Borrar contenido de la celda
       return;
     }
@@ -109,7 +112,11 @@ $.ajax({
     columna: columna,
     nuevoValor: nuevoValor
   },
-  success: function(respuesta) {}
+  success: function(respuesta) {
+    if (respuesta === "actualizado") {
+        celda.style.backgroundColor = 'lightgreen';
+      }
+  }
 });
 }
 
