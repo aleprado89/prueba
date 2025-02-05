@@ -2,6 +2,7 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/analisisestado.php';
 
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
@@ -9,23 +10,35 @@ $idMateria = $_SESSION['idMateria'];
 $ciclolectivo = $_SESSION['ciclolectivo'];
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];
+$i=0;
 // echo $idMateria;
 
 // actualizarCalifDocente($conn, 106045, 'n1', 4);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
+  // Obtiene los datos de la solicitud
   $idCalificacion = $_POST['idCalificacion'];
   $columna = $_POST['columna'];
   $nuevoValor = $_POST['nuevoValor'];
+  $idAlumno = $_POST['idAlumno'];
 
-  // Actualizar la base de datos con el nuevo valor
+  // Verifica si el valor contiene caracteres no permitidos
+  $caracteresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'a', 'AP', 'ap', 'NA', 'ña', ' '];
+  foreach (str_split($nuevoValor) as $caracter) {
+    if (!in_array($caracter, $caracteresPermitidos)) {
+      echo json_encode(array('respuesta' => 'error', 'mensaje' => 'Valor no permitido'));
+      exit;
+    }
+  }
+
+  // Llama a la función actualizarCalifDocente
   $respuesta = actualizarCalifDocente($conn, $idCalificacion, $columna, $nuevoValor);
-  //echo $nuevoValor;
-  //var_dump($respuesta);
 
-  echo $respuesta;
+  // Llama a la función iniciarAnalisis
+  $resultado = iniciarAnalisis($conn, $idMateria, $idAlumno, $idCalificacion);
 
+  // Devuelve el resultado
+  echo json_encode(array('respuesta' => $respuesta, 'resultado' => $resultado));
   exit;
 }
 
@@ -82,10 +95,15 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
       <script src="../js/bootstrap.min.js"></script>
 
       <script>
+
         function actualizarCalif(celda, columna) {
+
           var idCalificacion = celda.getAttribute('data-id');
           var nuevoValor = celda.textContent.trim(); // Agrega el método trim() aquí
-
+          var filaPadre = celda.parentNode.parentNode;
+          var trElement = celda.closest('tr[data-idAlumno]');
+          var idAlumno = trElement.getAttribute('data-idAlumno');
+         
  // Validación de caracteres permitidos
 var valoresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'a', 'AP', 'ap', 'NA', 'na',''];
 
@@ -95,29 +113,51 @@ celda.onblur = function() {
     if (nuevoValor.toUpperCase() === 'N') {
       alert("Por favor, complete el valor con 'a' para 'na' o 'A' para 'NA'.");
       celda.textContent = ''; // Borrar contenido de la celda
+      celda.dispatchEvent(new Event('input')); // Desencadenar el evento input
       return;
     } else {
       alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A', 'a', 'AP', 'ap', 'NA', 'na' ó vacio si no hay calificacion.");
       celda.textContent = ''; // Borrar contenido de la celda
+      celda.dispatchEvent(new Event('input')); // Desencadenar el evento input
       return;
     }
   }
-}
+ }
 
 $.ajax({
-  type: "POST",
-  url: "carga_calif.php",
-  data: {
-    idCalificacion: idCalificacion,
-    columna: columna,
-    nuevoValor: nuevoValor
-  },
-  success: function(respuesta) {
-    if (respuesta === "actualizado") {
-        celda.style.backgroundColor = 'lightgreen';
+    type: "POST",
+    url: "carga_calif.php",
+    data: {
+      idCalificacion: idCalificacion,
+      columna: columna,
+      nuevoValor: nuevoValor,
+      idAlumno: idAlumno
+
+    },
+    dataType: 'json',
+    success: function(respuesta) {
+ var filaPadre = celda.parentNode;
+          var rowId = filaPadre.rowIndex;
+      if (respuesta.respuesta === "actualizado") {
+        var filaActual = document.querySelectorAll('tr')[rowId];  
+        if (filaActual) {
+          var estadoParcialCorrecto = filaActual.querySelector('#estadoCursado');
+          if (estadoParcialCorrecto) {
+            celda.style.backgroundColor = 'lightgreen';
+            estadoParcialCorrecto.innerHTML = respuesta.resultado;
+          } else {
+            console.log('No se encontró la celda estadoCursado');
+          }
+        } else {
+          console.log('No se encontró la fila con el atributo data-row igual a ' + rowId);
+        }
+
+      } else {
+        celda.style.backgroundColor = '';
       }
-  }
-});
+
+    },
+  });
 }
 
         // Agregar evento de teclado a las celdas de la tabla
@@ -167,11 +207,11 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
           </thead>
           <tbody>
             <?php if (isset($alumnosCalif)) { ?>
-              <?php foreach ($alumnosCalif as $listado) { ?>
-                <tr>
-                  <td><?php echo $listado['apellido'] . " " . $listado['nombre']; ?></td>
+              <?php foreach ($alumnosCalif as $listado) {  ?>
+                <tr data-id="<?php echo $i; ?>" data-row="<?php echo $i; ?>" data-idAlumno="<?php echo $listado['idAlumno']; ?>">
+                <td><?php echo $listado['apellido'] . " " . $listado['nombre']; ?></td>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n1'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n1')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td contenteditable="true" oninput="actualizarCalif(this, 'n1')" data-id="<?php echo $listado['idCalificacion']; ?>" data-idAlumno="<?php echo $listado['idAlumno']; ?>">
                       <?php echo $listado['n1']; ?>
                     </td>
                   <?php else: ?>
@@ -314,10 +354,10 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
                       <?php echo $listado['r8']; ?>
                     </td>
                   <?php endif; ?>
-                  <td><?php echo $listado['estadoCursado']; ?></td>
+                  <td id="estadoCursado" ><?php echo $listado['estadoCursado']; ?></td>
                   <td><?php echo $listado['asistencia']; ?></td>
                 </tr>
-              <?php } ?>
+              <?php $i++;} ?>
             <?php } ?>
           </tbody>
         </table>
