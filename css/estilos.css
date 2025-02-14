@@ -1,3 +1,9 @@
+.celda-actualizada {
+  background-color: lightgreen;
+}
+.celda-invalida {
+  background-color: #ff0000;
+}
 footer {
  /* position: relative;*/
   margin-bottom: -10px;

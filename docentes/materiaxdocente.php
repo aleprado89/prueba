@@ -56,13 +56,20 @@ if (isset($_POST['valor'])) {
   $valorSeleccionado = $_POST['valor'];
   $ciclolectivo = $_POST['ciclolectivo'];
   $plan = $_POST['plan'];
+
   // Llamar a la función con el valor seleccionado
   $materiasAsignadas = obtenerMateriasxProfesor($conn,$doc_legajo,$ciclolectivo,$plan);
+
+  function getMes($i) {
+    $meses = array('Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre');
+    return $meses[$i-1];
+  }
   // Devolver los datos de la tabla en formato HTML
   echo '<table id="tablaMaterias" class="table table-hover col-12">
     <thead>
       <tr class="table-primary">
         <th scope="col">Materias asignadas al docente</th>
+        <th scope="col">Curso</th>
         <th scope="col">Imprimir</th>
       </tr>
     </thead>
@@ -70,7 +77,20 @@ if (isset($_POST['valor'])) {
   foreach ($materiasAsignadas as $materia) {
     echo '<tr>
      <td><a href="#" onclick="setMateria('.$materia['idMateria'].', \''.$materia['Materia'].'\', \''.$_SESSION['parametro'].'\')">'.$materia['Materia'].'</a></td>
-     <td><a href="../reportes/calificacionesDocPDF.php?idMateria='.$materia['idMateria'].'" target="_blank"><i class="bi bi-printer"></i></a></td>
+     <td>'.$materia['Curso'].' </td>
+     <td>';
+
+     if ($urlForm == 'carga_calif.php') {
+       echo '<a href="../reportes/calificacionesDocPDF.php?idMateria='.$materia['idMateria'].'" target="_blank"><i class="bi bi-printer"></i></a>';
+     } else if ($urlForm == 'carga_asist.php') {
+      echo '<select onchange="window.open(\'../reportes/asistenciaDocPDF.php?idMateria='.$materia['idMateria'].'&mes=\'+this.value, \'_blank\')">';
+      echo '<option value="">Mes</option>';
+      for ($i = 1; $i <= 12; $i++) {
+        echo '<option value="'.$i.'">'.getMes($i).'</option>';
+      }
+      echo '</select>';
+     }
+     echo '</td>
    </tr>';
   }
   echo '</tbody>
@@ -89,7 +109,7 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ver calificaciones</title>
+  <title>Materias del docente</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -148,31 +168,38 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
         ?>
       </select>
   </div>
-  
-  
-    <br>
+      <br>
+      <div class="d-block d-sm-none text-center">
+  ------>scroll a la derecha para imprimir------>
+</div>
     <div>
-      <table id="tablaMaterias" class="table table-hover col-12">
-        <thead>
-          <tr class="table-primary">
-            <th scope="col">Materias asignadas al docente</th>
-            <th scope="col">Imprimir</th>
-
-          </tr>
-        </thead>
-        <tbody>     
-        <?php 
-          $materiasAsignadas = obtenerMateriasxProfesor($conn, $doc_legajo, $primerCicloLectivo, $primerPlan);
-          foreach ($materiasAsignadas as $materia) { ?>
-            <tr>
-              <td>
-              <a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>', '<?php echo $_SESSION['parametro']; ?>')">
-              <?php echo $materia['Materia']; ?>
-                </a>
-              </td>
-            </tr>
-          <?php } ?>
-        </tbody>
+    <table id="tablaMaterias" class="table table-hover col-12">
+  <thead>
+    <tr class="table-primary">
+      <th scope="col">Materias asignadas al docente</th>
+      <th scope="col">Curso</th>
+      <th scope="col">Imprimir</th>
+    </tr>
+  </thead>
+  <tbody>
+  <?php foreach ($materiasAsignadas as $materia) { ?>
+    <tr>
+      <td><a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>', '<?php echo $_SESSION['parametro']; ?>')"><?php echo $materia['Materia']; ?></a></td>
+      <td><?php echo $materia['Curso']; ?> </td>
+      <td>
+        <?php if ($urlForm == 'carga_calif.php') { ?>
+          <a href="../reportes/calificacionesDocPDF.php?idMateria=<?php echo $materia['idMateria']; ?>" target="_blank"><i class="bi bi-printer"></i></a>
+        <?php } else if ($urlForm == 'carga_asist.php') { ?>
+          <select onchange="window.open('../reportes/asistenciaDocPDF.php?idMateria=<?php echo $materia['idMateria']; ?>&mes='+this.value, '_blank')">
+            <?php for ($i = 1; $i <= 12; $i++) { ?>
+              <option value="<?php echo $i; ?>"><?php echo getMes($i); ?></option>
+            <?php } ?>
+          </select>
+        <?php } ?>
+      </td>
+    </tr>
+  <?php } ?>
+  </tbody>     
       </table>
     </div>
   

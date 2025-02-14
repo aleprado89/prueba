@@ -1,4 +1,3 @@
-
 <nav class="navbar navbar-expand-lg " data-bs-theme="light">
     <div class="container ">
       <div class="d-flex flex-column align-items-center centrarlogomenu ">
@@ -25,7 +24,7 @@
           <li class="nav-item">
           <a class="nav-link" href="#" onclick="cargarParametro('carga_asist.php')">Carga de asistencias</a>          </li>
           <li class="nav-item">
-            <a class="nav-link" href="examenes_planes.php">Carga de actas</a>
+            <a class="nav-link" href="#" onclick="verificarFechaActasVolantes()">Carga de actas</a>
           </li>
         </ul>
         <ul class="ms-auto" style="list-style-type: none;">
@@ -39,6 +38,41 @@
       </div>
     </div>
   </nav>
+
+
+
+
+  <!-- Modal -->
+<div class="modal" id="inscModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Inscripciones Cerradas</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <p id="mensajeModal"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+       <!--           FUNCIONES     y SCRIPTS        -->
+
+<!-- Bootstrap JS y jQuery (necesario para el modal) -->
+<script src="../js/jquery-3.7.1.min.js"></script>
+ <script src="../js/bootstrap.min.js"></script> 
+ <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+  
   <script> //cargo el parametro en el hipervinculo
     function cargarParametro(parametro) {
   // Establece la cookie con el valor de la variable de sesión
@@ -53,4 +87,9 @@
       window.location.href = 'materiaxdocente.php';
     }
   });
-}</script>
+}
+
+
+
+
+</script>

@@ -16,7 +16,7 @@ $options->set('defaultFont', 'Arial');
 $dompdf = new Dompdf($options);
 
 //PREPARO CONSULTAS PARA LOS DATOS DEL REPORTE HTML
-$idMateria = $_SESSION['idMateria'];
+$idMateria = $_GET['idMateria'];
 $ciclolectivo = $_SESSION['ciclolectivo'];
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];

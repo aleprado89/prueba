@@ -32,6 +32,8 @@ if (!empty($colegio)) {
         $datosColegio[$i]['idTurnoActa'] = $data['cargaActaVolTurno'];
         $datosColegio[$i]['anioautoweb'] = $data['anioautoweb'];
         $datosColegio[$i]['anioCargaNotas'] = $data['anio_carga_notas'];
+        $datosColegio[$i]['cargaActaVolTurno'] = $data['cargaActaVolTurno'];
+
         $i++;
     }
 }

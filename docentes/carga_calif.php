@@ -209,153 +209,153 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
             <?php if (isset($alumnosCalif)) { ?>
               <?php foreach ($alumnosCalif as $listado) {  ?>
                 <tr data-id="<?php echo $i; ?>" data-row="<?php echo $i; ?>" data-idAlumno="<?php echo $listado['idAlumno']; ?>">
-                <td><?php echo $listado['apellido'] . " " . $listado['nombre']; ?></td>
+                <td class="border"><?php echo $listado['apellido'] . " " . $listado['nombre']; ?></td>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n1'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n1')" data-id="<?php echo $listado['idCalificacion']; ?>" data-idAlumno="<?php echo $listado['idAlumno']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n1')" data-id="<?php echo $listado['idCalificacion']; ?>" data-idAlumno="<?php echo $listado['idAlumno']; ?>">
                       <?php echo $listado['n1']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n1']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n2'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n2')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n2')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n2']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n2']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n3'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n3')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n3')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n3']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n3']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n4'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n4')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n4')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n4']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n4']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n5'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n5')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n5')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n5']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n5']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n6'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n6')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n6')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n6']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n6']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n7'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n7')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n7')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n7']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n7']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['n8'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'n8')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'n8')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['n8']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['n8']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r1'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r1')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r1')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r1']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r1']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r2'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r2')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r2')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r2']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r2']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r3'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r3')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r3')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r3']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r3']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r4'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r4')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r4')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r4']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r4']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r5'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r5')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r5')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r5']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r5']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r6'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r6')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r6')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r6']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r6']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r7'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r7')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r7')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r7']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r7']; ?>
                     </td>
                   <?php endif; ?>
                   <?php if ($_SESSION['profeModCalifAsis'] == 1 || empty($listado['r8'])): ?>
-                    <td contenteditable="true" oninput="actualizarCalif(this, 'r8')" data-id="<?php echo $listado['idCalificacion']; ?>">
+                    <td class="border" contenteditable="true" oninput="actualizarCalif(this, 'r8')" data-id="<?php echo $listado['idCalificacion']; ?>">
                       <?php echo $listado['r8']; ?>
                     </td>
                   <?php else: ?>
-                    <td>
+                    <td class="border">
                       <?php echo $listado['r8']; ?>
                     </td>
                   <?php endif; ?>
-                  <td id="estadoCursado" ><?php echo $listado['estadoCursado']; ?></td>
-                  <td><?php echo $listado['asistencia']; ?></td>
+                  <td class="border" id="estadoCursado" ><?php echo $listado['estadoCursado']; ?></td>
+                  <td class="border"><?php echo $listado['asistencia']; ?></td>
                 </tr>
               <?php $i++;} ?>
             <?php } ?>

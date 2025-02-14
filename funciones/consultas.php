@@ -688,10 +688,11 @@ function levantarCiclosLectivos($conexion){
 //obtener materiasxprofesor
 function obtenerMateriasxProfesor($conexion, $legajo,$idCicloLectivo,$idPlan)
 {
-    $consulta = "SELECT m.nombre, p.idMateria 
+    $consulta = "SELECT m.nombre, p.idMateria,c.nombre as nombreCurso
     FROM materiaterciario m 
     INNER JOIN profesorxmateria p 
-    ON m.idMateria = p.idMateria
+    ON m.idMateria = p.idMateria 
+	 INNER JOIN curso c ON m.idCurso=c.idCurso
     WHERE p.idPersonal = $legajo 
     AND m.idCicloLectivo = $idCicloLectivo 
     AND m.idPlan = $idPlan
@@ -707,7 +708,7 @@ function obtenerMateriasxProfesor($conexion, $legajo,$idCicloLectivo,$idPlan)
         AND (SELECT COUNT(*) FROM profesorxmateria p2 WHERE p2.idMateria = p.idMateria AND p2.tipo = 'Operador') = 0
       ) 
       OR p.tipo = 'Operador'
-    )";
+    ) ORDER BY m.nombre";
 
     $materias = mysqli_query($conexion, $consulta);
 
@@ -717,6 +718,7 @@ function obtenerMateriasxProfesor($conexion, $legajo,$idCicloLectivo,$idPlan)
         while ($data = mysqli_fetch_array($materias)) {
             $listadoMaterias[$i]['idMateria'] = $data['idMateria'];
             $listadoMaterias[$i]['Materia'] = $data['nombre'];
+            $listadoMaterias[$i]['Curso'] = $data['nombreCurso'];
             
             $i++;
         }
@@ -782,6 +784,29 @@ function obtenerCalificacionesMateria($conexion, $idMateria){
     }
     return $listadoMateria;
 }
+
+//obtener asistencia materia
+function obtenerAsistenciaMateria($conexion, $idMateria, $mes, $dia, $idCicloLectivo){
+    $consulta = 'SELECT p.nombre,p.apellido, asis.' . $dia . ', a.idAlumno FROM persona p INNER JOIN
+    alumnosterciario a ON p.idPersona=a.idPersona INNER JOIN 
+    asistenciaterciario asis ON a.idAlumno=asis.idAlumno WHERE asis.idMateria='.$idMateria.'
+    AND asis.mes='.$mes.' AND asis.idCicloLectivo='.$idCicloLectivo.''; 
+
+    $queryasist = mysqli_query($conexion, $consulta);   
+    $lista = array();
+    $i = 0;
+    if (!empty($queryasist)) {
+        while ($data = mysqli_fetch_array($queryasist)) {
+            $lista[$i]['idAlumno'] = $data['idAlumno'];
+            $lista[$i]['apellido'] = $data['apellido'];
+            $lista[$i]['nombre'] = $data['nombre'];
+            $lista[$i]['dia'] = $data[$dia];
+            $i++;
+}
+}
+    return $lista;
+}
+
 //actualizar calificaciones docente
 function actualizarCalifDocente($conexion, $idCalif, $columna, $valor){
   
@@ -807,4 +832,102 @@ function actualizarAsistxDocentes($conexion,$idAlumno,$idCicloLectivo,$mes,$dia,
   }
   return $respuesta;
 
+}
+//funcion para obtener asistencias por materia para pdf
+function obtenerAsistenciaMateriaPDF($conexion, $columnas, $idMateria, $mes, $idCicloLectivo){
+    $consulta = 'SELECT p.nombre,p.apellido,' . $columnas . ' FROM persona p INNER JOIN
+    alumnosterciario a ON p.idPersona=a.idPersona INNER JOIN 
+    asistenciaterciario asis ON a.idAlumno=asis.idAlumno WHERE asis.idMateria='.$idMateria.'
+    AND asis.mes='.$mes.' AND asis.idCicloLectivo='.$idCicloLectivo.'';
+    $numColumnas = count(explode(',', $columnas));
+
+    $queryasist = mysqli_query($conexion, $consulta);
+    $lista = array();
+    $i = 0;
+    if (!empty($queryasist)) {
+        while ($data = mysqli_fetch_array($queryasist)) {
+            $lista[$i]['apellido'] = $data['apellido'];
+            $lista[$i]['nombre'] = $data['nombre'];
+            for ($j = 0; $j < $numColumnas; $j++) {
+                $lista[$i]['d' . ($j + 1)] = $data[$j + 2];
+            }
+            $i++;
+        }
+    }
+    return $lista;
+}
+//obtener fechas de examen por profesor
+function obtenerFechasExamenProfesor($conexion, $idPersonal1, $idCicloLectivo,$idTurno,$idPlan) {
+    $consulta = "SELECT m.nombre,c.nombre AS nombreCurso,f.idMateria, f.idFechaExamen,f.fecha,f.hora
+FROM fechasexamenes f INNER JOIN materiaterciario m ON
+m.idMateria=f.idMateria INNER JOIN curso c ON
+c.idCurso=m.idCurso INNER JOIN plandeestudio p ON
+c.idPlanEstudio=p.idPlan
+WHERE f.idTurno=$idTurno AND f.idCicloLectivo=$idCicloLectivo AND f.p1=$idPersonal1 AND c.idPlanEstudio=$idPlan";
+
+    $fec = mysqli_query($conexion, $consulta);
+    $listadoFechasExamenes = array();
+    $i = 0;
+    if (!empty($fec)) {
+        while ($data = mysqli_fetch_array($fec)) {
+            $listadoFechasExamenes[$i]['idFechaExamen'] = $data['idFechaExamen'];
+            $listadoFechasExamenes[$i]['nombreMateria'] = $data['nombre'];
+            $listadoFechasExamenes[$i]['Curso'] = $data['nombreCurso'];
+            $listadoFechasExamenes[$i]['Fecha'] = $data['fecha'];
+            $listadoFechasExamenes[$i]['Hora'] = $data['hora'];
+            $listadoFechasExamenes[$i]['idMateria'] = $data['idMateria'];            
+            $i++;
+        }
+    }
+    return $listadoFechasExamenes;
+}
+//buscar turno de examen
+function buscarNombreTurno($conexion,$idTurno){
+    $consulta="select nombre from turnosexamenes where idTurno= '$idTurno'";
+$resultado=mysqli_query($conexion, $consulta);
+if ($resultado) {
+    // Obtener el nombre
+    if ($fila = mysqli_fetch_assoc($resultado)) {
+        $turno = $fila['nombre']; // Almacenar el nombre turno en una variable
+    } }
+
+return $turno ;
+}
+//obtener acta
+function obtenerActa($conexion, $idFechaExamen){
+    $consulta = "SELECT i.idAlumno, i.oral, i.escrito,i.calificacion,i.libro,i.folio,
+i.idCondicion,p.apellido,p.nombre FROM inscripcionexamenes i INNER JOIN
+alumnosterciario a ON i.idAlumno=a.idAlumno INNER JOIN persona p
+ON a.idPersona=p.idPersona WHERE i.idFechaExamen=$idFechaExamen";
+
+    $acta = mysqli_query($conexion, $consulta);
+    $listadoActa = array();
+    $i = 0;
+    if (!empty($acta)) {
+        while ($data = mysqli_fetch_array($acta)) {
+            $listadoActa[$i]['idAlumno'] = $data['idAlumno'];
+            $listadoActa[$i]['apellido'] = $data['apellido'];
+            $listadoActa[$i]['nombre'] = $data['nombre'];
+            $listadoActa[$i]['oral'] = $data['oral'];
+            $listadoActa[$i]['escrito'] = $data['escrito'];
+            $listadoActa[$i]['calificacion'] = $data['calificacion'];
+            $listadoActa[$i]['libro'] = $data['libro'];
+            $listadoActa[$i]['folio'] = $data['folio'];
+            $listadoActa[$i]['condicion'] = $data['idCondicion'];
+            $i++;
+        }
+    }
+    return $listadoActa;
+    
+}
+//actualizar acta
+function actualizarActa($conexion, $idFechaExamen, $idAlumno, $setUpdate){
+    $consulta = "UPDATE inscripcionexamenes SET $setUpdate WHERE idFechaExamen=$idFechaExamen and idAlumno=$idAlumno";
+    $resultado = mysqli_query($conexion, $consulta);
+    if (!$resultado) {
+        $respuesta= "Error: " . mysqli_error($conexion);
+      } else {
+        $respuesta = "actualizado";
+      }
+      return $respuesta;
 }

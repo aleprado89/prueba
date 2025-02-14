@@ -100,7 +100,7 @@
                 <div class="col-md-6">
                      <!-- Primera columna de la fila inferior  -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                    <a href="#" onclick="verificarFechaActasVolantes()" class="card-link ">
+                    <a href="mesasExamenProf.php" onclick="verificarFechaActasVolantes()" class="card-link ">
 
                       <div class="card-header"></div>
                       <div class="card-body">
@@ -190,8 +190,8 @@ $conn->close();
         
         if (cargaActaVolDesde <= fechaActual && cargaActaVolHasta>= fechaActual) {
           //codigo para ingresar al formulario de la carga de actas
-          $('#mensajeModal').text("La carga de actas está abierta." ); // Cambiar el contenido del modal con el mensaje
-          $('#inscModal').modal('show');
+          // $('#mensajeModal').text("La carga de actas está abierta." ); // Cambiar el contenido del modal con el mensaje
+          // $('#inscModal').modal('show');
         }
         else {
             // Código para abrir el modal que dice inscripcion cerrada
