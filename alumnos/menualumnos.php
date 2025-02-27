@@ -114,7 +114,7 @@
                     <div class="card-body">
                         <h4 class="card-title text-center">Actualizar datos personales</h4>
                         <div class="text-center">
-                        <i class="bi bi-person-gear icono" style="font-size: 3.2rem"></i>
+                        <i class="bi-person-gear icono" style="font-size: 3.2rem; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>

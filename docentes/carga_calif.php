@@ -4,18 +4,29 @@ include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/analisisestado.php';
 
+
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
 $idMateria = $_SESSION['idMateria'];
+$curso= $_SESSION['curso'];
 $ciclolectivo = $_SESSION['ciclolectivo'];
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];
 $i=0;
-// echo $idMateria;
 
-// actualizarCalifDocente($conn, 106045, 'n1', 4);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  if (isset($_POST['idAlumno']) && isset($_POST['abandono'])) {
+    // Actualizar la propiedad cursando en la base de datos
+    $idAlumno = $_POST['idAlumno'];
+    $abandono = $_POST['abandono'];
+    if ($abandono == 'true') {
+      $estado = 'Abandonó Cursado';
+    }
+   
+    // Aquí debes agregar la consulta SQL para actualizar la propiedad cursando
+$resultado=actualizarAbandonoCursado($conn, $idAlumno, $idMateria, $estado);
+  } else {
   // Obtiene los datos de la solicitud
   $idCalificacion = $_POST['idCalificacion'];
   $columna = $_POST['columna'];
@@ -41,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   echo json_encode(array('respuesta' => $respuesta, 'resultado' => $resultado));
   exit;
 }
-
+}
 
 $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 ?>
@@ -80,10 +91,11 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
         <h5><?php echo  "Docente: " . $nombreDoc; ?> </h5>
         <h5><?php echo  "Ciclo lectivo: " . $ciclolectivo; ?> </h5>
         <h5><?php echo  "Carrera: " . $plan; ?> </h5>
+        <h5><?php echo  "Curso: " . $curso; ?> </h5>
         <h5><?php echo  "Materia: " . $materia; ?> </h5><br>
 
         <p><small>* Las calificaciones se guardan automaticamente en cada modificación. La celda se pinta de verde cuando la calificacion se ha guardado exitosamente. Si no se pinta de verde revise su conexion a internet.
-          <br>Valores permitidos:1-10(notas), A(ausente), a(ausente), AP(aprobado), ap(aprobado), NA(no aprobado), na(no aprobado).
+          <br>Valores permitidos:1-10(notas), A(ausente), AP(aprobado), NA(no aprobado).
           </small></p>
     
       </div>
@@ -116,7 +128,7 @@ celda.onblur = function() {
       celda.dispatchEvent(new Event('input')); // Desencadenar el evento input
       return;
     } else {
-      alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A', 'a', 'AP', 'ap', 'NA', 'na' ó vacio si no hay calificacion.");
+      alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A', 'AP', 'NA' ó vacio si no hay calificacion.");
       celda.textContent = ''; // Borrar contenido de la celda
       celda.dispatchEvent(new Event('input')); // Desencadenar el evento input
       return;
@@ -171,13 +183,20 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
     $(this).text(''); // Borrar contenido de la celda
   }
 });
+
+// Agregar evento de cambio al checkbox
+$(document).on('change', 'input[type="checkbox"]', function() {
+  
+
+ 
+});
       </script>
 <br>
 <div class="text-center">
    <!-- BOTON VER LISTADO CALIFICACIONES -->
-           <a href="../reportes/calificacionesDocPDF.php" target="_blank">
-        <button class="btn btn-primary">Imprimir Calificaciones</button>
-    </a>
+           <a href="../reportes/calificacionesDocPDF.php?idMateria=<?php echo htmlspecialchars($idMateria); ?>&curso=<?php echo htmlspecialchars($curso); ?>&ciclolectivo=<?php echo htmlspecialchars($ciclolectivo); ?>&plan=<?php echo htmlspecialchars($plan); ?>&materia=<?php echo htmlspecialchars($materia); ?>" target="_blank">
+               <button class="btn btn-primary">Imprimir Calificaciones</button>
+           </a>
       </div>
       <br>
       <div>
@@ -203,7 +222,8 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
               <th scope="col">RIEFI</th>
               <th scope="col">Estado Parcial</th>
               <th scope="col">Asist</th>
-            </tr>
+              <th scope="col">Abandonó Cursado</th>          
+              </tr>
           </thead>
           <tbody>
             <?php if (isset($alumnosCalif)) { ?>
@@ -356,6 +376,16 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
                   <?php endif; ?>
                   <td class="border" id="estadoCursado" ><?php echo $listado['estadoCursado']; ?></td>
                   <td class="border"><?php echo $listado['asistencia']; ?></td>
+                  <td class="border text-center">
+                    <?php 
+                    if ($listado['estado'] == 'Abandonó Cursado') {
+                      echo '<input type="checkbox" id="abandono-'.$listado['idAlumno'].'" checked>';
+                    }
+                    else {
+                      echo '<input type="checkbox" id="abandono-'.$listado['idAlumno'].'">';
+                    }
+                    ?>
+                  </td>
                 </tr>
               <?php $i++;} ?>
             <?php } ?>
@@ -365,10 +395,84 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
     </div>
   </div>
   </div>
-
-
-
   <?php include '../funciones/footer.html'; ?>
+
+   <!-- Ventana modal con confirmación -->
+<div id="confirmarAbandono" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Confirmar abandono de materia</h4>
+      </div>
+      <div class="modal-body">
+        <p>Al marcar esta casilla, se bloquea la carga de calificaciones y asistencia del alumno. Esta opción solo se puede revertir desde secretaria ¿Desea continuar?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="confirmarAbandonoBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+$(document).ready(function() {
+  // Buscar los checkboxes que estén marcados como "Abandonó Cursado"
+  $('input[type="checkbox"][id^="abandono-"]').each(function() {
+    if ($(this).is(':checked')) {
+      var fila = $(this).closest('tr');
+      fila.find('td').css('background-color', '#ccc'); // Pintar la fila de gris
+      fila.find('td[contenteditable="true"]').attr('contenteditable', 'false'); // Bloquear las celdas
+      $(this).attr('disabled', true); // Deshabilitar el checkbox
+
+    }
+  });
+});
+//boton confirmar
+$(document).on('click', '#confirmarAbandonoBtn', function() {
+  var checkbox = $('#confirmarAbandono').data('checkbox');
+  var fila = checkbox.closest('tr');
+  var idAlumno = fila.attr('data-idAlumno');
+  var abandono = true; // El checkbox ya está marcado
+
+  // Actualizar la propiedad abandono en la base de datos
+  $.ajax({
+    type: "POST",
+    url: "carga_calif.php",
+    data: {
+      idAlumno: idAlumno,
+      abandono: abandono
+    },
+    success: function() {
+      console.log(abandono);
+    }
+  });
+
+  checkbox.prop('checked', true); // Marca el checkbox
+  fila.find('td').css('background-color', '#ccc'); // Pintar la fila de gris
+  fila.find('td[contenteditable="true"]').attr('contenteditable', 'false'); // Bloquear las celdas
+  checkbox.attr('disabled', true); // Deshabilitar el checkbox
+  $('#confirmarAbandono').modal('hide'); // Ocultar ventana modal
+});
+//abre el modal
+$(document).on('mousedown', 'input[type="checkbox"][id^="abandono-"]', function(event) {
+  event.preventDefault(); // Evita que se marque el checkbox
+  $('#confirmarAbandono').data('checkbox', $(this)); // Almacena el checkbox en la ventana modal
+  $('#confirmarAbandono').modal('show'); // Muestra la ventana modal
+});
+//boton cancelar del modal
+$(document).on('click', '.btn-default', function() {
+  var checkbox = $('#confirmarAbandono').data('checkbox');
+  checkbox.prop('checked', false); // Desmarca el checkbox
+  checkbox.removeAttr('disabled'); // Habilita el checkbox
+  checkbox.closest('tr').find('td[contenteditable="true"]').attr('contenteditable', 'true'); // Desbloquea las celdas
+  checkbox.closest('tr').find('td').css('background-color', ''); // Restaura el color original de la fila
+  $('#confirmarAbandono').modal('hide'); // Ocultar ventana modal
+});
+</script>
+
 </body>
 
 </html>

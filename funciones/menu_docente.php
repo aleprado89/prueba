@@ -63,7 +63,21 @@
 </div>
 
 
-
+<?php
+// Verifica si el período de actas está abierto
+function verificarPeriodoActas() {
+    $fechaActual = date('Y-m-d');
+    include '../inicio/conexion.php';
+    $sql = "SELECT cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE cargaActaVolDesde <= '$fechaActual' AND cargaActaVolHasta >= '$fechaActual'";
+    $resultado = $conn->query($sql);
+    if ($resultado->num_rows > 0) {
+        return true;
+    } else {
+        return false;
+    }
+    mysqli_close($conn);
+}
+?>
 
 
        <!--           FUNCIONES     y SCRIPTS        -->
@@ -89,7 +103,15 @@
   });
 }
 
-
+function verificarFechaActasVolantes() {
+        var periodoActasAbierto = '<?php echo verificarPeriodoActas() ? "abierto" : "cerrado"; ?>';
+        if (periodoActasAbierto == 'abierto') {
+            window.location.href = 'mesasExamenProf.php';
+        } else {
+            $('#inscModal').modal('show');
+            $('#mensajeModal').text("La carga de actas está cerrada. Los períodos de carga de actas están definidos por secretaria.");
+        }
+    }
 
 
 </script>

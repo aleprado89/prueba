@@ -28,6 +28,7 @@ if (isset($_POST['idMateria'])) {
   $_SESSION['materia'] = $_POST['materia'];
   $_SESSION['ciclolectivo'] = $_POST['ciclolectivo'];
   $_SESSION['plan'] = $_POST['plan'];
+  $_SESSION['curso'] = $_POST['curso'];
   $url=$_POST['urlForm'];
   header('Location: '.$url);
   exit;
@@ -41,6 +42,7 @@ $primerCiclolectivo=$datosColegio[0]['anioCargaNotas'];
 // Obtener el primer plan
 $planes = buscarPlanesProfesorMateria($conn,$doc_legajo);
 $primerPlan = $planes[0]['idPlan'];
+$nombrePlan=$planes[0]['nombrePlan'];
 
 // Cargar la variable de sesión con el primer ciclolectivo y plan
 if (!isset($_SESSION['valorSeleccionado'])) {
@@ -56,6 +58,7 @@ if (isset($_POST['valor'])) {
   $valorSeleccionado = $_POST['valor'];
   $ciclolectivo = $_POST['ciclolectivo'];
   $plan = $_POST['plan'];
+  $nombrePlan=buscarNombrePlan($conn,$plan);
 
   // Llamar a la función con el valor seleccionado
   $materiasAsignadas = obtenerMateriasxProfesor($conn,$doc_legajo,$ciclolectivo,$plan);
@@ -76,13 +79,13 @@ if (isset($_POST['valor'])) {
     <tbody>';
   foreach ($materiasAsignadas as $materia) {
     echo '<tr>
-     <td><a href="#" onclick="setMateria('.$materia['idMateria'].', \''.$materia['Materia'].'\', \''.$_SESSION['parametro'].'\')">'.$materia['Materia'].'</a></td>
+<td><a href="#" onclick="setMateria('.$materia['idMateria'].', \''.$materia['Materia'].'\', \''.$materia['Curso'].'\', \''.$_SESSION['parametro'].'\')">'.$materia['Materia'].'</a></td>
      <td>'.$materia['Curso'].' </td>
-     <td>';
+     <td class="text-center">';
 
      if ($urlForm == 'carga_calif.php') {
-       echo '<a href="../reportes/calificacionesDocPDF.php?idMateria='.$materia['idMateria'].'" target="_blank"><i class="bi bi-printer"></i></a>';
-     } else if ($urlForm == 'carga_asist.php') {
+echo '<a href="../reportes/calificacionesDocPDF.php?idMateria=' . htmlspecialchars($materia['idMateria']) . '&materia=' . htmlspecialchars($materia['Materia']) . '&curso=' . htmlspecialchars($materia['Curso']) . '&plan=' . htmlspecialchars($nombrePlan) . '&ciclolectivo=' . htmlspecialchars($ciclolectivo) . '" target="_blank"><i class="bi bi-printer"></i></a>';
+             } else if ($urlForm == 'carga_asist.php') {
       echo '<select onchange="window.open(\'../reportes/asistenciaDocPDF.php?idMateria='.$materia['idMateria'].'&mes=\'+this.value, \'_blank\')">';
       echo '<option value="">Mes</option>';
       for ($i = 1; $i <= 12; $i++) {
@@ -140,7 +143,12 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
         <?php
     $primerCicloLectivo = $datosColegio[0]['anioCargaNotas'];
     ?>
-<select name="ciclolectivo" class="form-select" id="ciclolectivo" onchange="cargarValor(this.value)" <?php if ($_SESSION['profeModCiclo'] == 0) { echo 'disabled'; } ?>>
+    <br>
+      <div class="row col-12 col-md-6">
+      <div class="col-auto "> 
+<label>Ciclo Lectivo:</label></div>
+<div class="col-12 col-md-8 ">
+<select name="ciclolectivo" class="form-select margenes padding" id="ciclolectivo" onchange="cargarValor(this.value)" <?php if ($_SESSION['profeModCiclo'] == 0) { echo 'disabled'; } ?>>
 <?php
         $ciclolectivos = levantarCiclosLectivos(conexion: $conn); // Llamar a la función levantarCiclosLectivos
         $ciclolectivo_seleccionado = null;
@@ -157,16 +165,20 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
           }
         }
       ?>
-    </select>
+    </select></div></div>
   <br>
-  <select name="plan" class="form-select" id="plan" onchange="cargarValor(this.value)">
+  <div class="row col-12 col-md-6 ">
+    <div class="col-auto ">  <label>Carrera:</label>
+    </div>
+  <div class="col-12 col-md-9 ">
+  <select name="plan" class="form-select margenes padding" id="plan" onchange="cargarValor(this.value)">
     <?php
         $planes = buscarPlanesProfesorMateria($conn,$doc_legajo); // Llamar a la función buscarPlanesProfesorMateria
         foreach ($planes as $plan) {
           echo '<option value="' . $plan['idPlan'] . '">' . $plan['nombrePlan'] . '</option>';
         }
         ?>
-      </select>
+      </select></div></div>
   </div>
       <br>
       <div class="d-block d-sm-none text-center">
@@ -184,12 +196,12 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
   <tbody>
   <?php foreach ($materiasAsignadas as $materia) { ?>
     <tr>
-      <td><a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>', '<?php echo $_SESSION['parametro']; ?>')"><?php echo $materia['Materia']; ?></a></td>
+<td><a href="#" onclick="setMateria(<?php echo $materia['idMateria']; ?>, '<?php echo $materia['Materia']; ?>', '<?php echo $materia['Curso']; ?>', '<?php echo $_SESSION['parametro']; ?>')"><?php echo $materia['Materia']; ?></a></td>
       <td><?php echo $materia['Curso']; ?> </td>
-      <td>
-        <?php if ($urlForm == 'carga_calif.php') { ?>
-          <a href="../reportes/calificacionesDocPDF.php?idMateria=<?php echo $materia['idMateria']; ?>" target="_blank"><i class="bi bi-printer"></i></a>
-        <?php } else if ($urlForm == 'carga_asist.php') { ?>
+      <td class="text-center">
+      <?php if ($urlForm == 'carga_calif.php') { ?>
+<a href="../reportes/calificacionesDocPDF.php?idMateria=<?php echo htmlspecialchars($materia['idMateria']); ?>&materia=<?php echo htmlspecialchars($materia['Materia']); ?>&curso=<?php echo htmlspecialchars($materia['Curso']); ?>&plan=<?php echo htmlspecialchars($primerPlan); ?>&ciclolectivo=<?php echo htmlspecialchars($primerCicloLectivo); ?>" target="_blank"><i class="bi bi-printer"></i></a>
+          <?php } else if ($urlForm == 'carga_asist.php') { ?>
           <select onchange="window.open('../reportes/asistenciaDocPDF.php?idMateria=<?php echo $materia['idMateria']; ?>&mes='+this.value, '_blank')">
             <?php for ($i = 1; $i <= 12; $i++) { ?>
               <option value="<?php echo $i; ?>"><?php echo getMes($i); ?></option>
@@ -232,13 +244,13 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
       });
     }
     //funcion para pasar idmateria,ciclolectivo y plan a la pagina carga_calif.php
-    function setMateria(idMateria, materia, urlForm) {
+    function setMateria(idMateria, materia,curso, urlForm) {
       var ciclolectivo = $('#ciclolectivo').find('option:selected').text();
       var plan = $('#plan').find('option:selected').text();
       $.ajax({
         type: 'POST',
         url: '<?php echo $_SERVER['PHP_SELF']; ?>',
-        data: {idMateria: idMateria, materia: materia, ciclolectivo: ciclolectivo, plan: plan, urlForm: urlForm},
+        data: {idMateria: idMateria, materia: materia, ciclolectivo: ciclolectivo, plan: plan,curso: curso ,urlForm: urlForm},
         success: function(data) {
           window.location.href = urlForm;
         }

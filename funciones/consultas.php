@@ -517,6 +517,19 @@ if ($resultado) {
 
 return $idCiclolectivo;
 }
+//buscar el anio por idciclo
+function buscarnombreCiclo($conexion, $idciclo)
+{
+$consulta="select anio from ciclolectivo where idCiclolectivo= $idciclo";
+$resultado=mysqli_query($conexion, $consulta);
+if ($resultado) {
+    // Obtener el ciclo lectivo
+    if ($fila = mysqli_fetch_assoc($resultado)) {
+        $anio = $fila['anio']; // Almacenar el idCiclolectivo en una variable
+    } }
+
+return $anio;
+}
 
 function selectCursadoFinalizadoByIdPlan($conexion,$idAlumno){
     $consulta = "SELECT p.nombre as nombre,c.anio as anio,cur.intencionExamen as intencionExamen from cursadofinalizado cur INNER JOIN
@@ -708,7 +721,7 @@ function obtenerMateriasxProfesor($conexion, $legajo,$idCicloLectivo,$idPlan)
         AND (SELECT COUNT(*) FROM profesorxmateria p2 WHERE p2.idMateria = p.idMateria AND p2.tipo = 'Operador') = 0
       ) 
       OR p.tipo = 'Operador'
-    ) ORDER BY m.nombre";
+    ) ORDER BY m.nombre,nombreCurso";
 
     $materias = mysqli_query($conexion, $consulta);
 
@@ -748,9 +761,10 @@ ON m.idMateria=pm.idMateria INNER JOIN plandeestudio p ON m.idPlan = p.idPlan
 
 //obtener registros decalificaciones de todos los alumnos de una materia
 function obtenerCalificacionesMateria($conexion, $idMateria){
-    $consulta = 'SELECT c.*,p.apellido,p.nombre from calificacionesterciario c inner join
-     alumnosterciario a on a.idAlumno=c.idAlumno inner join
-     persona p on p.idPersona=a.idPersona where idMateria = '.$idMateria;
+    $consulta = 'SELECT c.*,p.apellido,p.nombre,m.estado FROM persona p INNER JOIN alumnosterciario a ON
+p.idPersona=a.idPersona  inner JOIN matriculacionmateria m ON a.idAlumno=m.idAlumno INNER JOIN
+calificacionesterciario c ON m.idMateria=c.idMateria AND c.idAlumno=a.idAlumno
+WHERE m.idMateria = '.$idMateria.'  order by p.apellido,p.nombre';
     $querycalif = mysqli_query($conexion, $consulta);   
     $listadoMateria = array();
     $i = 0;
@@ -778,12 +792,14 @@ function obtenerCalificacionesMateria($conexion, $idMateria){
             $listadoMateria[$i]['r8'] = $data['r8'];
             $listadoMateria[$i]['asistencia'] = $data['asistencia'];
             $listadoMateria[$i]['estadoCursado'] = $data['estadoCursado'];
+            $listadoMateria[$i]['estado'] = $data['estado'];
 
             $i++;
         }
     }
     return $listadoMateria;
 }
+
 
 //obtener asistencia materia
 function obtenerAsistenciaMateria($conexion, $idMateria, $mes, $dia, $idCicloLectivo){
@@ -923,6 +939,17 @@ ON a.idPersona=p.idPersona WHERE i.idFechaExamen=$idFechaExamen";
 //actualizar acta
 function actualizarActa($conexion, $idFechaExamen, $idAlumno, $setUpdate){
     $consulta = "UPDATE inscripcionexamenes SET $setUpdate WHERE idFechaExamen=$idFechaExamen and idAlumno=$idAlumno";
+    $resultado = mysqli_query($conexion, $consulta);
+    if (!$resultado) {
+        $respuesta= "Error: " . mysqli_error($conexion);
+      } else {
+        $respuesta = "actualizado";
+      }
+      return $respuesta;
+}
+//actualizar abandono cursado
+function actualizarAbandonoCursado($conexion, $idAlumno, $idMateria,$estado){
+    $consulta = "UPDATE matriculacionmateria SET estado='$estado' WHERE idAlumno=$idAlumno and idMateria=$idMateria";
     $resultado = mysqli_query($conexion, $consulta);
     if (!$resultado) {
         $respuesta= "Error: " . mysqli_error($conexion);

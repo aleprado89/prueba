@@ -11,7 +11,7 @@
 
   <!-- <link rel="stylesheet" href="../css/bootstrap.min.css"> -->
   <!-- Font Awesome CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 </head>
 <body>
@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <div class="container-fluid text-center fondo" >
+    <div class="container-fluid text-center fondo padding-bottom margenbottom2" >
 <div class="container" style="margin-top: 5%;">
 <br>
     <div class="row">
@@ -43,25 +43,25 @@
             <!-- Columna en la mitad izquierda de la pantalla -->
             <div class="card carddoc " style="background-color: #739FA5;margin-bottom: 2%; ">
               <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
-                
+
                 <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php echo $_SESSION['doc_nombre']." ".$_SESSION["doc_apellido"]; ?></h4>
                 <br>
-                <div class="alert alert-dismissible alert-danger">
-  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  <h4 style="color:#333333;">Actas:</h4>
-  <p class="mb-0">El módulo de carga de actas de exámenes están cerradas.</a></p>
+                <div class="alert alert-dismissible alert-secondary">
+  <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
+  <h4 style="color:#333333;">¡Atención!</h4>
+  <p class="mb-0">La carga de actas de exámenes está deshabilitada.</a></p>
 </div>
                 <br>
                 <p class="card-text" style="margin-bottom: 20%;">Aquí puedes cargar calificaciones y asistencias y
-                  actualizar tus datos personales. Si se utiliza la carga de Actas desde esta plataforma, 
+                  actualizar tus datos personales. Si se utiliza la carga de Actas desde esta plataforma,
                   se abrirá solo en los períodos de fechas que secretaría habilite.
                   </p>
-                
+
               </div>
             </div>
                   </div>
 
-                 
+
 
         <div class="card carddoc col-md-7 custom-card">
         <div class="col-md-10 offset-md-1">
@@ -70,13 +70,13 @@
             <div class="row elemento" >
                 <div class="col-md-6">
                     <!-- Primera columna de la fila superior -->
-                    <div class="card  mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
+                    <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%; ">
                       <a href="#" onclick="cargarParametro('carga_calif.php')" class="card-link ">
-                      <div class="card-header"></div>
+                      <!-- <div class="card-header"></div> -->
                       <div class="card-body">
-                        <h4 class="card-title text-center">Carga de Calificaciones Parciales</h4>
+                        <h4 style="font-size: 1.35rem;" class="card-title text-center"> Carga de Calificaciones Parciales</h4>
                         <div class="card-header text-center">
-                          <i class="bi bi-award icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                          <i class="bi-pencil-square icono" style="font-size: 2.6rem; text-shadow: none;"></i>
                         </div>
                       </div></a>
                   </div>                </div>
@@ -86,21 +86,21 @@
                       <a href="#" onclick="cargarParametro('carga_asist.php')"  class="card-link ">
 
                       <div class="card-header"></div>
-                      <div class="card-body">
+                      <div class="card-body ">
                         <h4 class="card-title text-center">Carga de Asistencias</h4>
                         <div class="card-header text-center">
-                          <i class="bi bi-mortarboard icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                          <i class="bi-calendar-week icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>
-                  </div>               
+                  </div>
                  </div>
             </div>
             <div class="row">
                 <div class="col-md-6">
                      <!-- Primera columna de la fila inferior  -->
                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                    <a href="mesasExamenProf.php" onclick="verificarFechaActasVolantes()" class="card-link ">
+                    <a href="#"  onclick="verificarFechaActasVolantes()" class="card-link ">
 
                       <div class="card-header"></div>
                       <div class="card-body">
@@ -110,28 +110,29 @@
                         </div>
                       </div>
                       </a>
-                  </div>              
+                  </div>
                   </div>
                 <div class="col-md-6">
                      <!-- Segunda columna de la fila inferior  -->
-                    <!-- <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
-                      <a href="#" onclick="verificarFechaInscripcionExamen()" class="card-link">
+                     <div class="card mx-auto" style="background-color: #739FA5;margin-bottom: 2%;">
+                      <a href="actuaDatosDoc.php"  class="card-link">
 
                       <div class="card-header"></div>
                       <div class="card-body">
-                        <h4 class="card-title text-center">Inscripciones a exámenes</h4>
+                        <h4 class="card-title text-center">Actualizar datos personales</h4>
                         <div class="card-header text-center">
-                          <i class="bi bi-calendar-week icono" style="font-size: 2.8rem; text-shadow: none;"></i>
+                        <i class="bi-person-gear icono" style="font-size: 2.8rem; text-shadow: none;"></i>
                         </div>
                       </div>
                       </a>
-                  </div> -->              
-                 </div> 
+                  </div>
+                 </div>
             </div>
         </div>
       </div>
     </div>
 </div>
+    </div>
 
 
 <!-- Modal -->
@@ -159,17 +160,17 @@
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
 <script src="../js/jquery-3.7.1.min.js"></script>
- <script src="../js/bootstrap.min.js"></script> 
+ <script src="../js/bootstrap.min.js"></script>
  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 
 <script>
         /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA CARGA DE ACTAS
           function verificarFechaActasVolantes() {
- <?php 
+ <?php
 include '../inicio/conexion.php';
 
 // Realizar la consulta para obtener la fecha de ACTAS
-$sql = "SELECT cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE idColegio =" . $_SESSION['idColegio']; 
+$sql = "SELECT cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE idColegio =" . $_SESSION['idColegio'];
 $resultado = $conn->query($sql);
 
 if ($resultado->num_rows > 0) {
@@ -182,16 +183,18 @@ if ($resultado->num_rows > 0) {
   $fechaCargaActaHasta = null;
 }
 $conn->close();
-                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL  
+                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL
 
         var cargaActaVolDesde = new Date("<?php echo $fechaCargaActaDesde; ?>");
         var cargaActaVolHasta = new Date("<?php echo $fechaCargaActaHasta; ?>");
         var fechaActual = new Date();
-        
+
         if (cargaActaVolDesde <= fechaActual && cargaActaVolHasta>= fechaActual) {
           //codigo para ingresar al formulario de la carga de actas
           // $('#mensajeModal').text("La carga de actas está abierta." ); // Cambiar el contenido del modal con el mensaje
           // $('#inscModal').modal('show');
+          window.location.href = 'mesasExamenProf.php';
+
         }
         else {
             // Código para abrir el modal que dice inscripcion cerrada
@@ -219,15 +222,15 @@ $conn->close();
     }
     $conn->close();
     $fechaActual = date('Y-m-d H:i:s');
-    
-     
+
+
     if ($fechaCargaActaDesde <= $fechaActual && $fechaCargaActaHasta >= $fechaActual) {
-      
+
         echo 'var alertDiv = document.querySelector(".alert");'; // Selecciona el elemento <div> con la clase alert
-        echo 'alertDiv.classList.remove("alert-danger");'; // Elimina la clase alert-secondary
+        echo 'alertDiv.classList.remove("alert-secondary");'; // Elimina la clase alert-secondary
         echo 'alertDiv.classList.add("alert-success");'; // Agrega la clase alert-danger
         echo 'alertDiv.querySelector("h4").textContent = "¡Atención!";'; // Modifica el texto del título
-        echo 'alertDiv.querySelector("p").textContent = "La carga de actas de exámenes está abierta";'; // Modifica el texto del contenido
+        echo 'alertDiv.querySelector("p").textContent = "La carga de actas de exámenes está habilitada";'; // Modifica el texto del contenido
     }
     ?>
 

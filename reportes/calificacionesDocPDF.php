@@ -17,11 +17,13 @@ $dompdf = new Dompdf($options);
 
 //PREPARO CONSULTAS PARA LOS DATOS DEL REPORTE HTML
 $idMateria = $_GET['idMateria'];
-$ciclolectivo = $_SESSION['ciclolectivo'];
-$plan = $_SESSION['plan'];
-$materia = $_SESSION['materia'];
+$materia = $_GET['materia'];
+$curso = $_GET['curso'];
+$idciclolectivo = $_GET['ciclolectivo'];
+$ciclolectivo=buscarnombreCiclo($conn,$idciclolectivo);
+$plan = $_GET['plan'];
+//$materia = $_SESSION['materia'];
 $membrete=$_SESSION['membrete'];
-
 
 $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 
@@ -92,9 +94,12 @@ $html = '
 <body>
     <div class="header">
         <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
-        <h1>Listado de calificaciones</h1>
-        <h2>Plan: ' . $plan . '</h2>
-        <h2>Materia: ' . $materia . '</h2>
+        <h3>Listado de calificaciones</h3>
+        <h4>Plan: ' . $plan . '</h4>
+        <h4>Materia: ' . $materia . '</h4>
+        <h4>Curso: ' . $curso . '</h4>
+        <h4>Ciclo Lectivo: ' . $ciclolectivo . '</h4>
+        
     </div>
     <div class="container">
         <table>
