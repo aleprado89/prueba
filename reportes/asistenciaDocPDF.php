@@ -17,6 +17,13 @@ $options->set('defaultFont', 'Arial');
 $dompdf = new Dompdf($options);
 
 //PREPARO CONSULTAS PARA LOS DATOS DEL REPORTE HTML
+/*$idMateria = $_GET['idMateria'];
+$materia = $_GET['materia'];
+$curso = $_GET['curso'];
+$plan = $_GET['plan'];
+$ciclolectivo = $_GET['ciclolectivo'];
+$mes = $_GET['mes'];*/
+
 $idMateria = filter_var($_GET['idMateria'], FILTER_SANITIZE_NUMBER_INT);
 $mes = filter_var($_GET['mes'], FILTER_SANITIZE_NUMBER_INT);
 $mes = ltrim($mes, '0');
@@ -122,6 +129,7 @@ th:first-child { /* Establece un ancho mayor para la columna "Alumno" */
         <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
         <h1>Listado de asistencia por materia</h1>
         <h2>Plan: ' . $plan . '</h2>
+        <h2>Curso: ' . $curso . '</h2>
         <h2>Materia: ' . $materia . '</h2>
         <h2>'.$nombreMes.' - ' . $ciclolectivo . '</h2>
 

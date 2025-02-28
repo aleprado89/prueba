@@ -34,13 +34,19 @@ $resultado=actualizarAbandonoCursado($conn, $idAlumno, $idMateria, $estado);
   $idAlumno = $_POST['idAlumno'];
 
   // Verifica si el valor contiene caracteres no permitidos
-  $caracteresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'a', 'AP', 'ap', 'NA', 'ña', ' '];
+  $combinacionesPermitidas = ['AP', 'ap', 'NA', 'na'];
+if (in_array($nuevoValor, $combinacionesPermitidas)) {
+  // El valor es permitido
+} else {
+  // El valor no es permitido
+  $caracteresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'a', ' ', ''];
   foreach (str_split($nuevoValor) as $caracter) {
     if (!in_array($caracter, $caracteresPermitidos)) {
       echo json_encode(array('respuesta' => 'error', 'mensaje' => 'Valor no permitido'));
       exit;
     }
   }
+}
 
   // Llama a la función actualizarCalifDocente
   $respuesta = actualizarCalifDocente($conn, $idCalificacion, $columna, $nuevoValor);
@@ -117,26 +123,30 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
           var idAlumno = trElement.getAttribute('data-idAlumno');
          
  // Validación de caracteres permitidos
-var valoresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'a', 'AP', 'ap', 'NA', 'na',''];
+var valoresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'a',''];
+var valoresPermitidosMultiples = ['AP', 'ap', 'NA', 'na'];
 
 celda.onblur = function() {
   var nuevoValor = celda.textContent.trim();
   if (valoresPermitidos.indexOf(nuevoValor) === -1) {
-    if (nuevoValor.toUpperCase() === 'N') {
-      alert("Por favor, complete el valor con 'a' para 'na' o 'A' para 'NA'.");
-      celda.textContent = ''; // Borrar contenido de la celda
-      celda.dispatchEvent(new Event('input')); // Desencadenar el evento input
-      return;
-    } else {
+    var encontrado = false;
+    for (var i = 0; i < valoresPermitidosMultiples.length; i++) {
+      if (nuevoValor.toUpperCase() === valoresPermitidosMultiples[i].toUpperCase()) {
+        encontrado = true;
+        break;
+      }
+    }
+    if (!encontrado) {
       alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A', 'AP', 'NA' ó vacio si no hay calificacion.");
       celda.textContent = ''; // Borrar contenido de la celda
       celda.dispatchEvent(new Event('input')); // Desencadenar el evento input
       return;
     }
   }
- }
-
+}
+console.log(nuevoValor);
 $.ajax({
+  
     type: "POST",
     url: "carga_calif.php",
     data: {
@@ -184,12 +194,7 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
   }
 });
 
-// Agregar evento de cambio al checkbox
-$(document).on('change', 'input[type="checkbox"]', function() {
-  
 
- 
-});
       </script>
 <br>
 <div class="text-center">
