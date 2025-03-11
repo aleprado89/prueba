@@ -10,6 +10,7 @@ $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
 $idMateria = $_SESSION['idMateria'];
 $curso= $_SESSION['curso'];
 $ciclolectivo = $_SESSION['ciclolectivo'];
+$idCiclo=buscarIdCiclo($conn,$ciclolectivo);
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];
 $i=0;
@@ -199,7 +200,7 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
 <br>
 <div class="text-center">
    <!-- BOTON VER LISTADO CALIFICACIONES -->
-           <a href="../reportes/calificacionesDocPDF.php?idMateria=<?php echo htmlspecialchars($idMateria); ?>&curso=<?php echo htmlspecialchars($curso); ?>&ciclolectivo=<?php echo htmlspecialchars($ciclolectivo); ?>&plan=<?php echo htmlspecialchars($plan); ?>&materia=<?php echo htmlspecialchars($materia); ?>" target="_blank">
+           <a href="../reportes/calificacionesDocPDF.php?idMateria=<?php echo htmlspecialchars($idMateria); ?>&curso=<?php echo htmlspecialchars($curso); ?>&ciclolectivo=<?php echo htmlspecialchars($idCiclo); ?>&plan=<?php echo htmlspecialchars($plan); ?>&materia=<?php echo htmlspecialchars($materia); ?>" target="_blank">
                <button class="btn btn-primary">Imprimir Calificaciones</button>
            </a>
       </div>

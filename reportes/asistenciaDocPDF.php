@@ -7,7 +7,6 @@ include '../funciones/consultas.php';
 ob_end_clean();
 use Dompdf\Dompdf;
 use Dompdf\Options;
-
 // Crear una instancia de Dompdf
 $options = new Options();
 $options->set('isHtml5ParserEnabled', true);
@@ -16,20 +15,14 @@ $options->set('defaultFont', 'Arial');
 
 $dompdf = new Dompdf($options);
 
-//PREPARO CONSULTAS PARA LOS DATOS DEL REPORTE HTML
-/*$idMateria = $_GET['idMateria'];
-$materia = $_GET['materia'];
-$curso = $_GET['curso'];
-$plan = $_GET['plan'];
-$ciclolectivo = $_GET['ciclolectivo'];
-$mes = $_GET['mes'];*/
-
-$idMateria = filter_var($_GET['idMateria'], FILTER_SANITIZE_NUMBER_INT);
-$mes = filter_var($_GET['mes'], FILTER_SANITIZE_NUMBER_INT);
-$mes = ltrim($mes, '0');
-$ciclolectivo = $_SESSION['ciclolectivo'];
-$plan = $_SESSION['plan'];
-$materia = $_SESSION['materia'];
+$idMateria =filter_var($_GET['idMateria'], FILTER_SANITIZE_NUMBER_INT);
+$mes =filter_var($_GET['mes'], FILTER_SANITIZE_NUMBER_INT);
+//$mes = ltrim($mes, '0');
+$idCiclo = htmlspecialchars($_GET['ciclolectivo'], ENT_QUOTES, 'UTF-8');
+$ciclolectivo=buscarnombreCiclo($conn,$idCiclo);
+$plan = htmlspecialchars($_GET['plan'], ENT_QUOTES, 'UTF-8');
+$materia = htmlspecialchars($_GET['materia'], ENT_QUOTES, 'UTF-8');
+$curso = htmlspecialchars($_GET['curso'], ENT_QUOTES, 'UTF-8');
 $membrete=$_SESSION['membrete'];
 
 $nombreMes = array(
@@ -74,10 +67,9 @@ else if ($num_dias == 28) {
     asis.d21,asis.d22,asis.d23,asis.d24,asis.d25,asis.d26,asis.d27,asis.d28";
 }
 
-
-$idciclo=buscarIdCiclo($conn, $ciclolectivo);
-$alumnosAsis=obtenerAsistenciaMateriaPDF($conn, $columnasAsistencia, $idMateria, $mes, $idciclo);
-
+//$idciclo=buscarIdCiclo($conn, $ciclolectivo);
+//echo $idciclo;
+$alumnosAsis=obtenerAsistenciaMateriaPDF($conn, $columnasAsistencia, $idMateria, $mes, $idCiclo);
 // Cargar el contenido HTML
 $html = '
 
@@ -126,13 +118,22 @@ th:first-child { /* Establece un ancho mayor para la columna "Alumno" */
 </head>
 <body>
     <div class="header">
-        <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
-        <h1>Listado de asistencia por materia</h1>
-        <h2>Plan: ' . $plan . '</h2>
-        <h2>Curso: ' . $curso . '</h2>
-        <h2>Materia: ' . $materia . '</h2>
-        <h2>'.$nombreMes.' - ' . $ciclolectivo . '</h2>
-
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 50%; text-align: center;">
+                    <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
+                </td>
+                <td style="width: 50%; font-size: 12px; padding-left: 3px; box-sizing: border-box;">
+                    <div style="padding-left: 10px;">
+                        <h2 style="font-size: 14px;">Listado de asistencia por materia</h2>
+                        <h3>Plan: ' . $plan . '</h3>
+                        <h3>Curso: ' . $curso . '</h3>
+                        <h3>Materia: ' . $materia . '</h3>
+                        <h3>'.$nombreMes.' - ' . $ciclolectivo . '</h3>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
     <div class="container">
         <table>
@@ -164,6 +165,7 @@ $html .= '
 </html>';
         
 // Generar el PDF
+
  try {
      $dompdf->loadHtml($html);
      $dompdf->setPaper('A4', 'landscape'); // Establece el tamaño del papel en A4 y la orientación en horizontal

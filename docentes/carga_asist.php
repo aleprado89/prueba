@@ -7,8 +7,10 @@ $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
 $idMateria = $_SESSION['idMateria'];
 $ciclolectivo = $_SESSION['ciclolectivo'];
+$idCurso=buscarIdCiclo($conn,$ciclolectivo);
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];
+$curso = $_SESSION['curso'];
 $alumnosAsist = obtenerCalificacionesMateria($conn, $idMateria);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -117,10 +119,12 @@ $fecha = $dia . '/' . $mes . '/' . $anio;
         <h5><?php echo  "Docente: " . $nombreDoc; ?> </h5>
         <h5><?php echo  "Ciclo lectivo: " . $ciclolectivo; ?> </h5>
         <h5><?php echo  "Carrera: " . $plan; ?> </h5>
-        <h5><?php echo  "Materia: " . $materia; ?> </h5><br>
+        <h5><?php echo  "Materia: " . $materia; ?> </h5>
+        <h5><?php echo  "Curso: " . $curso; ?> </h5><br>
+        <div class="col-md-6>
         <label for="fecha">Seleccione fecha:</label>
         <input type="date" id="fecha" name="fecha" value="<?php echo $ciclolectivo . '-' . date('m-d'); ?>" min="<?php echo $ciclolectivo; ?>-01-01" max="<?php echo $ciclolectivo; ?>-12-31">  
-        <button class="btn btn-primary" id="cargar-asistencia">Seleccionar fecha</button>
+        <button class="btn btn-primary" id="cargar-asistencia">Seleccionar fecha</button></div>
          
         <br><p><small>* Las asistencias se guardan automaticamente en cada modificación. La celda se pinta de verde cuando la calificacion se ha guardado exitosamente. Si no se pinta de verde revise su conexion a internet y/o dispositivo.
           <br>Valores permitidos:P ó p(presente), A ó a(ausente). Se puede cargar 1 asistencia por día y hasta 5 asistencias por día por alumno(5 horas). 
@@ -163,18 +167,26 @@ $fecha = $dia . '/' . $mes . '/' . $anio;
  $(document).ready(function() {
   var fecha = $('#fecha').val();
   var partes = fecha.split('-');
-  var mes = partes[1];
+  var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
+  var anio = '<?php echo $idCurso; ?>'; // Obtiene el año de la fecha seleccionada
+  var plan = '<?php echo $plan; ?>'; // Obtiene el plan de la variable de sesión
+  var materia = '<?php echo $materia; ?>'; // Obtiene la materia de la variable de sesión
+  var curso = '<?php echo $curso; ?>'; // Obtiene el curso de la variable de sesión
   var idMateria = '<?php echo $idMateria; ?>';
-  var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&mes=' + encodeURIComponent(mes);
+  var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&mes=' + encodeURIComponent(mes) + '&ciclolectivo=' + encodeURIComponent(anio) + '&plan=' + encodeURIComponent(plan) + '&materia=' + encodeURIComponent(materia) + '&curso=' + encodeURIComponent(curso);
   $('#imprimir-asistencias').attr('href', url);
 
   $('#fecha').on('change', function() {
     var fecha = $(this).val();
     var partes = fecha.split('-');
-    var mes = partes[1];
+    var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
+  var anio = '<?php echo $idCurso; ?>'; // Obtiene el año de la fecha seleccionada
+  var plan = '<?php echo $plan; ?>'; // Obtiene el plan de la variable de sesión
+  var materia = '<?php echo $materia; ?>'; // Obtiene la materia de la variable de sesión
+  var curso = '<?php echo $curso; ?>'; // Obtiene el curso de la variable de sesión
     var idMateria = '<?php echo $idMateria; ?>';
-    var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&mes=' + encodeURIComponent(mes);
-    $('#imprimir-asistencias').attr('href', url);
+    var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&mes=' + encodeURIComponent(mes) + '&ciclolectivo=' + encodeURIComponent(anio) + '&plan=' + encodeURIComponent(plan) + '&materia=' + encodeURIComponent(materia) + '&curso=' + encodeURIComponent(curso);
+  $('#imprimir-asistencias').attr('href', url);
   });
 
   $('#tablaAsistencia td[contenteditable="true"]').on('input', function() {

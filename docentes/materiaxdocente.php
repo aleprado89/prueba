@@ -85,9 +85,11 @@ if (isset($_POST['valor'])) {
 
      if ($urlForm == 'carga_calif.php') {
 echo '<a href="../reportes/calificacionesDocPDF.php?idMateria=' . htmlspecialchars($materia['idMateria']) . '&materia=' . htmlspecialchars($materia['Materia']) . '&curso=' . htmlspecialchars($materia['Curso']) . '&plan=' . htmlspecialchars($nombrePlan) . '&ciclolectivo=' . htmlspecialchars($ciclolectivo) . '" target="_blank"><i class="bi bi-printer"></i></a>';
-             } else if ($urlForm == 'carga_asist.php') {
-      echo '<select onchange="window.open(\'../reportes/asistenciaDocPDF.php?idMateria='.$materia['idMateria'].'&curso='.$materia['Curso'].'materia='.$materia['Materia'].'ciclolectivo='.$ciclolectivo.'&plan='.$nombrePlan.'&mes=\'+this.value, \'_blank\')">';
-      echo '<option value="">Mes</option>';
+             } else if ($urlForm == 'carga_asist.php') {              
+              $url = 'http://localhost/prueba/reportes/asistenciaDocPDF.php?idMateria='.htmlspecialchars(string: $materia['idMateria']).'&materia='.htmlspecialchars($materia['Materia']).'&curso='.htmlspecialchars($materia['Curso']).'&plan='.htmlspecialchars($nombrePlan).'&ciclolectivo='.htmlspecialchars($ciclolectivo).'&mes=';
+echo '<select onchange="window.open(\''.$url.'\'+this.value, \'_blank\')">';    
+
+              echo '<option value="">Mes</option>';
       for ($i = 1; $i <= 12; $i++) {
         echo '<option value="'.$i.'">'.getMes($i).'</option>';
       }

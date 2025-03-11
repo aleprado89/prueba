@@ -806,7 +806,7 @@ function obtenerAsistenciaMateria($conexion, $idMateria, $mes, $dia, $idCicloLec
     $consulta = 'SELECT p.nombre,p.apellido, asis.' . $dia . ', a.idAlumno FROM persona p INNER JOIN
     alumnosterciario a ON p.idPersona=a.idPersona INNER JOIN 
     asistenciaterciario asis ON a.idAlumno=asis.idAlumno WHERE asis.idMateria='.$idMateria.'
-    AND asis.mes='.$mes.' AND asis.idCicloLectivo='.$idCicloLectivo.''; 
+    AND asis.mes='.$mes.' AND asis.idCicloLectivo='.$idCicloLectivo.' order by p.apellido,p.nombre'; 
 
     $queryasist = mysqli_query($conexion, $consulta);   
     $lista = array();
@@ -854,7 +854,7 @@ function obtenerAsistenciaMateriaPDF($conexion, $columnas, $idMateria, $mes, $id
     $consulta = 'SELECT p.nombre,p.apellido,' . $columnas . ' FROM persona p INNER JOIN
     alumnosterciario a ON p.idPersona=a.idPersona INNER JOIN 
     asistenciaterciario asis ON a.idAlumno=asis.idAlumno WHERE asis.idMateria='.$idMateria.'
-    AND asis.mes='.$mes.' AND asis.idCicloLectivo='.$idCicloLectivo.'';
+    AND asis.mes='.$mes.' AND asis.idCicloLectivo='.$idCicloLectivo.' order by p.apellido,p.nombre';
     $numColumnas = count(explode(',', $columnas));
 
     $queryasist = mysqli_query($conexion, $consulta);

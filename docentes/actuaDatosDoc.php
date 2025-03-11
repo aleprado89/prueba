@@ -171,7 +171,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
 </ol>
 
   <div class="card padding col-12">
-    <h5><?php echo  "Alumno: ".$nombreDoc." <br> DNI: ".$select_dni; ?> </h5>
+    <h5><?php echo  "Docente: ".$nombreDoc." <br> DNI: ".$select_dni; ?> </h5>
   </div>
   <br>
   <div class="card padding "> 

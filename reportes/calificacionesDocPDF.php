@@ -89,16 +89,19 @@ $html = '
         .columna4 {
             width: 5%;
         }
+            h3, h4,h5 {
+    line-height: 0.2; /* ajusta el valor según tus necesidades */
+}
     </style>
 </head>
 <body>
     <div class="header">
         <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
-        <h3>Listado de calificaciones</h3>
-        <h4>Plan: ' . $plan . '</h4>
-        <h4>Materia: ' . $materia . '</h4>
-        <h4>Curso: ' . $curso . '</h4>
-        <h4>Ciclo Lectivo: ' . $ciclolectivo . '</h4>
+        <h4>Listado de calificaciones</h4>
+        <h5>Plan: ' . $plan . '</h5>
+        <h5>Materia: ' . $materia . '</h5>
+        <h5>Curso: ' . $curso . '</h5>
+        <h5>Ciclo Lectivo: ' . $ciclolectivo . '</h5>
         
     </div>
     <div class="container">
