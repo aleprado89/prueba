@@ -1,27 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 
-<?php 
+<?php
+
+use FontLib\Table\Type\post;
+
 session_start(); 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
 //include '../funciones/pruebaSession.php';
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-  //BOTON VOLVER
-  if (isset($_POST['submitVolver'])) {
-    header("Location: ../alumnos/materias_materias.php");
-    exit;
-  }
-
-  //BOTON CANCELAR
-  if (isset($_POST['submitCancelar'])) {
-    header("Location: ../alumnos/materias_cancelar.php");
-    exit;
-  }
-}
 
 //VARIABLES
 $idCicloLectivo = $_SESSION['idCiclo'];
@@ -32,6 +20,33 @@ $nombrePlan = $_SESSION['nombreP'];
 $idMateria = $_SESSION['idM'];
 $nombreMateria = $_SESSION['nombreM'];
 $nombreCurso = $_SESSION['nombreC'];
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+  //BOTON VOLVER
+  if (isset($_POST['submitVolver'])) {
+    header("Location: ../alumnos/materias_materias.php");
+    exit;
+  }
+
+  //BOTON CANCELAR
+  if (isset($_POST['idMatriculacionWeb'])) {
+    $idMatriculacionWeb = $_POST["idMatriculacionWeb"];    
+    cancelarCursado($conn, $idMatriculacionWeb);
+
+    header("Location: materias_solicitar.php");
+    exit();
+  }
+  if(isset($_POST['idM'])){
+    $idMateria = $_POST['idM'];
+    solicitarCursado($conn, $idAlumno, $idMateria, $idCicloLectivo);
+
+    header("Location: materias_solicitar.php");
+    exit();
+  }
+}
+
+
 
 //FUNCIONES
 //LISTAR SOLICITUDES
@@ -96,7 +111,7 @@ while ($a < $cantidadSolicitudes) {
     <div class="col-12 col-md-6">    
     
     <!-- FORM SOLICITAR -->
-    <form action="../alumnos/materias_solicitar_ejecutar.php" method="POST">      
+    <form action="../alumnos/materias_solicitar.php" method="POST">      
       </div>
       
       <div class="col-12 col-md-6">
@@ -115,7 +130,7 @@ while ($a < $cantidadSolicitudes) {
   <div class="container mt-5">
 
     <!-- FORM CANCELAR -->
-    <form id="cancelar" action="../alumnos/materias_cancelar.php" method="post">
+    <form id="cancelar" action="../alumnos/materias_solicitar.php" method="post">
       <input type="hidden" name="idMatriculacionWeb" id="idMatriculacionWeb">
       
       <caption>Solicitudes Generadas</caption>

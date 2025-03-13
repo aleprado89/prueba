@@ -11,6 +11,18 @@ $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $idPlan = $_SESSION['idP'];
 $nombrePlan = $_SESSION['nombreP'];
 
+if($_SERVER['REQUEST_METHOD']=='POST'){
+  //BOTON CANCELAR
+  if (isset($_POST['idInscripcionWeb'])) {
+    $idInscripcionWeb = $_POST["idInscripcionWeb"];    
+    cancelarExamen($conn, $idInscripcionWeb);
+
+    header("Location: examenes_solicitudes_listado.php");
+    exit();
+  }
+
+}
+
 //FUNCIONES
 //LISTAR SOLICITUDES
 $listadoSolicitudes = array();
@@ -61,6 +73,7 @@ $cantidad = count($listadoSolicitudes);
           <th scope="col">Fecha</th>
           <th scope="col">Estado</th>
           <th scope="col">Observaciones</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -98,6 +111,14 @@ $cantidad = count($listadoSolicitudes);
             <td>
               <?php echo $Observaciones ?>
             </td>
+            <td>
+  <?php if ($Estado == "Pendiente") { ?>
+    <form action="examenes_solicitudes_listado.php" method="post">
+      <input type="hidden" name="idInscripcionWeb" value="<?php echo $idInscripcionWeb; ?>">
+      <button type="submit" class="btn btn-danger">Cancelar</button>
+    </form>
+  <?php } ?>
+</td>
           </tr>
 
           <?php

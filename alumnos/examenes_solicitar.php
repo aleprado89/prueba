@@ -8,21 +8,6 @@ include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
 //include '../funciones/pruebaSession.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-  //BOTON VOLVER
-  if (isset($_POST['submitVolver'])) {
-    header("Location: ../alumnos/examenes_materias.php");
-    exit;
-  }
-
-  //BOTON CANCELAR
-  if (isset($_POST['submitCancelar'])) {
-    header("Location: ../alumnos/examenes_cancelar.php");
-    exit;
-  }
-}
-
 //VARIABLES
 $idCicloLectivo = $_SESSION['idCiclo'];
 $idAlumno = $_SESSION['alu_idAlumno'];
@@ -32,6 +17,36 @@ $nombrePlan = $_SESSION['nombreP'];
 $idMateria = $_SESSION['idM'];
 $nombreMateria = $_SESSION['nombreM'];
 $nombreCurso = $_SESSION['nombreC'];
+$idDivision = $_SESSION['idDivision'];
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+  //BOTON VOLVER
+  if (isset($_POST['submitVolver'])) {
+    header("Location: ../alumnos/examenes_materias.php");
+    exit;
+  }
+
+  //BOTON CANCELAR
+  if (isset($_POST['idInscripcionWeb'])) {
+    $idInscripcionWeb = $_POST["idInscripcionWeb"];    
+    cancelarExamen($conn, $idInscripcionWeb);
+
+    header("Location: examenes_solicitar.php");
+    exit();
+  }
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["fechaExamen"])) {//cuando se aprieta el boton solicitar
+  $idFechaSeleccionada = $_POST["fechaExamen"];
+  $idMateria = $_POST['idM'];
+  solicitarExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $idFechaSeleccionada);
+
+  // Redirigir a la misma página 
+    header("Location: examenes_solicitar.php");
+  exit();
+}
 
 //FUNCIONES
 //LISTAR SOLICITUDES
@@ -51,7 +66,7 @@ while ($a < $cantidadSolicitudes) {
 
 //LISTAR FECHAS DISPONIBLES
 $listadoFechasExamenes = array();
-$listadoFechasExamenes = buscarFechasExamenTurno($conn, $idMateria, $nombreCurso, $idCicloLectivo, $datosColegio[0]['idTurno']);
+$listadoFechasExamenes = buscarFechasExamenTurno(conexion: $conn, idMateria: $idMateria, idCicloLectivo: $idCicloLectivo, idTurno: $datosColegio[0]['idTurno'], idDivision: $idDivision);
 $cantidadFechas = count($listadoFechasExamenes);
 ?>
 
@@ -110,7 +125,7 @@ $cantidadFechas = count($listadoFechasExamenes);
     <div class="col-12 col-md-6">
     <h5 class="padding">Fechas Disponibles</h5>
     <!-- FORM SOLICITAR -->
-    <form action="../alumnos/examenes_solicitar_ejecutar.php" method="POST">
+    <form action="../alumnos/examenes_solicitar.php" method="POST">
       <select class="form-select margenes padding" name="fechaExamen" id="fechaExamen">
         <?php
         $a = 0;
@@ -155,7 +170,7 @@ $cantidadFechas = count($listadoFechasExamenes);
   <div class="container mt-5">
 
     <!-- FORM CANCELAR -->
-    <form id="cancelar" action="../alumnos/examenes_cancelar.php" method="post">
+    <form id="cancelar" action="../alumnos/examenes_solicitar.php" method="post">
       <input type="hidden" name="idInscripcionWeb" id="idInscripcionWeb">
       <caption>Solicitudes Generadas</caption>
       <table class="table table-hover" <?php if ($cantidadSolicitudes == 0) { ?> style="display:none;" <?php } ?> >

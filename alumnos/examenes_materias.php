@@ -18,9 +18,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idM = $_POST['idM'];
     $nombreM = $_POST['nombreM'];
     $nombreC = $_POST['nombreC'];
+    $idDivision = $_POST['idDivision'];
     $_SESSION['idM'] = $idM;
     $_SESSION['nombreM'] = $nombreM;
     $_SESSION['nombreC'] = $nombreC;
+    $_SESSION['idDivision'] = $idDivision;
 
     header("Location: ../alumnos/examenes_solicitar.php");
     exit;
@@ -91,6 +93,7 @@ $cantidad = count($listadoMaterias);
           <input type="hidden" name="idM" id="idM">
           <input type="hidden" name="nombreM" id="nombreM">
           <input type="hidden" name="nombreC" id="nombreC">
+          <input type="hidden" name="idDivision" id="idDivision">
 
           <table id="materias" class="table table-hover col-12">
             <thead>
@@ -135,6 +138,7 @@ $cantidad = count($listadoMaterias);
                 $Curso = $listadoMaterias[$a]['Curso'];
                 $Estado = $listadoMaterias[$a]['Estado'];
                 $CalificacionFinal = $listadoMaterias[$a]['CalificacionFinal'];
+                $idDivision=$listadoMaterias[$a]['idDivision'];
                 $a++;
                 ?>
 
@@ -146,6 +150,9 @@ $cantidad = count($listadoMaterias);
                     </td>
                     <td style="display:none;" name="nombreM">
                       <?php echo $MateriaCompleto ?>
+                    </td>
+                    <td style="display:none;" id="idDivision" name="idDivision">
+                      <?php echo $idDivision ?>
                     </td>
                     <td>
                       <?php echo $Materia ?>
@@ -212,10 +219,12 @@ $cantidad = count($listadoMaterias);
           var idMateriaSeleccionada = fila.querySelector("td:nth-child(1)").innerText;
           var nombreMateriaCompleto = fila.querySelector("td:nth-child(2)").innerText;
           var nombreCursoCompleto = fila.querySelector("td:nth-child(4)").innerText;
+          var idDivision = fila.querySelector("#idDivision").innerText;
           // Cargar Datos
           document.getElementById("idM").value = idMateriaSeleccionada;
           document.getElementById("nombreM").value = nombreMateriaCompleto;
           document.getElementById("nombreC").value = nombreCursoCompleto;
+          document.getElementById("idDivision").value = idDivision;
           // Enviar el formulario
           document.getElementById("envio").submit();
         });

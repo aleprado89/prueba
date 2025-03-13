@@ -28,7 +28,7 @@ where materiaterciario.idPlan = $idPlan and materiaterciario.idCicloLectivo =
 //Calificaciones de un alumno por Plan
 function buscarMaterias($conexion, $idAlumno, $idPlan)
 {
-    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso,curso.idDivision as idDivision 
 from calificacionesterciario inner join materiaterciario 
 on calificacionesterciario.idMateria = materiaterciario.idMateria inner join curso
 on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
@@ -83,6 +83,7 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
             $listadoCalificaciones[$i]['Asistencia'] = $data['asistencia'];
             $listadoCalificaciones[$i]['Estado'] = $data['estadoCursado'];
             $listadoCalificaciones[$i]['CalificacionFinal'] = $examen;
+            $listadoCalificaciones[$i]['idDivision'] = $data['idDivision'];
             $i++;
         }
     }
@@ -428,7 +429,7 @@ and fechasexamenes.idTurno = $idTurno";
 }
 
 //Listado de fechas a examen por materia y turno
-function buscarFechasExamenTurno($conexion, $idMateria, $nombreCurso, $idCicloLectivo, $idTurno)
+function buscarFechasExamenTurno($conexion, $idMateria, $idCicloLectivo, $idTurno, $idDivision)
 {
     $consulta = "SELECT * from fechasexamenes inner join materiaterciario
 on fechasexamenes.idMateria = materiaterciario.idMateria inner join curso
@@ -436,8 +437,8 @@ on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
 on curso.idcursopredeterminado = cursospredeterminado.idcursopredeterminado
 where materiaterciario.idUnicoMateria = 
 (Select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = $idMateria)
-and fechasexamenes.idCicloLectivo = $idCicloLectivo 
-and fechasexamenes.idTurno = $idTurno";
+and fechasexamenes.idCicloLectivo = $idCicloLectivo
+and fechasexamenes.idTurno = $idTurno AND curso.idDivision=$idDivision";
 
     $fec = mysqli_query($conexion, $consulta);
 
