@@ -598,6 +598,7 @@ and matriculacionmateria_web.idcicloLectivo = $idCicloLectivo";
         while ($data = mysqli_fetch_array($sol)) {
             $listadoSolicitudesMateria[$i]['idMatriculacionWeb'] = $data['id_matriculacion_web'];
             $listadoSolicitudesMateria[$i]['Materia'] = $data['nombreMateria'];            
+            $listadoSolicitudesMateria[$i]['Fecha'] = $data['fechhora_inscri'];
             if ($data['estado'] == '1') {
                 $listadoSolicitudesMateria[$i]['Estado'] = "Pendiente";
             }

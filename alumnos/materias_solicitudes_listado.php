@@ -11,6 +11,15 @@ $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $idPlan = $_SESSION['idP'];
 $nombrePlan = $_SESSION['nombreP'];
 
+//BOTON CANCELAR
+if($_SERVER['REQUEST_METHOD']=='POST'){
+  $idMatriculacionWeb = $_POST["idMatriculacionWeb"];    
+  cancelarCursado($conn, $idMatriculacionWeb);
+
+  header("Location: materias_solicitudes_listado.php");
+  exit();
+}
+
 //FUNCIONES
 //LISTAR SOLICITUDES
 $listadoSolicitudes = array();
@@ -60,6 +69,8 @@ $cantidad = count($listadoSolicitudes);
           <th scope="col">Materia</th>
           <th scope="col">Estado</th>
           <th scope="col">Observaciones</th>
+          <th scope="col">Fecha</th>
+          <th scope="col"></th>
         </tr>
       </thead>
       <tbody>
@@ -73,6 +84,7 @@ $cantidad = count($listadoSolicitudes);
           $Materia = $listadoSolicitudes[$a]['Materia'];
           $Estado = $listadoSolicitudes[$a]['Estado'];
           $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
+          $fecha=$listadoSolicitudes[$a]['Fecha'];
           $a++;
           ?>
 
@@ -89,6 +101,15 @@ $cantidad = count($listadoSolicitudes);
             <td>
               <?php echo $Observaciones ?>
             </td>
+            <td><?php echo $fecha ?></td>
+            <td>
+                <?php if ($Estado == "Pendiente") { ?>
+                  <form action="materias_solicitudes_listado.php" method="post">
+                    <input type="hidden" name="idMatriculacionWeb" value="<?php echo $idMatriculacionWeb; ?>">                  
+                  <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
+                  </form>
+                <?php } ?>
+              </td>
           </tr>
 
           <?php
