@@ -64,8 +64,12 @@ $cantidad = count($listadoSolicitudes);
     <h5><?php echo  "Carrera: ".$nombrePlan; ?></h5>
   </div>
   <br>
+  <div class="container text-center">
+  <a href="../reportes/solicitudesExamPDF.php" class="btn btn-primary" target="_blank">Imprimir</a>
+  <br><br>
+  </div>
      <div class="container">
-    <table class="table table-hover">
+        <table class="table table-hover">
       <thead>
         <tr class="table-primary">
           <th scope="col" style="display:none;">idInscripcionWeb</th>
