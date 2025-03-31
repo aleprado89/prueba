@@ -101,7 +101,7 @@
         <td contenteditable="false"><?php echo $alumno['apellido'] . ', ' . $alumno['nombre']; ?></td>
         <td contenteditable="true" data-columna="oral" oninput="actualizarCelda( <?php echo $alumno['idAlumno']; ?>, 'oral', this.textContent)"><?php echo $alumno['oral']; ?></td>
 <td contenteditable="true" data-columna="escrito" oninput="actualizarCelda( <?php echo $alumno['idAlumno']; ?>, 'escrito', this.textContent)"><?php echo $alumno['escrito']; ?></td>
-<td contenteditable="true" data-columna="calificacion" oninput="actualizarCelda( <?php echo $alumno['idAlumno']; ?>, 'calificacion', this.textContent)"><?php echo $alumno['calificacion']; ?></td>
+<td contenteditable="true" data-columna="calificacion" oninput="actualizarCelda(<?php echo $alumno['idAlumno']; ?>, 'calificacion', this.textContent)" onblur="if (this.textContent.toUpperCase() === 'APT') { this.textContent = ''; actualizarCelda(<?php echo $alumno['idAlumno']; ?>, 'calificacion', this.textContent); }"><?php echo $alumno['calificacion']; ?></td>
 <td contenteditable="true" data-columna="libro" oninput="actualizarCelda(<?php echo $alumno['idAlumno']; ?>, 'libro', this.textContent)"><?php echo $alumno['libro']; ?></td>
 <td contenteditable="true" data-columna="folio" oninput="actualizarCelda( <?php echo $alumno['idAlumno']; ?>, 'folio', this.textContent)"><?php echo $alumno['folio']; ?></td>
  </tr>
@@ -123,14 +123,15 @@
 <script>
     
     function actualizarCelda(idAlumno, columna, valor) {
+      
       if (['escrito', 'oral', 'calificacion'].includes(columna)) {
-    const valoresValidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'a', ''];
-    if (!valoresValidos.includes(valor)) {
-      alert("Dato inválido");
-      $(`tr[data-id-alumno="${idAlumno}"] td[data-columna="${columna}"]`).text('');
-      valor = "";
-    }
-  } else if (['libro', 'folio'].includes(columna)) {
+  const valoresValidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'a','ap','apto','na','apt',''].map(x => x.toUpperCase()); 
+  if (!valoresValidos.includes(valor.toUpperCase())) {
+    alert("Dato inválido");
+    $(`tr[data-id-alumno="${idAlumno}"] td[data-columna="${columna}"]`).text('');
+    valor = "";
+  }
+} else if (['libro', 'folio'].includes(columna)) {
     if (valor.length > 10) {
       alert("Máximo 10 caracteres permitidos");
       $(`tr[data-id-alumno="${idAlumno}"] td[data-columna="${columna}"]`).text('');

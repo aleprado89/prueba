@@ -86,7 +86,7 @@ if (isset($_POST['valor'])) {
      if ($urlForm == 'carga_calif.php') {
 echo '<a href="../reportes/calificacionesDocPDF.php?idMateria=' . htmlspecialchars($materia['idMateria']) . '&materia=' . htmlspecialchars($materia['Materia']) . '&curso=' . htmlspecialchars($materia['Curso']) . '&plan=' . htmlspecialchars($nombrePlan) . '&ciclolectivo=' . htmlspecialchars($ciclolectivo) . '" target="_blank"><i class="bi bi-printer"></i></a>';
              } else if ($urlForm == 'carga_asist.php') {              
-              $url = 'http://localhost/prueba/reportes/asistenciaDocPDF.php?idMateria='.htmlspecialchars(string: $materia['idMateria']).'&materia='.htmlspecialchars($materia['Materia']).'&curso='.htmlspecialchars($materia['Curso']).'&plan='.htmlspecialchars($nombrePlan).'&ciclolectivo='.htmlspecialchars($ciclolectivo).'&mes=';
+              $url = '../reportes/asistenciaDocPDF.php?idMateria='.htmlspecialchars(string: $materia['idMateria']).'&materia='.htmlspecialchars($materia['Materia']).'&curso='.htmlspecialchars($materia['Curso']).'&plan='.htmlspecialchars($nombrePlan).'&ciclolectivo='.htmlspecialchars($ciclolectivo).'&mes=';
 echo '<select onchange="window.open(\''.$url.'\'+this.value, \'_blank\')">';    
 
               echo '<option value="">Mes</option>';

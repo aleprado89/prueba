@@ -146,31 +146,11 @@ function buscarMateriasAdeuda($conexion, $cicloLectivo, $idAlumno, $idPlan)
     and c1.idAlumno = $idAlumno
     and mt1.idAlumno = $idAlumno
     and
-    ( 
-    (
+    (     
     c1.materiaAprobada = 1 or 
-    mt1.estado = 'Aprobación PreSistema' or 
-    mt1.estado = 'Regularidad PreSistema' or
+    mt1.estado = 'Aprobación PreSistema' or     
     mt1.estado = 'Aprobación por Equivalencia' or 
-    mt1.estado = 'Aprobación por Pase'
-    ) 
-    or
-    (
-    c1.estadoCursado != 'Libre' and
-    c1.estadoCursado != 'Libre (Abandonó)' and
-    c1.estadoCursado != 'Libre - S/Asist' and
-    c1.estadoCursado != 'Libre - S/Asist (Abandonó)' and
-    c1.estadoCursado != 'Pendiente' and
-    c1.estadoCursado != 'Pendiente (Abandonó)' and
-    c1.estadoCursado != 'Pendiente - S/Asist' and
-    c1.estadoCursado != 'Pendiente - S/Asist (Abandonó)' and
-    c1.estadoCursado != 'Recursa' and
-    c1.estadoCursado != 'Recursa (Abandonó)' and
-    c1.estadoCursado != 'Recursa - S/Asist' and
-    c1.estadoCursado != 'Recursa - S/Asist (Abandonó)' and
-    c1.estadoCursado != 'Desaprob./Recurs. PreSistema'
-    )
-    or (c1.estadoCursado is null)
+    mt1.estado = 'Aprobación por Pase'       
     )
     )
     order by curso.idcursopredeterminado, materiaterciario.ubicacion";

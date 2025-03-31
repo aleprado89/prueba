@@ -108,11 +108,10 @@ while ($a < $cantidadSolicitudes) {
     </h5>
 
   <div class="row col-12 ">
-    <div class="col-12 col-md-6">    
     
     <!-- FORM SOLICITAR -->
     <form action="../alumnos/materias_solicitar.php" method="POST">      
-      </div>
+      
       
       <div class="col-12 col-md-6">
       <br>

@@ -21,13 +21,17 @@
             <a class="nav-link" href="calificaciones_planes.php">Calificaciones
               <span class="visually-hidden">(current)</span>
             </a>
-
           </li>
-          <li class="nav-item">
+                   <li class="nav-item">
             <a class="nav-link" href="materias_planes.php">Insc.Cursado</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="examenes_planes.php">Insc. Exámen</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="actuaDatosAlu.php">Datos Personales
+              <span class="visually-hidden">(current)</span>
+            </a>
           </li>
         </ul>
         <ul class="ms-auto" style="list-style-type: none;">
