@@ -88,51 +88,56 @@ $cantidad = count($listadoMaterias);
       <div class="container">
         <br>
         <!-- FORM SOLICITAR -->
-        <form id="envio" method="post">
-          <input type="hidden" name="idM" id="idM">
-          <input type="hidden" name="nombreM" id="nombreM">
-          <input type="hidden" name="nombreC" id="nombreC">
-
-          <table id="materias" class="table table-hover col-12">
-            <thead>
-              <tr class="table-primary">
-                <th scope="col" style="display:none;">idMateria</th>
-                <th scope="col">Materia</th>  
-                <th scope="col">Curso</th>              
-                <th scope="col">Solicitar Inscripción</th>
-              </tr>
-            </thead>
-            <tbody>
-
-              <?php
-
-              //RECORRER TABLA DE MATERIAS
-              $a = 0;
-              while ($a < $cantidad) {
-
-                $idMateria = $listadoMaterias[$a]['idMateria'];
-                $Materia = $listadoMaterias[$a]['Materia'];
-                $Curso = $listadoMaterias[$a]['Curso'];
-                $a++;
-                ?>
-                <tr>
-                  <td style="display:none;" name="idM">
-                    <?php echo $idMateria ?>
-                  </td>
-                  <td name="nombreM">
-                    <?php echo $Materia ?>
-                  </td>      
-                  <td name="nombreC">
-                    <?php echo $Curso ?>
-                  </td>             
-                  <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
-                </tr>
-
-                <?php } ?>
-
-            </tbody>
-          </table>
-        </form>
+                <form id="envio" method="post">
+                  <input type="hidden" name="idM" id="idM">
+                  <input type="hidden" name="nombreM" id="nombreM">
+                  <input type="hidden" name="nombreC" id="nombreC">
+        
+                  <table id="materias" class="table table-hover col-12"  >
+                    <thead>
+                      <tr class="table-primary">
+                        <th scope="col" style="display:none;">idMateria</th>
+                        <th scope="col">Materia</th>  
+                        <th scope="col">Curso</th>              
+                        <th scope="col">Solicitar Inscripción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php $hayRegistros = false; ?>
+                      <?php
+        
+                      //RECORRER TABLA DE MATERIAS
+                      $a = 0;
+                      while ($a < $cantidad) {
+        
+                        $idMateria = $listadoMaterias[$a]['idMateria'];
+                        $Materia = $listadoMaterias[$a]['Materia'];
+                        $Curso = $listadoMaterias[$a]['Curso'];
+                        $a++;
+                        $hayRegistros = true; // Establece la variable en true si se encuentra al menos un registro
+                        ?>
+                        <tr>
+                          <td style="display:none;" name="idM">
+                            <?php echo $idMateria ?>
+                          </td>
+                          <td name="nombreM">
+                            <?php echo $Materia ?>
+                          </td>      
+                          <td name="nombreC">
+                            <?php echo $Curso ?>
+                          </td>             
+                          <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
+                        </tr>
+        
+                        <?php } ?>
+                        <?php if (!$hayRegistros) { ?>
+                          <tr>
+                            <td colspan="4" >No hay registros</td>
+                          </tr>
+                        <?php } ?>
+                    </tbody>
+                  </table>
+                </form>
       </div>
     </div>
   </div>

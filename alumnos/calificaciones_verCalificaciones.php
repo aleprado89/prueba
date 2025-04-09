@@ -149,32 +149,57 @@ $datosCursado = cursadoMateria($conn, $idMateria, $idAlumno);
 
      
 
-        <?php
+      <?php
 
-        //RECORRER TABLA DE EXAMENES
-        
-        $a = 0;
-        while ($a < $cantidad) {
-          $Fecha = $listadoExamenes[$a]['Fecha'];
-          $Calificacion = $listadoExamenes[$a]['Calificacion'];
-          $a++;
-          ?>
+//RECORRER TABLA DE EXAMENES
 
-          <tr>
-            <td>
-              <?php 
-              $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
-              $fechaFormateada = $fechaFormato->format('d-m-Y');
-              echo $fechaFormateada ?>
-            </td>
-            <td class= "text-center">
-              <?php echo $Calificacion ?>
-            </td>
-          </tr>
+$a = 0;
+while ($a < $cantidad) {
+  $Fecha = $listadoExamenes[$a]['Fecha'];
+  $Calificacion = $listadoExamenes[$a]['Calificacion'];
+  if ($Calificacion != "") {
+    ?>
+    <tr>
+      <td>
+        <?php 
+        $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
+        $fechaFormateada = $fechaFormato->format('d-m-Y');
+        echo $fechaFormateada ?>
+      </td>
+      <td class= "text-center">
+        <?php echo $Calificacion ?>
+      </td>
+    </tr>
+    <?php
+  }
+  $a++;
+}
 
-          <?php
-        }
-        ?>
+// Si no hay registros, mostrar mensaje
+if ($cantidad == 0) {
+  ?>
+  <tr>
+    <td colspan="2" class="text-center">No hay registros</td>
+  </tr>
+  <?php
+} else {
+  $hayRegistros = false;
+  foreach ($listadoExamenes as $examen) {
+    if ($examen['Calificacion'] != "") {
+      $hayRegistros = true;
+      break;
+    }
+  }
+  if (!$hayRegistros) {
+    ?>
+    <tr>
+      <td colspan="2" >No hay registros</td>
+    </tr>
+    <?php
+  }
+}
+
+?>
 
       </tbody>
     </table>

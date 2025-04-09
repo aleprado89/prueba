@@ -298,6 +298,34 @@ where inscripcionexamenes.idAlumno = $idAlumno and materiaterciario.idUnicoMater
             $i++;
         }
     }
+
+    // Agregar la segunda consulta
+    $consulta2 = "SELECT mt.fechaMatriculacion AS fecha, c.examenIntegrador AS calificacion 
+                  FROM matriculacionmateria mt
+                  INNER JOIN calificacionesterciario c 
+                  ON mt.idAlumno = c.idAlumno AND mt.idMateria = c.idMateria
+                  WHERE mt.idAlumno = $idAlumno 
+                  AND mt.idMateria IN (
+                    SELECT m1.idMateria 
+                    FROM materiaterciario m1 
+                    WHERE m1.idUnicoMateria IN (
+                      SELECT m2.idUnicoMateria 
+                      FROM materiaterciario m2 
+                      WHERE m2.idMateria = $idMateria
+                    )
+                  )
+                  AND mt.estado IN ('Aprobación PreSistema', 'Aprobación Por Equivalencia', 'Aprobación Por Pase')";
+
+    $matriculacion = mysqli_query($conexion, $consulta2);
+
+    if (!empty($matriculacion)) {
+        while ($data = mysqli_fetch_array($matriculacion)) {
+            $listadoExamenes[$i]['Fecha'] = $data['fecha'];
+            $listadoExamenes[$i]['Calificacion'] = $data['calificacion'];
+            $i++;
+        }
+    }
+
     return $listadoExamenes;
 }
 

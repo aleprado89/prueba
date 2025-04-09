@@ -108,13 +108,11 @@ $cantidad = count($listadoMaterias);
               </tr>
             </thead>
             <tbody>
-
+              <?php $hayRegistros = false; ?>
               <?php
-
               //RECORRER TABLA DE CALIFICACIONES          
               $a = 0;
               while ($a < $cantidad) {
-
                 //LIMITAR CANTIDAD DE PALABRAS DE NOMBRE MATERIA          
                 $idMateria = $listadoMaterias[$a]['idMateria'];
                 $Materia = $listadoMaterias[$a]['Materia'];
@@ -134,16 +132,16 @@ $cantidad = count($listadoMaterias);
                     break;
                   }
                 }
-
+            
                 $Curso = $listadoMaterias[$a]['Curso'];
                 $Estado = $listadoMaterias[$a]['Estado'];
                 $CalificacionFinal = $listadoMaterias[$a]['CalificacionFinal'];
                 $idDivision=$listadoMaterias[$a]['idDivision'];
                 $a++;
                 ?>
-
+            
                 <?php if (empty(trim($CalificacionFinal)) || $CalificacionFinal == null) { ?>
-
+                  <?php $hayRegistros = true; ?>
                   <tr>
                     <td style="display:none;" name="idM">
                       <?php echo $idMateria ?>
@@ -167,13 +165,13 @@ $cantidad = count($listadoMaterias);
                     <!-- <td>
                     $calificacionFinal iba aca
                     </td> -->
-
+            
                     <?php
                       //Control Existe Solicitud
                       $listadoSolicitudes = array();
                       $listadoSolicitudes = existeSolicitudExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $datosColegio[0]['idTurno']);
                       $cantidadSolicitudes = count($listadoSolicitudes);
-
+            
                       $habilitado = true;
                       $b = 0;
                       while ($b < $cantidadSolicitudes) {
@@ -195,6 +193,11 @@ $cantidad = count($listadoMaterias);
                         <?php } ?>
                       </tr>                  
                     <?php } } ?>
+              <?php if (!$hayRegistros) { ?>
+                <tr>
+                  <td colspan="6">No hay registros</td>
+                </tr>
+              <?php } ?>
             </tbody>
           </table>
         </form>

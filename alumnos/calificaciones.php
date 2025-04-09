@@ -115,102 +115,105 @@ $cantidad = count($listadoCalificaciones);
 </div>
 
    
-  <div class="container mt-5">
-     <table id="tablamaterias" class="table table-hover">
-      <thead>
-        <tr class="table-primary">
-          <!-- 24 columnas -->
-          <th scope="col" style="display:none;">idMateria</th>
-          <th scope="col" style="display:none;">Materia Completo</th>
-          <th scope="col">Materia</th>
-          
-          <th scope="col">Asistencia</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Exa. Final</th>
-          <th scope="col">Ver Calificaciones</th>
-        </tr>
-      </thead>
-      <tbody>
-
-        <?php
-
-        //RECORRER TABLA DE CALIFICACIONES
-        
-        $a = 0;
-        while ($a < $cantidad) {
-
-          //LIMITAR CANTIDAD DE PALABRAS DE NOMBRE MATERIA
-        
-          $idMateria = $listadoCalificaciones[$a]['idMateria'];
-          $Materia = $listadoCalificaciones[$a]['Materia'];
-          $MateriaCompleto = $Materia;
-          $MateriaArray = explode(" ", $Materia);
-          $cantidadPabras = count($MateriaArray);
-          $b = 0;
-          while ($b < $cantidadPabras) {
-            if ($b == 0) {
-              $Materia = $MateriaArray[$b];
-            } else {
-              $Materia = $Materia . " " . $MateriaArray[$b];
-            }
-            $b++;
-            if ($b == 8) {
-              $Materia = $Materia . "...";
-              break;
-            }
-          }
-          $Curso = $listadoCalificaciones[$a]['Curso'];
-          $n1 = $listadoCalificaciones[$a]['n1'];
-          $n2 = $listadoCalificaciones[$a]['n2'];
-          $n3 = $listadoCalificaciones[$a]['n3'];
-          $n4 = $listadoCalificaciones[$a]['n4'];
-          $n5 = $listadoCalificaciones[$a]['n5'];
-          $n6 = $listadoCalificaciones[$a]['n5'];
-          $n7 = $listadoCalificaciones[$a]['n5'];
-          $n8 = $listadoCalificaciones[$a]['n5'];
-          $r1 = $listadoCalificaciones[$a]['n5'];
-          $r2 = $listadoCalificaciones[$a]['n5'];
-          $r3 = $listadoCalificaciones[$a]['n5'];
-          $r4 = $listadoCalificaciones[$a]['n5'];
-          $r5 = $listadoCalificaciones[$a]['n5'];
-          $r6 = $listadoCalificaciones[$a]['n5'];
-          $r7 = $listadoCalificaciones[$a]['n5'];
-          $r8 = $listadoCalificaciones[$a]['n5'];
-          $Asistencia = $listadoCalificaciones[$a]['Asistencia'];
-          $Estado = $listadoCalificaciones[$a]['Estado'];
-          $CalificacionFinal = $listadoCalificaciones[$a]['CalificacionFinal'];
-          $a++;
-          ?>
-
-          <tr class="table-light">
-            <td style="display:none;">
-              <?php echo $idMateria ?>
-            </td>
-            <td style="display:none;">
-              <?php echo $MateriaCompleto ?>
-            </td>
-            <td>
-              <?php echo $Materia ?>
-            </td>           
-            <td>
-              <?php echo $Asistencia ?>
-            </td>
-            <td>
-              <?php echo $Estado ?>
-            </td>
-            <td class= "text-center">
-              <?php echo $CalificacionFinal ?>
-            </td>
-            <td><button type="button" onclick="verCalificaciones(this)" class="btn btn-primary">Ver Calificaciones</button></td>
-          </tr>
-
-          <?php
-        }
-        ?>
-
-      </tbody>
-    </table>
-  </div>
+ <div class="container mt-5">
+   <table id="tablamaterias" class="table table-hover">
+     <thead>
+       <tr class="table-primary">
+         <!-- 24 columnas -->
+         <th scope="col" style="display:none;">idMateria</th>
+         <th scope="col" style="display:none;">Materia Completo</th>
+         <th scope="col">Materia</th>
+         
+         <th scope="col">Asistencia</th>
+         <th scope="col">Estado</th>
+         <th scope="col">Exa. Final</th>
+         <th scope="col">Ver Calificaciones</th>
+       </tr>
+     </thead>
+     <tbody>
+       <?php if ($cantidad == 0) { ?>
+         <tr>
+           <td colspan="7" >No hay registros</td>
+         </tr>
+       <?php } else { ?>
+         <?php
+         //RECORRER TABLA DE CALIFICACIONES
+         
+         $a = 0;
+         while ($a < $cantidad) {
+ 
+           //LIMITAR CANTIDAD DE PALABRAS DE NOMBRE MATERIA
+         
+           $idMateria = $listadoCalificaciones[$a]['idMateria'];
+           $Materia = $listadoCalificaciones[$a]['Materia'];
+           $MateriaCompleto = $Materia;
+           $MateriaArray = explode(" ", $Materia);
+           $cantidadPabras = count($MateriaArray);
+           $b = 0;
+           while ($b < $cantidadPabras) {
+             if ($b == 0) {
+               $Materia = $MateriaArray[$b];
+             } else {
+               $Materia = $Materia . " " . $MateriaArray[$b];
+             }
+             $b++;
+             if ($b == 8) {
+               $Materia = $Materia . "...";
+               break;
+             }
+           }
+           $Curso = $listadoCalificaciones[$a]['Curso'];
+           $n1 = $listadoCalificaciones[$a]['n1'];
+           $n2 = $listadoCalificaciones[$a]['n2'];
+           $n3 = $listadoCalificaciones[$a]['n3'];
+           $n4 = $listadoCalificaciones[$a]['n4'];
+           $n5 = $listadoCalificaciones[$a]['n5'];
+           $n6 = $listadoCalificaciones[$a]['n5'];
+           $n7 = $listadoCalificaciones[$a]['n5'];
+           $n8 = $listadoCalificaciones[$a]['n5'];
+           $r1 = $listadoCalificaciones[$a]['n5'];
+           $r2 = $listadoCalificaciones[$a]['n5'];
+           $r3 = $listadoCalificaciones[$a]['n5'];
+           $r4 = $listadoCalificaciones[$a]['n5'];
+           $r5 = $listadoCalificaciones[$a]['n5'];
+           $r6 = $listadoCalificaciones[$a]['n5'];
+           $r7 = $listadoCalificaciones[$a]['n5'];
+           $r8 = $listadoCalificaciones[$a]['n5'];
+           $Asistencia = $listadoCalificaciones[$a]['Asistencia'];
+           $Estado = $listadoCalificaciones[$a]['Estado'];
+           $CalificacionFinal = $listadoCalificaciones[$a]['CalificacionFinal'];
+           $a++;
+           ?>
+ 
+           <tr class="table-light">
+             <td style="display:none;">
+               <?php echo $idMateria ?>
+             </td>
+             <td style="display:none;">
+               <?php echo $MateriaCompleto ?>
+             </td>
+             <td>
+               <?php echo $Materia ?>
+             </td>           
+             <td>
+               <?php echo $Asistencia ?>
+             </td>
+             <td>
+               <?php echo $Estado ?>
+             </td>
+             <td class= "text-center">
+               <?php echo $CalificacionFinal ?>
+             </td>
+             <td><button type="button" onclick="verCalificaciones(this)" class="btn btn-primary">Ver Calificaciones</button></td>
+           </tr>
+ 
+           <?php
+         }
+         ?>
+       <?php } ?>
+     </tbody>
+   </table>
+ </div>
 </div>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->

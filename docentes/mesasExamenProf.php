@@ -118,7 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
   </div>
       <br>
       <div class="container">
-
+      <?php if (empty($fechasExamen)) { ?>
+    <p>No hay mesas de exámen de las materias del profesor.</p>
+  <?php } else { ?>
       
       <div class="accordion" id="accordionExample">
   <?php
@@ -160,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
       </div>
     </div>
   <?php
-  }
+  }}
   ?>
 </div>
     

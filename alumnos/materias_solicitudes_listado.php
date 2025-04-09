@@ -31,7 +31,7 @@ $cantidad = count($listadoSolicitudes);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Materias</title>
+  <title>Listado Solicitudes</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -66,62 +66,65 @@ $cantidad = count($listadoSolicitudes);
      <br><br>
     </div>
      <div class="container">     
-    <table class="table table-hover">
-      <thead>
-        <tr class="table-primary">
-          <th scope="col" style="display:none;">idMatriculacionWeb</th>
-          <th scope="col">Materia</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Observaciones</th>
-          <th scope="col">Fecha</th>
-          <th scope="col"></th>
+     <table class="table table-hover" >
+  <thead>
+    <tr class="table-primary">
+      <th scope="col" style="display:none;">idMatriculacionWeb</th>
+      <th scope="col">Materia</th>
+      <th scope="col">Estado</th>
+      <th scope="col">Observaciones</th>
+      <th scope="col">Fecha</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php $hayRegistros = false; ?>
+    <?php
+
+    //RECORRER TABLA DE SOLICITUDES        
+    $a = 0;
+    while ($a < $cantidad) {
+      $idMatriculacionWeb = $listadoSolicitudes[$a]['idMatriculacionWeb'];
+      $Materia = $listadoSolicitudes[$a]['Materia'];
+      $Estado = $listadoSolicitudes[$a]['Estado'];
+      $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
+      $fecha=$listadoSolicitudes[$a]['Fecha'];
+      $a++;
+      $hayRegistros = true; // Establece la variable en true si se encuentra al menos un registro
+      ?>
+
+      <tr>
+        <td style="display:none;">
+          <?php echo $idMatriculacionWeb ?>
+        </td>
+        <td>
+          <?php echo $Materia ?>
+        </td>
+        <td>
+          <?php echo $Estado ?>
+        </td>
+        <td>
+          <?php echo $Observaciones ?>
+        </td>
+        <td><?php echo $fecha ?></td>
+        <td>
+            <?php if ($Estado == "Pendiente") { ?>
+              <form action="materias_solicitudes_listado.php" method="post">
+                <input type="hidden" name="idMatriculacionWeb" value="<?php echo $idMatriculacionWeb; ?>">                  
+              <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
+              </form>
+            <?php } ?>
+          </td>
+      </tr>
+
+      <?php } ?>
+      <?php if (!$hayRegistros) { ?>
+        <tr>
+          <td colspan="6" >No hay registros</td>
         </tr>
-      </thead>
-      <tbody>
-
-        <?php
-
-        //RECORRER TABLA DE SOLICITUDES        
-        $a = 0;
-        while ($a < $cantidad) {
-          $idMatriculacionWeb = $listadoSolicitudes[$a]['idMatriculacionWeb'];
-          $Materia = $listadoSolicitudes[$a]['Materia'];
-          $Estado = $listadoSolicitudes[$a]['Estado'];
-          $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
-          $fecha=$listadoSolicitudes[$a]['Fecha'];
-          $a++;
-          ?>
-
-          <tr>
-            <td style="display:none;">
-              <?php echo $idMatriculacionWeb ?>
-            </td>
-            <td>
-              <?php echo $Materia ?>
-            </td>
-            <td>
-              <?php echo $Estado ?>
-            </td>
-            <td>
-              <?php echo $Observaciones ?>
-            </td>
-            <td><?php echo $fecha ?></td>
-            <td>
-                <?php if ($Estado == "Pendiente") { ?>
-                  <form action="materias_solicitudes_listado.php" method="post">
-                    <input type="hidden" name="idMatriculacionWeb" value="<?php echo $idMatriculacionWeb; ?>">                  
-                  <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
-                  </form>
-                <?php } ?>
-              </td>
-          </tr>
-
-          <?php
-        }
-        ?>
-
-      </tbody>
-    </table>
+      <?php } ?>
+  </tbody>
+</table>
   </div></div></div>
 
   <?php include '../funciones/footer.html'; ?>

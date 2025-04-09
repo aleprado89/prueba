@@ -77,6 +77,11 @@ if (isset($_POST['valor'])) {
       </tr>
     </thead>
     <tbody>';
+    if (empty($materiasAsignadas)) {
+      echo '<tr>
+      <td colspan="3">Sin registros</td>
+    </tr>';
+    }
   foreach ($materiasAsignadas as $materia) {
     echo '<tr>
 <td><a href="#" onclick="setMateria('.$materia['idMateria'].', \''.$materia['Materia'].'\', \''.$materia['Curso'].'\', \''.$_SESSION['parametro'].'\')">'.$materia['Materia'].'</a></td>

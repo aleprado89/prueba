@@ -37,6 +37,11 @@ $fecha = $dia . '/' . $mes . '/' . $anio;
     $tabla .= '</tr>';
     $tabla .= '</thead>';
     $tabla .= '<tbody>';
+    if (empty($alumnosAsist)) { 
+      $tabla.='<tr>
+        <td colspan="2">Sin registros</td>
+      </tr>';
+    }
     foreach ($alumnosAsist as $alumno) {
         $tabla .= '<tr>';
         $tabla .= '<td>' . $alumno['apellido'] . ' ' . $alumno['nombre'] . '</td>';
@@ -80,9 +85,10 @@ $fecha = $dia . '/' . $mes . '/' . $anio;
  $anio = $partes_fecha[0];
  $mes = trim($partes_fecha[1], '0');
  $dia = 'd'.ltrim($partes_fecha[2],'0');
+ $diasinD=ltrim($partes_fecha[2],'0');
  $idCicloLectivo = buscarIdCiclo($conn, $anio);
 
-//$alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLectivo);
+$alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLectivo);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -124,7 +130,7 @@ $fecha = $dia . '/' . $mes . '/' . $anio;
         <div class="col-md-6>
         <label for="fecha">Seleccione fecha:</label>
         <input type="date" id="fecha" name="fecha" value="<?php echo $ciclolectivo . '-' . date('m-d'); ?>" min="<?php echo $ciclolectivo; ?>-01-01" max="<?php echo $ciclolectivo; ?>-12-31">  
-        <button class="btn btn-primary" id="cargar-asistencia">Seleccionar fecha</button></div>
+        </div>
          
         <br><p><small>* Las asistencias se guardan automaticamente en cada modificación. La celda se pinta de verde cuando la calificacion se ha guardado exitosamente. Si no se pinta de verde revise su conexion a internet y/o dispositivo.
           <br>Valores permitidos:P ó p(presente), A ó a(ausente). Se puede cargar 1 asistencia por día y hasta 5 asistencias por día por alumno(5 horas). 
@@ -141,11 +147,21 @@ $fecha = $dia . '/' . $mes . '/' . $anio;
   <thead>
     <tr class="table-primary">
       <th scope="col">Estudiante</th>
-      <th scope="col">Asistencia</th>
+      <th scope="col"><?php echo $diasinD."/".$mes."/".$anio ?></th>
     </tr>
   </thead>
   <tbody>
-    
+  <?php if (empty($alumnosAsist)) { ?>
+        <tr>
+          <td colspan="2">Sin registros</td>
+        </tr>
+      <?php } else { 
+         foreach ($alumnosAsist as $alumno) { ?>
+          <tr>
+            <td><?php echo $alumno['apellido'] . ' ' . $alumno['nombre']; ?></td>
+            <td class="border" contenteditable="true" data-id="<?php echo $alumno['idAlumno']; ?>"><?php echo $alumno['dia']; ?></td>
+          </tr>
+        <?php } }?>
   </tbody>
 </table></div>
 
@@ -236,8 +252,8 @@ $fecha = $dia . '/' . $mes . '/' . $anio;
   //funcion para mostrar alertas de que fecha esta cargando
   $(document).ready(function() {
     
-    $('#cargar-asistencia').on('click', function() {
-        // Obtiene la fecha seleccionada
+    $('#fecha').on('change', function() {
+      // Obtiene la fecha seleccionada
         var fecha = $('#fecha').val();
         var partes = fecha.split('-');
         var anio = partes[0];

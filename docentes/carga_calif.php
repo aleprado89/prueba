@@ -232,6 +232,11 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
               </tr>
           </thead>
           <tbody>
+          <?php if (empty($alumnosCalif)) { ?>
+        <tr>
+          <td colspan="20">Sin registros</td>
+        </tr>
+      <?php } else { ?>
             <?php if (isset($alumnosCalif)) { ?>
               <?php foreach ($alumnosCalif as $listado) {  ?>
                 <tr data-id="<?php echo $i; ?>" data-row="<?php echo $i; ?>" data-idAlumno="<?php echo $listado['idAlumno']; ?>">
@@ -394,7 +399,7 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
                   </td>
                 </tr>
               <?php $i++;} ?>
-            <?php } ?>
+            <?php } } ?>
           </tbody>
         </table>
       </div>

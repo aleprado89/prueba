@@ -69,7 +69,7 @@ while ($a < $cantidadSolicitudes) {
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solicitudes</title>
+  <title>Solicitar Inscripción</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -133,56 +133,60 @@ while ($a < $cantidadSolicitudes) {
       <input type="hidden" name="idMatriculacionWeb" id="idMatriculacionWeb">
       
       <caption>Solicitudes Generadas</caption>
-      <table class="table table-hover">        
-        <thead>
-          <tr class="table-primary">
-            <th scope="col" style="display:none;">idMatriculacionWeb</th>
-            <th scope="col">Materia</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Observaciones</th>
-            <th scope="col"></th>
-          </tr>
-        </thead>
-        <tbody>
+      <table class="table table-hover"  >        
+    <thead>
+      <tr class="table-primary">
+        <th scope="col" style="display:none;">idMatriculacionWeb</th>
+        <th scope="col">Materia</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Observaciones</th>
+        <th scope="col"></th>
+      </tr>
+    </thead>
+    <tbody>
 
-          <?php
+      <?php
 
-          //RECORRER TABLA DE SOLICITUDES        
-          $a = 0;
-          while ($a < $cantidadSolicitudes) {
-            $idMatriculacionWeb = $listadoSolicitudes[$a]['idMatriculacionWeb'];
-            $Materia = $listadoSolicitudes[$a]['Materia'];
-            $Estado = $listadoSolicitudes[$a]['Estado'];
-            $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
-            $a++;
-            ?>
+      //RECORRER TABLA DE SOLICITUDES        
+      $a = 0;
+      while ($a < $cantidadSolicitudes) {
+        $idMatriculacionWeb = $listadoSolicitudes[$a]['idMatriculacionWeb'];
+        $Materia = $listadoSolicitudes[$a]['Materia'];
+        $Estado = $listadoSolicitudes[$a]['Estado'];
+        $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
+        $a++;
+        ?>
 
-            <tr>
-              <td style="display:none;">
-                <?php echo $idMatriculacionWeb ?>
-              </td>
-              <td>
-                <?php echo $Materia ?>
-              </td>
-              <td>
-                <?php echo $Estado ?>
-              </td>
-              <td>
-                <?php echo $Observaciones ?>
-              </td>
-              <td>
-                <?php if ($Estado == "Pendiente") { ?>
-                  <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
-                <?php } ?>
-              </td>
-            </tr>
+        <tr>
+          <td style="display:none;">
+            <?php echo $idMatriculacionWeb ?>
+          </td>
+          <td>
+            <?php echo $Materia ?>
+          </td>
+          <td>
+            <?php echo $Estado ?>
+          </td>
+          <td>
+            <?php echo $Observaciones ?>
+          </td>
+          <td>
+            <?php if ($Estado == "Pendiente") { ?>
+              <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
+            <?php } ?>
+          </td>
+        </tr>
 
-            <?php
-          }
-          ?>
-
-        </tbody>
-      </table>
+        <?php
+      }
+      ?>
+      <?php if ($cantidadSolicitudes == 0) { ?>
+        <tr>
+          <td colspan="5" >No hay registros</td>
+        </tr>
+      <?php } ?>
+    </tbody>
+  </table>
     </form>
 
   </div>

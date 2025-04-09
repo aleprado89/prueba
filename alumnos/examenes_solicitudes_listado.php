@@ -81,9 +81,8 @@ $cantidad = count($listadoSolicitudes);
         </tr>
       </thead>
       <tbody>
-
+        <?php $hayRegistros = false; ?>
         <?php
-
         //RECORRER TABLA DE SOLICITUDES        
         $a = 0;
         while ($a < $cantidad) {
@@ -94,8 +93,9 @@ $cantidad = count($listadoSolicitudes);
           $Estado = $listadoSolicitudes[$a]['Estado'];
           $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
           $a++;
+          $hayRegistros = true; // Establece la variable en true si se encuentra al menos un registro
           ?>
-
+      
           <tr>
             <td style="display:none;">
               <?php echo $idInscripcionWeb ?>
@@ -116,19 +116,23 @@ $cantidad = count($listadoSolicitudes);
               <?php echo $Observaciones ?>
             </td>
             <td>
-  <?php if ($Estado == "Pendiente") { ?>
-    <form action="examenes_solicitudes_listado.php" method="post">
-      <input type="hidden" name="idInscripcionWeb" value="<?php echo $idInscripcionWeb; ?>">
-      <button type="submit" class="btn btn-danger">Cancelar</button>
-    </form>
-  <?php } ?>
-</td>
+              <?php if ($Estado == "Pendiente") { ?>
+                <form action="examenes_solicitudes_listado.php" method="post">
+                  <input type="hidden" name="idInscripcionWeb" value="<?php echo $idInscripcionWeb; ?>">
+                  <button type="submit" class="btn btn-danger">Cancelar</button>
+                </form>
+              <?php } ?>
+            </td>
           </tr>
-
+      
           <?php
         }
         ?>
-
+        <?php if (!$hayRegistros) { ?>
+          <tr>
+            <td colspan="6">No hay registros</td>
+          </tr>
+        <?php } ?>
       </tbody>
     </table>
   </div></div></div>

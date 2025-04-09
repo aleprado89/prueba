@@ -170,69 +170,74 @@ $cantidadFechas = count($listadoFechasExamenes);
   <div class="container mt-5">
 
     <!-- FORM CANCELAR -->
-    <form id="cancelar" action="../alumnos/examenes_solicitar.php" method="post">
-      <input type="hidden" name="idInscripcionWeb" id="idInscripcionWeb">
-      <caption>Solicitudes Generadas</caption>
-      <table class="table table-hover" <?php if ($cantidadSolicitudes == 0) { ?> style="display:none;" <?php } ?> >
-        <thead>
-          <tr class="table-primary">
-            <th scope="col" style="display:none;">idInscripcionWeb</th>
-            <th scope="col">Materia</th>
-            <th scope="col">Fecha</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Observaciones</th>
-            <th scope="col"></th>
-          </tr>
-        </thead>
-        <tbody>
-
-          <?php
-
-          //RECORRER TABLA DE SOLICITUDES        
-          $a = 0;
-          while ($a < $cantidadSolicitudes) {
-            $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
-            $Materia = $listadoSolicitudes[$a]['Materia'];
-            $Fecha = $listadoSolicitudes[$a]['Fecha'];
-            $Hora = $listadoSolicitudes[$a]['Hora'];
-            $Estado = $listadoSolicitudes[$a]['Estado'];
-            $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
-            $a++;
-            ?>
-
-            <tr>
-              <td style="display:none;">
-                <?php echo $idInscripcionWeb ?>
-              </td>
-              <td>
-                <?php echo $Materia ?>
-              </td>
-              <td>
-                <?php 
-                $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
-                $fechaFormateada = $fechaFormato->format('d-m-Y');
-                echo $fechaFormateada ?>  <?php echo $Hora ?> 
-              </td>
-              <td>
-                <?php echo $Estado ?>
-              </td>
-              <td>
-                <?php echo $Observaciones ?>
-              </td>
-              <td>
-                <?php if ($Estado == "Pendiente") { ?>
-                  <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
-                <?php } ?>
-              </td>
-            </tr>
-
-            <?php
-          }
-          ?>
-
-        </tbody>
-      </table>
-    </form>
+        <form id="cancelar" action="../alumnos/examenes_solicitar.php" method="post">
+          <input type="hidden" name="idInscripcionWeb" id="idInscripcionWeb">
+          <caption>Solicitudes Generadas</caption>
+          <table class="table table-hover"  >
+            <thead>
+              <tr class="table-primary">
+                <th scope="col" style="display:none;">idInscripcionWeb</th>
+                <th scope="col">Materia</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Observaciones</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php $hayRegistros = false; ?>
+              <?php
+    
+              //RECORRER TABLA DE SOLICITUDES        
+              $a = 0;
+              while ($a < $cantidadSolicitudes) {
+                $idInscripcionWeb = $listadoSolicitudes[$a]['idInscripcionWeb'];
+                $Materia = $listadoSolicitudes[$a]['Materia'];
+                $Fecha = $listadoSolicitudes[$a]['Fecha'];
+                $Hora = $listadoSolicitudes[$a]['Hora'];
+                $Estado = $listadoSolicitudes[$a]['Estado'];
+                $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
+                $a++;
+                $hayRegistros = true; // Establece la variable en true si se encuentra al menos un registro
+                ?>
+    
+                <tr>
+                  <td style="display:none;">
+                    <?php echo $idInscripcionWeb ?>
+                  </td>
+                  <td>
+                    <?php echo $Materia ?>
+                  </td>
+                  <td>
+                    <?php 
+                    $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
+                    $fechaFormateada = $fechaFormato->format('d-m-Y');
+                    echo $fechaFormateada ?>  <?php echo $Hora ?> 
+                  </td>
+                  <td>
+                    <?php echo $Estado ?>
+                  </td>
+                  <td>
+                    <?php echo $Observaciones ?>
+                  </td>
+                  <td>
+                    <?php if ($Estado == "Pendiente") { ?>
+                      <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
+                    <?php } ?>
+                  </td>
+                </tr>
+    
+                <?php
+              }
+              ?>
+              <?php if (!$hayRegistros) { ?>
+                <tr>
+                  <td colspan="6">No hay registros</td>
+                </tr>
+              <?php } ?>
+            </tbody>
+          </table>
+        </form>
 
   </div>
 
