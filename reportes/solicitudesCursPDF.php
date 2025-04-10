@@ -111,6 +111,7 @@ $html .= '
 try {
     $dompdf->loadHtml($html);
     $dompdf->render();
+    $dompdf->addInfo('Title', 'Solicitudes Cursado'); // Establece el título del PDF
     $dompdf->stream('solicitudesExam_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
 } catch (Exception $e) {
     echo 'Error al generar el PDF: ' . $e->getMessage();

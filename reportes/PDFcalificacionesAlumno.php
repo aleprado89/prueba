@@ -85,11 +85,18 @@ $html = '
     }.columna4 {
         width: 5%;
     }
+        .fecha {
+        text-align: right;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
     </style>
 </head>
 <body>
     <div class="header">
         <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
+        <div class="fecha">Fecha de impresión: '.date('d/m/Y H:i').'</div>
+
 <h3>Estado Curricular del Alumno/a: '.$nombreAlumno.'</h3>
         <h4>'.$nombrePlan.'</h4>
          </div>
@@ -129,4 +136,6 @@ $html = '
 // Generar el PDF
 $dompdf->loadHtml($html);
 $dompdf->render();
+$dompdf->addInfo('Title', 'Calificaciones'); // Establece el título del PDF
+
 $dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));

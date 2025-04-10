@@ -77,6 +77,8 @@ $cantidad = count($listadoMaterias);
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
         <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
+<select name="curso" id="curso">Seleccione el curso</select>
+
       </div>
       <br>
       <div class="text-center">
@@ -94,7 +96,7 @@ $cantidad = count($listadoMaterias);
           <input type="hidden" name="nombreM" id="nombreM">
           <input type="hidden" name="nombreC" id="nombreC">
           <input type="hidden" name="idDivision" id="idDivision">
-
+<?php if($_SESSION['soloLecturaExam']==0){ ?>
           <table id="materias" class="table table-hover col-12">
             <thead>
               <tr class="table-primary">
@@ -199,7 +201,7 @@ $cantidad = count($listadoMaterias);
                 </tr>
               <?php } ?>
             </tbody>
-          </table>
+          </table> <?php } else { echo "El período para generar solicitudes de inscripción a examen ha finalizado."; } ?>
         </form>
       </div>
     </div>

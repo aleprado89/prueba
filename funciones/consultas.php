@@ -358,7 +358,7 @@ function buscarSolicitudesExamen($conexion, $idAlumno, $idPlan, $idCicloLectivo)
 on inscripcionexamenes_web.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
 on inscripcionexamenes_web.idMateria = materiaterciario.idMateria
 where inscripcionexamenes_web.idAlumno = $idAlumno and materiaterciario.idPlan = $idPlan
-and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo";
+and inscripcionexamenes_web.idcicloLectivo = $idCicloLectivo order by inscripcionexamenes_web.fechhora_inscri desc";
 
     $sol = mysqli_query($conexion, $consulta);
 
@@ -596,7 +596,7 @@ function buscarSolicitudesMateria($conexion, $idAlumno, $idPlan, $idCicloLectivo
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from matriculacionmateria_web inner join materiaterciario
 on matriculacionmateria_web.idMateria = materiaterciario.idMateria
 where matriculacionmateria_web.idAlumno = $idAlumno and materiaterciario.idPlan = $idPlan
-and matriculacionmateria_web.idcicloLectivo = $idCicloLectivo";
+and matriculacionmateria_web.idcicloLectivo = $idCicloLectivo order by fechhora_inscri desc";
 
     $sol = mysqli_query($conexion, $consulta);
 

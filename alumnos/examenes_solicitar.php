@@ -74,7 +74,7 @@ $cantidadFechas = count($listadoFechasExamenes);
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solicitudes</title>
+  <title>Solicitar inscripción</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -125,7 +125,7 @@ $cantidadFechas = count($listadoFechasExamenes);
     <div class="col-12 col-md-6">
     <h5 class="padding">Fechas Disponibles</h5>
     <!-- FORM SOLICITAR -->
-    <form action="../alumnos/examenes_solicitar.php" method="POST">
+    <form id="formulario" action="../alumnos/examenes_solicitar.php" method="POST">
       <select class="form-select margenes padding" name="fechaExamen" id="fechaExamen">
         <?php
         $a = 0;
@@ -156,7 +156,7 @@ $cantidadFechas = count($listadoFechasExamenes);
       <br>
       <input type="hidden" name="idM" value=<?php echo $idMateria; ?> />
       <?php if ($habilitado == true) { ?>
-        <button type="submit" id="btnSolicitar" class="btn btn-primary">Solicitar</button>
+<button type="button" id="btnSolicitar" onclick="abrirModal()" class="btn btn-primary">Solicitar</button>
       <?php } else { ?>
         <label>Ya hay solicitudes en proceso o aprobadas.</label>
       <?php } ?>
@@ -211,7 +211,7 @@ $cantidadFechas = count($listadoFechasExamenes);
                   <td>
                     <?php 
                     $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
-                    $fechaFormateada = $fechaFormato->format('d-m-Y');
+                    $fechaFormateada = $fechaFormato->format('d/m/Y');
                     echo $fechaFormateada ?>  <?php echo $Hora ?> 
                   </td>
                   <td>
@@ -241,7 +241,26 @@ $cantidadFechas = count($listadoFechasExamenes);
 
   </div>
 
- 
+ <!-- MODAL PARA CONFIRMAR SOLICITUD -->
+ <div class="modal" id="confirmarSolicitudModal">
+   <div class="modal-dialog" role="document">
+     <div class="modal-content">
+       <div class="modal-header">
+         <h5 class="modal-title">Confirmar Solicitud</h5>
+         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+           <span aria-hidden="true"></span>
+         </button>
+       </div>
+       <div class="modal-body">
+         <p>¿Estás seguro de que deseas solicitar el examen?</p>
+       </div>
+       <div class="modal-footer">
+         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+         <button type="button" id="confirmarSolicitudBtn" class="btn btn-primary">Confirmar</button>
+       </div>
+     </div>
+   </div>
+ </div>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
@@ -264,6 +283,14 @@ $cantidadFechas = count($listadoFechasExamenes);
           document.getElementById("cancelar").submit();
         });
       });
+    });
+    // SCRIPT PARA ABRIR MODAL Y ENVIAR FORMULARIO
+    function abrirModal() {
+      $('#confirmarSolicitudModal').modal('show');
+    }
+    
+    document.getElementById("confirmarSolicitudBtn").addEventListener("click", function() {
+      document.getElementById("formulario").submit();
     });
   </script>
   </div>

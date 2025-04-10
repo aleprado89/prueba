@@ -170,6 +170,7 @@ $html .= '
      $dompdf->loadHtml($html);
      $dompdf->setPaper('A4', 'landscape'); // Establece el tamaño del papel en A4 y la orientación en horizontal
      $dompdf->render();
+     $dompdf->addInfo('Title', 'Asistencia'); // Establece el título del PDF
      $dompdf->stream('asist_'.$materia.'.pdf', array('Attachment' => 0));
  } catch (Exception $e) {
      echo 'Error al generar el PDF: ' . $e->getMessage();

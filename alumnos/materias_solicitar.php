@@ -37,6 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: materias_solicitar.php");
     exit();
   }
+  //BOTON SOLICITAR
   if(isset($_POST['idM'])){
     $idMateria = $_POST['idM'];
     solicitarCursado($conn, $idAlumno, $idMateria, $idCicloLectivo);
@@ -117,8 +118,7 @@ while ($a < $cantidadSolicitudes) {
       <br>
       <input type="hidden" name="idM" value=<?php echo $idMateria; ?> />
       <?php if ($habilitado == true) { ?>
-        <button type="submit" id="btnSolicitar" class="btn btn-primary">Solicitar</button>
-      <?php } ?>        
+<button type="button" id="btnSolicitar" onclick="abrirModal()" class="btn btn-primary">Solicitar</button>      <?php } ?>        
     </form>
       </div>
 
@@ -190,6 +190,29 @@ while ($a < $cantidadSolicitudes) {
     </form>
 
   </div>
+<!-- modal -->
+  <div class="modal" id="confirmarSolicitudModal">
+      <div class="modal-dialog" role="document">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title">Confirmar Solicitud</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true"></span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <p>¿Estás seguro de que deseas confirmar la solicitud?</p>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  <form action="" method="post">
+                      <input type="hidden" name="idM" value="<?php echo $idMateria; ?>">
+                      <button type="submit" class="btn btn-primary">Confirmar</button>
+                  </form>
+              </div>
+          </div>
+      </div>
+  </div>
 
  
 
@@ -215,6 +238,11 @@ while ($a < $cantidadSolicitudes) {
         });
       });
     });
+
+    function abrirModal() {
+        $('#confirmarSolicitudModal').modal('show');
+        return false; // Esto evita que se envíe el formulario
+    }
   </script>
   </div>
 

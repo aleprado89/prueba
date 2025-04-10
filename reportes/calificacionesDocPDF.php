@@ -165,6 +165,7 @@ $html .= '
  try {
      $dompdf->loadHtml($html);
      $dompdf->render();
+     $dompdf->addInfo('Title', 'Calificaciones'); // Establece el título del PDF
      $dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
  } catch (Exception $e) {
      echo 'Error al generar el PDF: ' . $e->getMessage();

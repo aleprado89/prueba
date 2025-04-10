@@ -71,9 +71,9 @@ $cantidad = count($listadoSolicitudes);
     <tr class="table-primary">
       <th scope="col" style="display:none;">idMatriculacionWeb</th>
       <th scope="col">Materia</th>
+      <th scope="col">Fecha</th>
       <th scope="col">Estado</th>
       <th scope="col">Observaciones</th>
-      <th scope="col">Fecha</th>
       <th scope="col"></th>
     </tr>
   </thead>
@@ -88,8 +88,8 @@ $cantidad = count($listadoSolicitudes);
       $Materia = $listadoSolicitudes[$a]['Materia'];
       $Estado = $listadoSolicitudes[$a]['Estado'];
       $Observaciones = $listadoSolicitudes[$a]['Observaciones'];
-      $fecha=$listadoSolicitudes[$a]['Fecha'];
-      $a++;
+$fecha = $listadoSolicitudes[$a]['Fecha'];
+$fechaFormateada = date('d/m/Y H:i:s', strtotime($fecha));      $a++;
       $hayRegistros = true; // Establece la variable en true si se encuentra al menos un registro
       ?>
 
@@ -100,13 +100,13 @@ $cantidad = count($listadoSolicitudes);
         <td>
           <?php echo $Materia ?>
         </td>
+        <td><?php echo $fechaFormateada ?></td>
         <td>
           <?php echo $Estado ?>
         </td>
         <td>
           <?php echo $Observaciones ?>
         </td>
-        <td><?php echo $fecha ?></td>
         <td>
             <?php if ($Estado == "Pendiente") { ?>
               <form action="materias_solicitudes_listado.php" method="post">

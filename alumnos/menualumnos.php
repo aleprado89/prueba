@@ -188,77 +188,83 @@ echo '</div>';
 <script>
         /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA INSCRIPCION CURSADO
           function verificarFechaInscripcionExamen() {
- <?php 
-include '../inicio/conexion.php';
-
-// Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
-$sql = "SELECT inscExamDesde,inscExamHasta FROM colegio WHERE idColegio =".$_SESSION['idColegio']; 
-$resultado = $conn->query($sql);
-
-if ($resultado->num_rows > 0) {
-  $fila = $resultado->fetch_assoc();
-  $fechaInscExamDesde = $fila['inscExamDesde'];
-  $fechaInscExamHasta = $fila['inscExamHasta'];
-
-} else {
-  $fechaInscExamDesde = null;
-  $fechaInscExamHasta = null;
-}
-$conn->close();
-                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL  
-
-        var inscExamDesde = new Date("<?php echo $fechaInscExamDesde; ?>");
-        var inscExamHasta = new Date("<?php echo $fechaInscExamHasta; ?>");
-        var fechaActual = new Date();
-        
-        if (inscExamDesde <= fechaActual && inscExamHasta>= fechaActual) {
-          //codigo para ingresar al formulario de la inscripcion
-          window.location.href = 'examenes_planes.php';
-          //$('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
-          //$('#inscModal').modal('show');
-        }
-        else {
-            // Código para abrir el modal que dice inscripcion cerrada
-          $('#mensajeModal').text("Las inscripciones estan cerradas. Los períodos de inscripción son definidos por secretaria."); // Cambiar el contenido del modal con el mensaje
-          $('#inscModal').modal('show');
-        }
-      }
+            <?php 
+            include '../inicio/conexion.php';
+          
+            // Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
+            $sql = "SELECT inscExamDesde,inscExamHasta,inscExamLectDesde FROM colegio WHERE idColegio =".$_SESSION['idColegio']; 
+            $resultado = $conn->query($sql);
+          
+            if ($resultado->num_rows > 0) {
+              $fila = $resultado->fetch_assoc();
+              $fechaInscExamDesde = $fila['inscExamDesde'];
+              $fechaInscExamHasta = $fila['inscExamHasta'];
+              $fechaInscExamLectDesde = $fila['inscExamLectDesde'];
+          
+            } else {
+              $fechaInscExamDesde = null;
+              $fechaInscExamHasta = null;
+              $fechaInscExamLectDesde = null;
+            }
+            $conn->close();
+            ?>
+            var inscExamDesde = new Date("<?php echo $fechaInscExamDesde; ?>");
+            var inscExamHasta = new Date("<?php echo $fechaInscExamHasta; ?>");
+            var inscExamLectDesde = new Date("<?php echo $fechaInscExamLectDesde; ?>");
+            var fechaActual = new Date();
+            
+            if (inscExamDesde <= fechaActual && inscExamHasta>= fechaActual) {
+              if(inscExamLectDesde <= fechaActual && inscExamHasta>= fechaActual){
+                <?php $_SESSION['soloLecturaExam'] = 1; ?>
+              }else{
+                <?php $_SESSION['soloLecturaExam'] = 0; ?>
+              }
+              window.location.href = 'examenes_planes.php';
+           }else {
+              // Código para abrir el modal que dice inscripcion cerrada
+              $('#mensajeModal').text("Las inscripciones estan cerradas. Los períodos de inscripción son definidos por secretaria."); // Cambiar el contenido del modal con el mensaje
+              $('#inscModal').modal('show');
+            }
+          }
 
 
 
       /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA INSCRIPCION CURSADO
       function verificarFechaInscripcionCursado() {
- <?php 
-include '../inicio/conexion.php';
-
-// Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
-$sql = "SELECT inscCursDesde,inscCursHasta FROM colegio WHERE idColegio =".$_SESSION['idColegio']; 
-$resultado = $conn->query($sql);
-
-if ($resultado->num_rows > 0) {
-  $fila = $resultado->fetch_assoc();
-  $fechaInscCursDesde = $fila['inscCursDesde'];
-  $fechaInscCursHasta = $fila['inscCursHasta'];
-
-} else {
-  $fechaInscCursDesde = null;
-  $fechaInscCursHasta = null;
-}
-$conn->close();
-                 ?>//TERMINA EL PHP - SIGUE  EL SCRIPT QUE ABRIRÁ EL MODAL  
-
+        <?php 
+        include '../inicio/conexion.php';
+      
+        // Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
+        $sql = "SELECT inscCursDesde,inscCursHasta,inscCursLectDesde FROM colegio WHERE idColegio =".$_SESSION['idColegio']; 
+        $resultado = $conn->query($sql);
+      
+        if ($resultado->num_rows > 0) {
+          $fila = $resultado->fetch_assoc();
+          $fechaInscCursDesde = $fila['inscCursDesde'];
+          $fechaInscCursHasta = $fila['inscCursHasta'];
+          $fechaInscCursLectDesde = $fila['inscCursLectDesde'];
+      
+        } else {
+          $fechaInscCursDesde = null;
+          $fechaInscCursHasta = null;
+          $fechaInscCursLectDesde = null;
+        }
+        $conn->close();
+        ?>
         var inscCursDesde = new Date("<?php echo $fechaInscCursDesde; ?>");
         var inscCursHasta = new Date("<?php echo $fechaInscCursHasta; ?>");
+        var inscCursLectDesde = new Date("<?php echo $fechaInscCursLectDesde; ?>");
         var fechaActual = new Date();
         
         if (inscCursDesde <= fechaActual && inscCursHasta>= fechaActual) {
-          //codigo para ingresar al formulario de la inscripcion
+          if(inscCursLectDesde <= fechaActual && inscCursHasta>= fechaActual){
+            <?php $_SESSION['cursSoloLectura'] = 1; ?>
+          }else{
+            <?php $_SESSION['cursSoloLectura'] = 0; ?>
+          }
           window.location.href = 'materias_planes.php';
-        //  $('#mensajeModal').text("Las inscripciones estan abiertas." ); // Cambiar el contenido del modal con el mensaje
-         // $('#inscModal').modal('show');
-        }
-        else {
-            // Código para abrir el modal que dice inscripcion cerrada
+       }else {
+          // Código para abrir el modal que dice inscripcion cerrada
           $('#mensajeModal').text("Las inscripciones estan cerradas. Los períodos de inscripción son definidos por secretaria."); // Cambiar el contenido del modal con el mensaje
           $('#inscModal').modal('show');
         }

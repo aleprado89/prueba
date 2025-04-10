@@ -34,7 +34,7 @@ $cantidad = count($listadoSolicitudes);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exámenes</title>
+  <title>Solicitudes</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -106,7 +106,7 @@ $cantidad = count($listadoSolicitudes);
             <td>
               <?php 
               $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
-              $fechaFormateada = $fechaFormato->format('d-m-Y');
+              $fechaFormateada = $fechaFormato->format('d/m/Y');
               echo $fechaFormateada ?>  <?php echo $Hora ?> 
             </td>
             <td>

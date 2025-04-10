@@ -85,11 +85,17 @@ $html = '
     }.columna4 {
         width: 5%;
     }
+        .fecha {
+        text-align: right;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
     </style>
 </head>
 <body>
     <div class="header">
         <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo">
+                    <div class="fecha">Fecha de impresión: '.date('d/m/Y H:i').'</div>
 <h3>SOLICITUD DE INSCRIPCIÓN A RENDIR SOLAMENTE FINALES</h3><br>
         <p>El alumno/a '.$nombreAlumno.' con dni: '.$dni.'. Solicita presentarse únicamente a rendir finales</p><br>
 <h4>Carrera:'.$nombrePlan.'<br> Ciclo Lectivo: '.$anio.'</h4>
@@ -104,6 +110,7 @@ $html = '
 try {
     $dompdf->loadHtml($html);
     $dompdf->render();
+    $dompdf->addInfo('Title', 'Alumno que debe finales'); // Establece el título del PDF
     $dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
 } catch (Exception $e) {
     echo 'Error al generar el PDF: ' . $e->getMessage();

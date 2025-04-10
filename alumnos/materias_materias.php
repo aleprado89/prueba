@@ -48,7 +48,7 @@ $cantidad = count($listadoMaterias);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Materias</title>
+  <title>Materias a cursar</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Bootstrap CSS -->
@@ -92,7 +92,7 @@ $cantidad = count($listadoMaterias);
                   <input type="hidden" name="idM" id="idM">
                   <input type="hidden" name="nombreM" id="nombreM">
                   <input type="hidden" name="nombreC" id="nombreC">
-        
+        <?php if($_SESSION['cursSoloLectura']==0){ ?>
                   <table id="materias" class="table table-hover col-12"  >
                     <thead>
                       <tr class="table-primary">
@@ -136,7 +136,7 @@ $cantidad = count($listadoMaterias);
                           </tr>
                         <?php } ?>
                     </tbody>
-                  </table>
+                  </table> <?php } else { echo "El período para generar solicitudes de inscripción ha finalizado."; }?>
                 </form>
       </div>
     </div>
