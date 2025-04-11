@@ -5,27 +5,59 @@ include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
 //include '../funciones/pruebaSession.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-  //BOTON LISTADO SOLICITUDES
-  if (isset($_POST['submitVer'])) {
-    header("Location: ../alumnos/materias_solicitudes_listado.php");
-    exit;
-  }
+   //BOTON LISTADO SOLICITUDES
+   if (isset($_POST['submitVer'])) {
+     header("Location: ../alumnos/materias_solicitudes_listado.php");
+     exit;} 
 
-  //BOTON SOLICITAR
-  if (isset($_POST['submitSolicitar'])) {
-    $idM = $_POST['idM'];
-    $nombreM = $_POST['nombreM'];
-    $nombreC = $_POST['nombreC'];
-    $_SESSION['idM'] = $idM;
-    $_SESSION['nombreM'] = $nombreM;
-    $_SESSION['nombreC'] = $nombreC;
+   //BOTON SOLICITAR
+   if (isset($_POST['submitSolicitar'])) {
+     $idM = $_POST['idM'];
+     $nombreM = $_POST['nombreM'];
+     $nombreC = $_POST['nombreC'];
+     $_SESSION['idM'] = $idM;
+     $_SESSION['nombreM'] = $nombreM;
+     $_SESSION['nombreC'] = $nombreC;
 
-    header("Location: ../alumnos/materias_solicitar.php");
-    exit;
-  }
-}
+     header("Location: ../alumnos/materias_solicitar.php");
+     exit;
+   }
+   if (isset($_POST['curso'])) {
+     $cursoSeleccionado = $_POST['curso'];
+     // Buscar las materias adeudadas para el curso seleccionado
+     $listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan, $cursoSeleccionado);
+     
+     // Devolver los datos de la tabla en formato HTML
+     echo '<table id="materias" class="table table-hover col-12">
+       <thead>
+         <tr class="table-primary">
+           <th scope="col" style="display:none;">idMateria</th>
+           <th scope="col">Materia</th>  
+           <th scope="col">Curso</th>              
+           <th scope="col">Solicitar Inscripción</th>
+         </tr>
+       </thead>
+       <tbody>';
+     if (empty($listadoMaterias)) {
+       echo '<tr>
+         <td colspan="4">Sin registros</td>
+       </tr>';
+     }
+     foreach ($listadoMaterias as $materia) {
+       echo '<tr>
+         <td style="display:none;" name="idM">'.$materia['idMateria'].'</td>
+         <td name="nombreM">'.$materia['Materia'].'</td>      
+         <td name="nombreC">'.$materia['Curso'].'</td>             
+         <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
+       </tr>';
+     }
+     echo '</tbody>
+     </table><br>';
+     exit;
+   }
+ }
 
 //VARIABLES
 $idAlumno = $_SESSION['alu_idAlumno'];
@@ -37,7 +69,10 @@ $cicloLectivo =  $datosColegio[0]['anioautoweb'];
 //FUNCIONES
 //LISTAR MATERIAS
 $listadoMaterias = array();
-$listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan);
+$cursosPredeterminados=buscarCursoPredeterminado($conn,$idPlan);
+$maxIdCursoPredeterminado = max(array_column($cursosPredeterminados, 'idcursopredeterminado'));
+
+$listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan, $maxIdCursoPredeterminado);
 $cantidad = count($listadoMaterias);
 ?>
 <!DOCTYPE html>
@@ -76,6 +111,12 @@ $cantidad = count($listadoMaterias);
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
         <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
+        <select id="curso" name="curso">
+          <option value="">Seleccione un curso</option>
+          <?php foreach ($cursosPredeterminados as $curso) { ?>
+            <option value="<?php echo $curso['idcursopredeterminado']; ?>"><?php echo $curso['nombreCurso']; ?></option>
+          <?php } ?>
+        </select>
       </div>
       <br>
       <div class="text-center">
@@ -143,13 +184,14 @@ $cantidad = count($listadoMaterias);
   </div>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-  <script src="../js/jquery-3.7.1.slim.min.js"></script>
+  <script src="../js/jquery-3.7.1.min.js"></script>
   <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
 
   <script>
     //SCRIPT PARA SELECCIONAR DATOS DE LA MATERIA A SOLICITAR
     document.addEventListener("DOMContentLoaded", function () {
+
       // Agregar un evento de clic a todos los botones con la clase 'ver-btn'
       var botones = document.querySelectorAll('.ver-btn');
       botones.forEach(function (boton) {
@@ -168,7 +210,29 @@ $cantidad = count($listadoMaterias);
         });
       });
     });
+
+   $('#curso').change(function() {
+     var cursoSeleccionado = $(this).val();
+     console.log(cursoSeleccionado);
+     $.ajax({
+       type: 'POST',
+       url: 'materias_materias.php',
+       data: {curso: cursoSeleccionado},
+       success: function(data)
+        {
+    console.log('Respuesta del servidor:', data);
+    // Reemplazar solo el contenido de la tabla
+    var tabla = $(data).filter('#materias');
+    if (tabla.length > 0) {
+      $('#materias').html(tabla.html());
+    }
+  },
+  error: function(xhr, status, error) {
+    console.log(JSON.stringify(data))  }
+     });
+   });
   </script>
+ 
   
 
   <?php include '../funciones/footer.html'; ?>

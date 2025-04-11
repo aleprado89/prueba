@@ -53,6 +53,7 @@ footer {
   .card-link-act:hover .icono {
     color: #40848d; /* Nuevo color al hacer hover sobre la card */
   }
+
   
   /* Estilo para padding de cuadritos diferenciados en celulares */
   .elemento {
@@ -159,7 +160,7 @@ table {
   display: block;
   width: 100%;
   overflow-x: auto; 
-  white-space: nowrap;
+  /* white-space: nowrap; */
 }
 
 .tabla-calificaciones-planes {

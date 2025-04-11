@@ -131,17 +131,18 @@ where calificacionesterciario.idMateria = $idMateria and calificacionesterciario
 }
 
 //Materias que adeuda de un alumno por Plan y Curso
-function buscarMateriasAdeuda($conexion, $cicloLectivo, $idAlumno, $idPlan)
+function buscarMateriasAdeuda($conexion, $cicloLectivo, $idAlumno, $idPlan,$idcursopred)
 {
     $consulta = "SELECT materiaterciario.*, curso.nombre as nombreCurso FROM materiaterciario 
-    inner join curso on materiaterciario.idCurso = curso.idCurso WHERE materiaterciario.idPlan = $idPlan 
+    inner join curso on materiaterciario.idCurso = curso.idCurso and curso.idcursopredeterminado = $idcursopred WHERE materiaterciario.idPlan = $idPlan 
     AND materiaterciario.idCicloLectivo = (select idciclolectivo from ciclolectivo where anio = $cicloLectivo)       
     and idUnicoMateria not in 
     (
     select m1.idUnicoMateria
     from calificacionesterciario c1 inner join 
     materiaterciario m1 on c1.idMateria = m1.idMateria inner join
-    matriculacionmateria mt1 on c1.idMateria = mt1.idMateria
+    matriculacionmateria mt1 on c1.idMateria = mt1.idMateria inner join 
+    curso on m1.idCurso = curso.idCurso and curso.idcursopredeterminado = $idcursopred
     where m1.idUnicoMateria = materiaterciario.idUnicoMateria
     and c1.idAlumno = $idAlumno
     and mt1.idAlumno = $idAlumno

@@ -77,8 +77,20 @@ $cantidad = count($listadoMaterias);
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
         <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
-<select name="curso" id="curso">Seleccione el curso</select>
-
+<select name="curso" id="curso" onchange="filtrarTabla(this.value)">
+  <option value="">Todas las materias</option>
+  <?php
+  // Obtener los cursos posibles de la consulta que busca las materias
+  $cursos = array();
+  foreach ($listadoMaterias as $materia) {
+    $cursos[] = $materia['Curso'];
+  }
+  $cursos = array_unique($cursos);
+  foreach ($cursos as $curso) {
+    echo '<option value="' . $curso . '">' . $curso . '</option>';
+  }
+  ?>
+</select>
       </div>
       <br>
       <div class="text-center">
@@ -215,6 +227,11 @@ $cantidad = count($listadoMaterias);
   <script>
     //SCRIPT PARA SELECCIONAR DATOS DE LA MATERIA A SOLICITAR
     document.addEventListener("DOMContentLoaded", function () {
+ // Seleccionar el curso más alto por defecto
+ var select = document.getElementById('curso');
+  select.value = select.options[select.options.length - 1].value;
+  filtrarTabla(select.value); // Llamar a la función filtrarTabla después de seleccionar el curso
+
       // Agregar un evento de clic a todos los botones con la clase 'ver-btn'
       var botones = document.querySelectorAll('.ver-btn');
       botones.forEach(function (boton) {
@@ -235,6 +252,20 @@ $cantidad = count($listadoMaterias);
         });
       });
     });
+
+    function filtrarTabla(curso) {
+      var tabla = document.getElementById('materias');
+      var filas = tabla.getElementsByTagName('tr');
+      for (var i = 1; i < filas.length; i++) {
+        var fila = filas[i];
+        var celdaCurso = fila.querySelector('td[name="nombreC"]');
+        if (celdaCurso.textContent.trim().toLowerCase() == curso.trim().toLowerCase() || curso == '') {
+          fila.style.display = '';
+        } else {
+          fila.style.display = 'none';
+        }
+      }
+    }
   </script>
 
 

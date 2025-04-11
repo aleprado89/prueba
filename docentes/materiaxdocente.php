@@ -188,9 +188,7 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
       </select></div></div>
   </div>
       <br>
-      <div class="d-block d-sm-none text-center">
-  ------>scroll a la derecha para imprimir------>
-</div>
+      
     <div>
     <table id="tablaMaterias" class="table table-hover col-12">
   <thead>
