@@ -74,10 +74,10 @@ if (isset($idPlan)) {
                 <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
                 <li class="breadcrumb-item active">Alumnos que solo adeudan finales</li>
             </ol>
-            <div class="card padding col-12">
+            <div class="card padding">
                 <h5><?php echo  "Alumno: " . $nombreAlumno; ?> </h5>
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-md-6">
                     <form method="post" id="boton">
                         <select class="form-control" id="plan" name="plan">
                             <?php                    //RECORRO ARRAY PLANES PARA LLENAR SELECT
@@ -94,12 +94,18 @@ if (isset($idPlan)) {
                             }
                             ?>
                         </select>
-                    </div>
-                    <div class="col-6">
+                    </div><br><br>
+                    <?php
+        if (empty($cursadosFinalizados)) {
+            // Mostrar el botón solo si no hay cursados finalizados
+        ?>
+                    <div>
                         <button type="submit" name="boton" class="btn btn-primary">Establecer intención de examen</button>
                         </form>
-
                     </div>
+                    <?php
+        }
+        ?>
                 </div>
             </div>
             <br>

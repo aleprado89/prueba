@@ -206,7 +206,7 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
       </div>
       <br>
       <div class="d-block d-sm-none text-center">
-  ------>scroll a la derecha para imprimir------>
+  ------>scroll a la derecha------>
 </div>
       <div>
         <table id="tablaMaterias" class="table table-hover col-12">

@@ -181,141 +181,84 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
 
 <script>
  $(document).ready(function() {
-  var fecha = $('#fecha').val();
-  var partes = fecha.split('-');
-  var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
-  var anio = '<?php echo $idCurso; ?>'; // Obtiene el año de la fecha seleccionada
-  var plan = '<?php echo $plan; ?>'; // Obtiene el plan de la variable de sesión
-  var materia = '<?php echo $materia; ?>'; // Obtiene la materia de la variable de sesión
-  var curso = '<?php echo $curso; ?>'; // Obtiene el curso de la variable de sesión
-  var idMateria = '<?php echo $idMateria; ?>';
-  var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&mes=' + encodeURIComponent(mes) + '&ciclolectivo=' + encodeURIComponent(anio) + '&plan=' + encodeURIComponent(plan) + '&materia=' + encodeURIComponent(materia) + '&curso=' + encodeURIComponent(curso);
-  $('#imprimir-asistencias').attr('href', url);
-
-  $('#fecha').on('change', function() {
-    var fecha = $(this).val();
-    var partes = fecha.split('-');
-    var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
-  var anio = '<?php echo $idCurso; ?>'; // Obtiene el año de la fecha seleccionada
-  var plan = '<?php echo $plan; ?>'; // Obtiene el plan de la variable de sesión
-  var materia = '<?php echo $materia; ?>'; // Obtiene la materia de la variable de sesión
-  var curso = '<?php echo $curso; ?>'; // Obtiene el curso de la variable de sesión
-    var idMateria = '<?php echo $idMateria; ?>';
-    var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&mes=' + encodeURIComponent(mes) + '&ciclolectivo=' + encodeURIComponent(anio) + '&plan=' + encodeURIComponent(plan) + '&materia=' + encodeURIComponent(materia) + '&curso=' + encodeURIComponent(curso);
-  $('#imprimir-asistencias').attr('href', url);
-  });
-
-  $('#tablaAsistencia td[contenteditable="true"]').on('input', function() {
-    var $this = $(this);
-    var id = $this.attr('data-id');
-    var asistencia = $this.text().trim();
-    var fecha = $('#fecha').val();
-    var partes = fecha.split('-');
-    var anio = fecha.split('-')[0];
-    var dia = 'd' + partes[2].replace(/^0+/, '');
-    var mes = partes[1].replace(/^0+/, '');
-
-    if (asistencia.length > 5) {
-      alert('La asistencia puede tener hasta 5 caracteres');
-      $this.text(asistencia.substring(0, 5));
-    }
-    if (!/^[AaPp]*$/.test(asistencia)) {
-  alert('La asistencia puede contener letras A, a, P, p');
-  $this.text('');
-} else {
-  $this.css('background-color', 'lightgreen');
-}
-
-    // Envía la información al servidor
-    $.ajax({
-      type: 'POST',
-      url: 'carga_asist.php',
-      data: {
-    idAlumno: id,
-    anio: anio,
-    mes: mes,
-    dia: dia,
-    valor: asistencia
-  },
-      success: function(respuesta) {
-        console.log(respuesta);
-      }
-    });
-  });
-
-  //funcion para validar la fecha del select
-  function isValidDate(fecha) {
-    var date = new Date(fecha);
-    return !isNaN(date.getTime());
-  }
-
-  //funcion para mostrar alertas de que fecha esta cargando
-  $(document).ready(function() {
-    
-    $('#fecha').on('change', function() {
-      // Obtiene la fecha seleccionada
-        var fecha = $('#fecha').val();
-        var partes = fecha.split('-');
-        var anio = partes[0];
-        var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
-        var dia = 'd' + partes[2].replace(/^0+/, ''); // Agrega la "d" adelante del día y elimina el cero adelante
-
-        // Hace la llamada AJAX al mismo archivo
-        $.ajax({
-  type: 'POST',
-  url: 'carga_asist.php',
-  data: {
-    actualizarTabla: true,
-    anio: anio,
-    mes: mes,
-    dia: dia
-  },
-  success: function(respuesta) {
-    $('#tablaAsistencia').html(respuesta);
-
-    
-        // Vuelve a aplicar la función que hace la validación y pinta la celda de verde
-    $('#tablaAsistencia td[contenteditable="true"]').on('input', function() {
-      var $this = $(this);
-      var id = $this.attr('data-id');
-      var asistencia = $this.text().trim();
-      var fecha = $('#fecha').val();
-      var partes = fecha.split('-');
-      var anio = fecha.split('-')[0];
-      var dia = 'd' + partes[2].replace(/^0+/, '');
-      var mes = partes[1].replace(/^0+/, '');
-
-      if (asistencia.length > 5) {
-        alert('La asistencia puede tener hasta 5 caracteres');
-        $this.text(asistencia.substring(0, 5));
-      }
-      if (!/^[AaPp]*$/.test(asistencia)) {
-        alert('La asistencia puede contener letras A, a, P, p');
-        $this.text('');
-      } else {
-        $this.css('background-color', 'lightgreen');
-      }
-
-      // Envía la información al servidor
-      $.ajax({
-        type: 'POST',
-        url: 'carga_asist.php',
-        data: {
-          idAlumno: id,
-          anio: anio,
-          mes: mes,
-          dia: dia,
-          valor: asistencia
-        },
-        success: function(respuesta) {
-          console.log(respuesta);
-        }
-      });
-    });
-  }
-});
-    });
-  });
-});
+   $('#fecha').on('change', function() {
+     var fecha = $(this).val();
+     var partes = fecha.split('-');
+     var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
+     var anio = '<?php echo $idCurso; ?>';
+     var plan = '<?php echo $plan; ?>';
+     var materia = '<?php echo $materia; ?>';
+     var curso = '<?php echo $curso; ?>';
+     var idMateria = '<?php echo $idMateria; ?>';
+     var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&mes=' + encodeURIComponent(mes) + '&ciclolectivo=' + encodeURIComponent(anio) + '&plan=' + encodeURIComponent(plan) + '&materia=' + encodeURIComponent(materia) + '&curso=' + encodeURIComponent(curso);
+     $('#imprimir-asistencias').attr('href', url);
+   });
+ 
+   $('#tablaAsistencia td[contenteditable="true"]').on('input', function() {
+     var $this = $(this);
+     var id = $this.attr('data-id');
+     var asistencia = $this.text().trim();
+     var fecha = $('#fecha').val();
+     var partes = fecha.split('-');
+     var anio = fecha.split('-')[0];
+     var dia = 'd' + partes[2].replace(/^0+/, '');
+     var mes = partes[1].replace(/^0+/, '');
+ 
+     if (asistencia.length > 5) {
+       alert('La asistencia puede tener hasta 5 caracteres');
+       $this.text(asistencia.substring(0, 5));
+     }
+     if (!/^[AaPp]*$/.test(asistencia)) {
+       alert('La asistencia puede contener letras A, a, P, p');
+       $this.text('');
+     } else {
+       $this.css('background-color', 'lightgreen');
+ 
+       $.ajax({
+         type: 'POST',
+         url: 'carga_asist.php',
+         data: {
+           idAlumno: id,
+           anio: anio,
+           mes: mes,
+           dia: dia,
+           valor: asistencia
+         },
+         success: function(respuesta) {
+           console.log(respuesta);
+         }
+       });
+     }
+   });
+ 
+   // Función para validar la fecha del select
+   function isValidDate(fecha) {
+     var date = new Date(fecha);
+     return !isNaN(date.getTime());
+   }
+ 
+   // Evento para mostrar alertas de la fecha cargada
+   $('#fecha').on('change', function() {
+     var fecha = $('#fecha').val();
+     var partes = fecha.split('-');
+     var anio = partes[0];
+     var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
+     var dia = 'd' + partes[2].replace(/^0+/, ''); // Agrega la "d" adelante del día y elimina el cero adelante
+ 
+     $.ajax({
+       type: 'POST',
+       url: 'carga_asist.php',
+       data: {
+         actualizarTabla: true,
+         anio: anio,
+         mes: mes,
+         dia: dia
+       },
+       success: function(respuesta) {
+         $('#tablaAsistencia').html(respuesta);
+       }
+     });
+   });
+ });
 </script>
 </html>

@@ -19,12 +19,16 @@
           <li class="nav-item active">
           <a class="nav-link" href="#" onclick="cargarParametro('carga_calif.php')">Carga de calificaciones</a>              <span class="visually-hidden">(current)</span>
             </a>
-
           </li>
           <li class="nav-item">
           <a class="nav-link" href="#" onclick="cargarParametro('carga_asist.php')">Carga de asistencias</a>          </li>
           <li class="nav-item">
             <a class="nav-link" href="#" onclick="verificarFechaActasVolantes()">Carga de actas</a>
+          </li>
+          <li class="nav-item active">
+          <a class="nav-link" href="actuaDatosDoc.php" >Datos Personales</a>
+                        <span class="visually-hidden">(current)</span>
+            </a>
           </li>
         </ul>
         <ul class="ms-auto" style="list-style-type: none;">

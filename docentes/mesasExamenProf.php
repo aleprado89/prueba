@@ -94,17 +94,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
 <h5><label for="ciclolectivo">Ciclo lectivo: <?php echo $CicloLectivo; ?></label></h5>
   <br>
   <script>
-    function cargarValor(valor) {
-        var idPlan = valor;
-        $.ajax({
-            type: 'POST',
-            url: 'mesasExamenProf.php',
-            data: {idPlan: idPlan, actualizarAcordeones: true},
-            success: function(data) {
-                $('#accordionExample').html(data);
-            }
-        });
-    }
+   $(document).ready(function() {
+       // Habilitar colapso de acordeones de forma individual
+       $('.collapse').on('show.bs.collapse', function () {
+           var $opened = $(this).closest('.accordion').find('.collapse.show');
+           if ($opened.length) {
+               $opened.collapse('hide');
+           }
+       });
+   });
+  var accordionState = null; // Variable global para almacenar el estado del acordeón
+  
+  function cargarValor(valor) {
+      var idPlan = valor;
+      
+      // Almacena el estado del acordeón solo la primera vez
+      if (accordionState === null) {
+          accordionState = $('#accordionExample').html();
+      }
+  
+      $.ajax({
+          type: 'POST',
+          url: 'mesasExamenProf.php',
+          data: {idPlan: idPlan, actualizarAcordeones: true},
+          success: function(data) {
+              if (data.trim() === '') {
+                  $('#accordionExample').html('<p>No hay mesas de examen de las materias del profesor.</p>');
+              } else {
+                  // Actualiza el contenido
+                  $('#accordionExample').html(data);
+                  
+                  
+                  // Restaura el estado del acordeón
+                  if (accordionState) {
+                      $('#accordionExample').html(accordionState);
+                  }
+              }
+          }
+      });
+  }
 </script>
 
   <select name="plan" class="form-select" id="plan" onchange="cargarValor(this.value)">

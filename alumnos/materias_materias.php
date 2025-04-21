@@ -5,6 +5,13 @@ include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
 //include '../funciones/pruebaSession.php';
 
+//VARIABLES
+$idAlumno = $_SESSION['alu_idAlumno'];
+$nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
+$idPlan = $_SESSION['idP'];
+$nombrePlan = $_SESSION['nombreP'];
+$cicloLectivo =  $datosColegio[0]['anioautoweb'];
+
  if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
    //BOTON LISTADO SOLICITUDES
@@ -24,55 +31,58 @@ include '../funciones/parametrosWeb.php';
      header("Location: ../alumnos/materias_solicitar.php");
      exit;
    }
-   if (isset($_POST['curso'])) {
-     $cursoSeleccionado = $_POST['curso'];
-     // Buscar las materias adeudadas para el curso seleccionado
-     $listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan, $cursoSeleccionado);
-     
-     // Devolver los datos de la tabla en formato HTML
-     echo '<table id="materias" class="table table-hover col-12">
-       <thead>
-         <tr class="table-primary">
-           <th scope="col" style="display:none;">idMateria</th>
-           <th scope="col">Materia</th>  
-           <th scope="col">Curso</th>              
-           <th scope="col">Solicitar Inscripción</th>
-         </tr>
-       </thead>
-       <tbody>';
-     if (empty($listadoMaterias)) {
-       echo '<tr>
-         <td colspan="4">Sin registros</td>
-       </tr>';
-     }
-     foreach ($listadoMaterias as $materia) {
-       echo '<tr>
-         <td style="display:none;" name="idM">'.$materia['idMateria'].'</td>
-         <td name="nombreM">'.$materia['Materia'].'</td>      
-         <td name="nombreC">'.$materia['Curso'].'</td>             
-         <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
-       </tr>';
-     }
-     echo '</tbody>
-     </table><br>';
-     exit;
-   }
+  if (isset($_POST['curso']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+    $cursoSeleccionado = $_POST['curso'];
+    try {
+      // Buscar las materias adeudadas para el curso seleccionado
+      $listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan, $cursoSeleccionado);
+       // Devolver los datos de la tabla en formato HTML
+        header('Content-Type: text/html; charset=UTF-8');
+        header('X-Robots-Tag: noindex, nofollow');
+
+      echo '<table id="materias" class="table table-hover col-12">
+        <thead>
+          <tr class="table-primary">
+            <th scope="col" style="display:none;">idMateria</th>
+            <th scope="col">Materia</th>  
+            <th scope="col">Curso</th>              
+            <th scope="col">Solicitar Inscripción</th>
+          </tr>
+        </thead>
+        <tbody>';
+      if (empty($listadoMaterias)) {
+        echo '<tr>
+          <td colspan="4">Sin registros</td>
+        </tr>';
+      }
+      foreach ($listadoMaterias as $materia) {
+        echo '<tr>
+          <td style="display:none;" name="idM">'.$materia['idMateria'].'</td>
+          <td name="nombreM">'.$materia['Materia'].'</td>      
+          <td name="nombreC">'.$materia['Curso'].'</td>             
+          <td><button type="submit" name="submitSolicitar" class="btn btn-primary ver-btn">Solicitar</button></td>
+        </tr>';
+      }
+      echo '</tbody>
+      </table>';
+      exit;
+    } catch (Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+      exit;
+     die();
+    }
+  }
  }
 
-//VARIABLES
-$idAlumno = $_SESSION['alu_idAlumno'];
-$nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
-$idPlan = $_SESSION['idP'];
-$nombrePlan = $_SESSION['nombreP'];
-$cicloLectivo =  $datosColegio[0]['anioautoweb'];
+
 
 //FUNCIONES
 //LISTAR MATERIAS
 $listadoMaterias = array();
 $cursosPredeterminados=buscarCursoPredeterminado($conn,$idPlan);
-$maxIdCursoPredeterminado = max(array_column($cursosPredeterminados, 'idcursopredeterminado'));
-
-$listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan, $maxIdCursoPredeterminado);
+//$maxIdCursoPredeterminado = max(array_column($cursosPredeterminados, 'idcursopredeterminado'));
+$idcursomatriculado=buscarCursoMatriculado($conn,$idPlan,$idAlumno);
+$listadoMaterias = buscarMateriasAdeuda($conn, $cicloLectivo, $idAlumno, $idPlan, $idcursomatriculado);
 $cantidad = count($listadoMaterias);
 ?>
 <!DOCTYPE html>
@@ -100,6 +110,13 @@ $cantidad = count($listadoMaterias);
   <?php include '../funciones/menu.php'; ?>
 
   <div class="container-fluid fondo">
+  <div class="text-center">
+      <div id="spinner" style="display: none;">
+        <div class="spinner-border" role="status">
+          <span class="sr-only"></span>
+        </div>
+      </div>
+    </div>
     <br>
     <div class="container">
       <ol class="breadcrumb">
@@ -111,12 +128,13 @@ $cantidad = count($listadoMaterias);
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
         <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
-        <select id="curso" name="curso">
+        <div class="row col-12 col-md-4">
+        <select id="curso" name="curso" class="form-control">
           <option value="">Seleccione un curso</option>
           <?php foreach ($cursosPredeterminados as $curso) { ?>
-            <option value="<?php echo $curso['idcursopredeterminado']; ?>"><?php echo $curso['nombreCurso']; ?></option>
+            <option value="<?php echo $curso['idcursopredeterminado']; ?>" <?php echo ($curso['idcursopredeterminado'] == $idcursomatriculado) ? 'selected' : ''; ?>><?php echo $curso['nombreCurso']; ?></option>
           <?php } ?>
-        </select>
+        </select></div>
       </div>
       <br>
       <div class="text-center">
@@ -182,6 +200,7 @@ $cantidad = count($listadoMaterias);
       </div>
     </div>
   </div>
+  
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.min.js"></script>
@@ -189,48 +208,52 @@ $cantidad = count($listadoMaterias);
   <script src="../js/bootstrap.min.js"></script>
 
   <script>
-    //SCRIPT PARA SELECCIONAR DATOS DE LA MATERIA A SOLICITAR
+        // Ocultar el spinner del form anterior
     document.addEventListener("DOMContentLoaded", function () {
-
-      // Agregar un evento de clic a todos los botones con la clase 'ver-btn'
-      var botones = document.querySelectorAll('.ver-btn');
-      botones.forEach(function (boton) {
-        boton.addEventListener('click', function () {
-          // Obtener los datos de la fila seleccionada
-          var fila = this.closest('tr');
-          var idMateriaSeleccionada = fila.querySelector("td:nth-child(1)").innerText;
-          var nombreMateriaCompleto = fila.querySelector("td:nth-child(2)").innerText;
-          var nombreCursoCompleto = fila.querySelector("td:nth-child(3)").innerText;
-          // Cargar Datos
-          document.getElementById("idM").value = idMateriaSeleccionada;
-          document.getElementById("nombreM").value = nombreMateriaCompleto;
-          document.getElementById("nombreC").value = nombreCursoCompleto;
-          // Enviar el formulario
-          document.getElementById("envio").submit();
-        });
-      });
+    document.getElementById("spinner").classList.remove("d-block");
+    document.getElementById("spinner").classList.add("d-none");
+  });
+   //SCRIPT PARA SELECCIONAR DATOS DE LA MATERIA A SOLICITAR
+       $(document).on('click', '.ver-btn', function() {
+        // Obtener los datos de la fila seleccionada
+        var fila = this.closest('tr');
+        var idMateriaSeleccionada = fila.querySelector("td:nth-child(1)").innerText;
+        var nombreMateriaCompleto = fila.querySelector("td:nth-child(2)").innerText;
+        var nombreCursoCompleto = fila.querySelector("td:nth-child(3)").innerText;
+        // Cargar Datos
+        document.getElementById("idM").value = idMateriaSeleccionada;
+        document.getElementById("nombreM").value = nombreMateriaCompleto;
+        document.getElementById("nombreC").value = nombreCursoCompleto;
+        // Enviar el formulario
+        document.getElementById("envio").submit();
     });
 
    $('#curso').change(function() {
      var cursoSeleccionado = $(this).val();
      console.log(cursoSeleccionado);
+     $('#spinner').removeClass('d-none').addClass('d-block'); // Mostrar el spinner
      $.ajax({
        type: 'POST',
        url: 'materias_materias.php',
        data: {curso: cursoSeleccionado},
-       success: function(data)
-        {
-    console.log('Respuesta del servidor:', data);
-    // Reemplazar solo el contenido de la tabla
-    var tabla = $(data).filter('#materias');
-    if (tabla.length > 0) {
-      $('#materias').html(tabla.html());
-    }
-  },
-  error: function(xhr, status, error) {
-    console.log(JSON.stringify(data))  }
+       success: function(data) {
+         console.log('Respuesta del servidor:', data);
+         // Reemplazar solo el contenido de la tabla
+         var tabla = $(data).filter('#materias');
+         if (tabla.length > 0) {
+           $('#materias').html(tabla.html());
+         } else {
+           console.log('No se encontró la tabla en la respuesta del servidor');
+         }
+         $('#spinner').removeClass('d-block').addClass('d-none'); // Ocultar el spinner
+       },
+       error: function(xhr, status, error) {
+         console.log('Error:', error);
+         $('#spinner').removeClass('d-block').addClass('d-none'); // Ocultar el spinner en caso de error
+       }
      });
    });
+   
   </script>
  
   

@@ -76,6 +76,12 @@ while ($b < $cantidadMaterias) {
 <?php include '../funciones/menu.php'; ?>
 
   <div class="container-fluid fondo">
+  <!-- Agregar el spinner -->
+<div id="spinner" class="d-none text-center">
+  <div class="spinner-border" role="status">
+    <span class="sr-only"></span>
+  </div>
+</div>
   <br>
   <div class="container">
   <ol class="breadcrumb">
@@ -184,6 +190,9 @@ while ($b < $cantidadMaterias) {
         var botones = document.querySelectorAll('.ver-btn');
         botones.forEach(function (boton) {
           boton.addEventListener('click', function () {
+             // Mostrar el spinner
+      document.getElementById("spinner").classList.remove("d-none");
+      document.getElementById("spinner").classList.add("d-block");
             // Obtener los datos de la fila seleccionada
             var fila = this.closest('tr');
             var idPlanSeleccionado = fila.querySelector("td:nth-child(1)").innerText;

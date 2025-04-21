@@ -192,7 +192,7 @@ $cantidad = count($listadoCalificaciones);
              <td style="display:none;">
                <?php echo $MateriaCompleto ?>
              </td>
-             <td>
+             <td style="color:#2196F3">
                <?php echo $Materia ?>
              </td>           
              <td>
