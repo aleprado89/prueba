@@ -194,8 +194,8 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
      $('#imprimir-asistencias').attr('href', url);
    });
  
-   $('#tablaAsistencia td[contenteditable="true"]').on('input', function() {
-     var $this = $(this);
+   $('#tablaAsistencia').on('input', 'td[contenteditable="true"]', function() {
+    var $this = $(this);
      var id = $this.attr('data-id');
      var asistencia = $this.text().trim();
      var fecha = $('#fecha').val();
@@ -256,6 +256,7 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
        },
        success: function(respuesta) {
          $('#tablaAsistencia').html(respuesta);
+         
        }
      });
    });

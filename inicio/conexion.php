@@ -20,5 +20,5 @@ if ($conn->connect_error) {
 }
 
 // Establecer el juego de caracteres a UTF-8 (opcional)
-$conn->set_charset("utf8");
+$conn->set_charset("utf8mb4");
 
