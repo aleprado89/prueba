@@ -7,7 +7,7 @@ $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
 $idMateria = $_SESSION['idMateria'];
 $ciclolectivo = $_SESSION['ciclolectivo'];
-$idCurso=buscarIdCiclo($conn,$ciclolectivo);
+$idCiclo=buscarIdCiclo($conn,$ciclolectivo);
 $plan = $_SESSION['plan'];
 $materia = $_SESSION['materia'];
 $curso = $_SESSION['curso'];
@@ -185,7 +185,7 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
      var fecha = $(this).val();
      var partes = fecha.split('-');
      var mes = partes[1].replace(/^0+/, ''); // Elimina el cero adelante del mes
-     var anio = '<?php echo $idCurso; ?>';
+     var anio = '<?php echo $idCiclo; ?>';
      var plan = '<?php echo $plan; ?>';
      var materia = '<?php echo $materia; ?>';
      var curso = '<?php echo $curso; ?>';
@@ -260,6 +260,19 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
        }
      });
    });
+ });
+ $('#imprimir-asistencias').on('click', function() {
+   var fecha = $('#fecha').val();
+   var partes = fecha.split('-');
+   var anio = partes[0];
+   var mes = partes[1].replace(/^0+/, '');
+   var idMateria = '<?php echo $idMateria; ?>';
+   var materia = '<?php echo $materia; ?>';
+   var curso = '<?php echo $curso; ?>';
+   var plan = '<?php echo $plan; ?>';
+   var ciclolectivo = '<?php echo $idCiclo; ?>';
+   var url = '../reportes/asistenciaDocPDF.php?idMateria=' + encodeURIComponent(idMateria) + '&materia=' + encodeURIComponent(materia) + '&curso=' + encodeURIComponent(curso) + '&plan=' + encodeURIComponent(plan) + '&ciclolectivo=' + encodeURIComponent(ciclolectivo) + '&mes=' + encodeURIComponent(mes);
+   window.open(url, '_blank');
  });
 </script>
 </html>
