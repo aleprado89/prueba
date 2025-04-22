@@ -2,7 +2,7 @@
   include 'variablesParticulares.php';
   include '../inicio/conexion.php';
     //busco el nombre colegio segun el id para crear la variable de sesion
-$sql = "SELECT nombreColegio FROM colegio WHERE idColegio=".$_SESSION['idColegio']; 
+$sql = "SELECT nombreColegio FROM colegio WHERE codnivel=6"; 
 $resultado = $conn->query($sql);
 $fila = $resultado->fetch_assoc();
 $nombre = $fila["nombreColegio"];
