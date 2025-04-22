@@ -128,13 +128,14 @@ $cantidad = count($listadoMaterias);
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
         <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
-        <div class="row col-12 col-md-4">
+        <div class="row ">
+          <div class="col-12 col-md-4">
         <select id="curso" name="curso" class="form-control">
           <option value="">Seleccione un curso</option>
           <?php foreach ($cursosPredeterminados as $curso) { ?>
             <option value="<?php echo $curso['idcursopredeterminado']; ?>" <?php echo ($curso['idcursopredeterminado'] == $idcursomatriculado) ? 'selected' : ''; ?>><?php echo $curso['nombreCurso']; ?></option>
           <?php } ?>
-        </select></div>
+        </select></div></div>
       </div>
       <br>
       <div class="text-center">

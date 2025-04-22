@@ -77,7 +77,9 @@ $cantidad = count($listadoMaterias);
       <div class="card padding col-12">
         <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
         <h5><?php echo "Carrera: " . $nombrePlan; ?></h5>
-<select name="curso" id="curso" onchange="filtrarTabla(this.value)">
+        <div class="row ">
+          <div class="col-12 col-md-4">
+<select name="curso" id="curso" class="form-control" onchange="filtrarTabla(this.value)">
   <option value="">Todas las materias</option>
   <?php
   // Obtener los cursos posibles de la consulta que busca las materias
@@ -90,7 +92,8 @@ $cantidad = count($listadoMaterias);
     echo '<option value="' . $curso . '">' . $curso . '</option>';
   }
   ?>
-</select>
+</select></div>
+      </div>
       </div>
       <br>
       <div class="text-center">
