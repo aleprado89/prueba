@@ -48,7 +48,7 @@
                 <br>      
                 
                 <div class="alert alert-dismissible alert-danger">
-  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
   <h4 style="color:#333333;">Inscripciones:</h4>
   <p class="mb-0">Las inscripciones a exámenes y cursado están cerradas.</a></p>
 </div> <br>
@@ -181,7 +181,7 @@ echo '</div>';
 <!--           FUNCIONES     y SCRIPTS        -->
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-<script src="../js/jquery-3.7.1.slim.min.js"></script>
+<script src="../js/jquery-3.7.1.min.js"></script>
  <script src="../js/bootstrap.min.js"></script> 
  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 
@@ -192,7 +192,7 @@ echo '</div>';
             include '../inicio/conexion.php';
           
             // Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
-            $sql = "SELECT inscExamDesde,inscExamHasta,inscExamLectDesde FROM colegio WHERE idColegio =".$_SESSION['idColegio']; 
+            $sql = "SELECT inscExamDesde,inscExamHasta,inscExamLectDesde FROM colegio WHERE codnivel =6"; 
             $resultado = $conn->query($sql);
           
             if ($resultado->num_rows > 0) {
@@ -235,7 +235,7 @@ echo '</div>';
         include '../inicio/conexion.php';
       
         // Realizar la consulta para obtener la fecha de inscripción DE EXAMEN
-        $sql = "SELECT inscCursDesde,inscCursHasta,inscCursLectDesde FROM colegio WHERE idColegio =".$_SESSION['idColegio']; 
+        $sql = "SELECT inscCursDesde,inscCursHasta,inscCursLectDesde FROM colegio WHERE codnivel =6"; 
         $resultado = $conn->query($sql);
       
         if ($resultado->num_rows > 0) {
@@ -277,7 +277,7 @@ echo '</div>';
     include '../inicio/conexion.php';
 
     // Realiza tu consulta MySQL para obtener un valor
-    $sql = "SELECT inscCursDesde, inscCursHasta, inscExamDesde, inscExamHasta FROM colegio WHERE idColegio =" . $_SESSION['idColegio'];
+    $sql = "SELECT inscCursDesde, inscCursHasta, inscExamDesde, inscExamHasta FROM colegio WHERE codnivel =6";
     $resultado = $conn->query($sql);
     if ($resultado->num_rows > 0) {
         $fila = $resultado->fetch_assoc();

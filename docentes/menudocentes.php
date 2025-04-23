@@ -170,7 +170,7 @@
 include '../inicio/conexion.php';
 
 // Realizar la consulta para obtener la fecha de ACTAS
-$sql = "SELECT cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE idColegio =" . $_SESSION['idColegio'];
+$sql = "SELECT cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE codnivel =6";
 $resultado = $conn->query($sql);
 
 if ($resultado->num_rows > 0) {
@@ -210,7 +210,7 @@ $conn->close();
     include '../inicio/conexion.php';
 
     // Realiza tu consulta MySQL para obtener un valor
-    $sql = "SELECT  cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE idColegio =" . $_SESSION['idColegio'];
+    $sql = "SELECT  cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE codnivel =6";
     $resultado = $conn->query($sql);
     if ($resultado->num_rows > 0) {
         $fila = $resultado->fetch_assoc();
