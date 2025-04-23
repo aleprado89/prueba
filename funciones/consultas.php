@@ -4,13 +4,16 @@ function estadoPlan($conexion, $idAlumno, $idPlan, $cicloLectivo)
 {
     $consulta = "SELECT * FROM materiaterciario inner join curso 
 on materiaterciario.idCurso = curso.idCurso
-left join calificacionesterciario on (calificacionesterciario.idAlumno = $idAlumno and 
+left join calificacionesterciario on (calificacionesterciario.idAlumno = ? and 
 materiaterciario.idUnicoMateria = 
 (select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = calificacionesterciario.idMateria))
-where materiaterciario.idPlan = $idPlan and materiaterciario.idCicloLectivo =
-(select idciclolectivo from ciclolectivo where anio = $cicloLectivo) and curso.cursoPrincipal = 1";
+where materiaterciario.idPlan = ? and materiaterciario.idCicloLectivo =
+(select idciclolectivo from ciclolectivo where anio = ?) and curso.cursoPrincipal = 1";
 
-    $estadoP = mysqli_query($conexion, $consulta);
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("iii", $idAlumno, $idPlan, $cicloLectivo);
+    $stmt->execute();
+    $estadoP = $stmt->get_result();
 
     $listadoCurricula = array();
     $i = 0;
@@ -24,7 +27,6 @@ where materiaterciario.idPlan = $idPlan and materiaterciario.idCicloLectivo =
     }
     return $listadoCurricula;
 }
-
 //Calificaciones de un alumno por Plan
 function buscarMaterias($conexion, $idAlumno, $idPlan)
 {

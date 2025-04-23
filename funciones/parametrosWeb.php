@@ -10,8 +10,19 @@ if (!empty($colegio)) {
     {
         $datosColegio[$i]['idTurno'] = $data['iDturnoautoweb'];
         
-        $turnoC = "SELECT nombre from turnosexamenes where idTurno = $data[iDturnoautoweb]";
-        $turno = mysqli_query($conn, $turnoC);        
+        // Preparar la consulta
+        $turnoC = "SELECT nombre from turnosexamenes where idTurno = ?";
+        $stmt = $conn->prepare($turnoC);
+        
+        // Vincular el parámetro
+        $stmt->bind_param("i", $data['iDturnoautoweb']);
+        
+        // Ejecutar la consulta
+        $stmt->execute();
+        
+        // Obtener el resultado
+        $turno = $stmt->get_result();
+        
         $i = 0;
         
         if (!empty($turno)) {
