@@ -168,7 +168,7 @@ function buscarMateriasAdeuda($conexion, $cicloLectivo, $idAlumno, $idPlan, $idc
     order by curso.idcursopredeterminado, materiaterciario.ubicacion";
 
     $stmt = $conexion->prepare($consulta);
-    $stmt->bind_param("iiiii", $idcursopred, $idPlan, $cicloLectivo, $idcursopred, $idAlumno, $idAlumno);
+    $stmt->bind_param("iiiiii", $idcursopred, $idPlan, $cicloLectivo, $idcursopred, $idAlumno, $idAlumno);
     $stmt->execute();
     $mat = $stmt->get_result();
 
@@ -995,10 +995,11 @@ function actualizarCalifDocente($conexion, $idCalif, $columna, $valor){
 
 //funcion para actualizar asistencia
 function actualizarAsistxDocentes($conexion, $idAlumno, $idCicloLectivo, $mes, $dia, $valor){
+    $dia = mysqli_real_escape_string($conexion, $dia);
     $consulta = "UPDATE asistenciaterciario SET $dia = ? WHERE idAlumno = ? AND idCicloLectivo = ? AND mes = ?";
 
     $stmt = mysqli_prepare($conexion, $consulta);
-    mysqli_stmt_bind_param($stmt, "isii", $valor, $idAlumno, $idCicloLectivo, $mes);
+    mysqli_stmt_bind_param($stmt, "siii", $valor, $idAlumno, $idCicloLectivo, $mes);
     $resultado = mysqli_stmt_execute($stmt);
 
     if (!$resultado) {

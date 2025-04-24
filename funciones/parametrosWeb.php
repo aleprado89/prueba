@@ -21,10 +21,8 @@ if (!empty($colegio)) {
         $stmt->execute();
         
         // Obtener el resultado
-        $turno = $stmt->get_result();
-        
-        $i = 0;
-        
+        $turno = $stmt->get_result();        
+      
         if (!empty($turno)) {
             while ($dataT = mysqli_fetch_array($turno)) 
             {
