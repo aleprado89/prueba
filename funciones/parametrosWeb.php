@@ -1,6 +1,6 @@
 <?php
 
-$consulta = "SELECT * from colegio";
+$consulta = "SELECT * from colegio where codnivel = 6";
 $colegio = mysqli_query($conn, $consulta);
 $datosColegio = array();
 $i = 0;
