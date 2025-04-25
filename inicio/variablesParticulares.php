@@ -6,3 +6,4 @@ session_start();
   $_SESSION['membrete']='../img/membrete_banfield.png';//ubicacion nombre membrete para reportes
   $_SESSION['profeModCiclo']=1;//profes pueden cambiar ciclo lectivo
   $_SESSION['profeModCalifAsis']=1;//profes pueden modificar calificaciones y asistencias
+  $_SESSION['claveDocente']="banfield";//clave para el primer acceso a la seccion de docente

@@ -1,104 +1,188 @@
 <?php
-  session_start();
-  include 'conexion.php';
+session_start(); 
+include 'conexion.php';
+include '../funciones/parametrosWeb.php';
 
-// Obtener los datos del formulario
+// Lógica principal
 $username = $_POST['username'];
 $password = $_POST['password'];
 
-// Consulta para verificar el usuario y la contraseña del DOCENTE
-$sql = "SELECT p.nombre,p.apellido,p.dni,pl.legajo,p.idPersona FROM persona p INNER JOIN personal pl ON
-p.idPersona=pl.idPersona INNER JOIN passwords ON
-pl.legajo=passwords.legajo WHERE p.dni='$username' AND passwords.password='$password'";
-$result = $conn->query($sql);
-
-// Verificar si se encontró un registro en la base de datos
-if ($result->num_rows > 0) {
-  // Usuario y contraseña válidos
-//VARIABLES SESSION TABLA PERSONA Y PERSONAL
-  while($row = $result->fetch_assoc()) {
-    $_SESSION['doc_nombre'] = $row["nombre"];
-    $_SESSION['doc_apellido'] = $row["apellido"];
-    $_SESSION['doc_dni'] = $row["dni"];
-    $_SESSION['doc_legajo'] = $row["legajo"];
-    $_SESSION['doc_idPersona'] = $row["idPersona"];
-
-     //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA DOCENTES Y CREO VARIABLES SESSION 
-
-    $sql3 = "SELECT colegio.anio_carga_notas,colegio.nombreColegio, ciclolectivo.idciclolectivo FROM colegio inner join ciclolectivo on
-    colegio.anioautoweb=ciclolectivo.anio WHERE codnivel = 6"; 
-    $resultado3 = $conn->query($sql3);
-    
-    if ($resultado3->num_rows > 0) {
-      $fila = $resultado3->fetch_assoc();
-      $anioPlataforma = $fila['anio_carga_notas'];
-      $colegio=$fila['nombreColegio'];
-      $idciclo=$fila['idciclolectivo'];
-
-      $_SESSION['anioPlataformaDoc']=$anioPlataforma;  
-      $_SESSION['colegio']=$colegio;
-      $_SESSION['idCiclo']=$idciclo;  
-    } 
-    
-
-}
-  $conn->close();
-//Link al menu docentes
-   header("Location:../docentes/menudocentes.php");
-   exit();
+if (verificarAccesoDocente($username, $password, $conn, $datosColegio)) {
+  // Redirigir al menú de docentes
+  header('Location: ../docentes/menudocentes.php');
+  exit;
+} elseif (verificarAccesoAlumno($username, $password, $conn, $datosColegio)) {
+  // Redirigir al menú de alumnos
+  header('Location: ../alumnos/menualumnos.php');
+  exit;
 } else {
-// Consulta SQL para buscar el ALUMNO en la tabla de persona y password_alumnos
-$sql2 = "SELECT p.nombre,p.apellido,p.dni,a.idAlumno,p.idPersona FROM persona p INNER JOIN alumnosterciario a ON
-p.idPersona=a.idPersona INNER JOIN passwords_alumnos ON
-a.idAlumno=passwords_alumnos.idAlumno WHERE p.dni='$username' AND passwords_alumnos.password='$password'";
-$result2 = $conn->query($sql2);
-
-
-
-// Verificar si se encontró un registro en la base de datos osea ingreso correcto
-if ($result2->num_rows > 0) {
-  session_start();
-
-  while($row = $result2->fetch_assoc()) {
-    $_SESSION['alu_nombre'] = $row["nombre"];
-    $_SESSION['alu_apellido'] = $row["apellido"];
-    $_SESSION['alu_dni'] = $row["dni"];
-    $_SESSION['alu_idAlumno'] = $row["idAlumno"];
-    $_SESSION['alu_idPersona'] = $row["idPersona"];
-
-    //CONSULTA PARA OBTENER  DATOS TABLA COLEGIO DE LA PLATAFORMA ALUMNOS Y CREO VARIABLES SESSION 
-
-    $sql4 = "SELECT colegio.anioautoweb,colegio.nombreColegio, ciclolectivo.idciclolectivo FROM colegio inner join ciclolectivo on
-    colegio.anioautoweb=ciclolectivo.anio WHERE codnivel = 6"; 
-    $resultado4 = $conn->query($sql4);
-    
-    if ($resultado4->num_rows > 0) {
-      $fila = $resultado4->fetch_assoc();
-      $anioPlataforma = $fila['anioautoweb'];
-      $colegio=$fila['nombreColegio'];
-      $idciclo=$fila['idciclolectivo'];
-
-      $_SESSION['anioPlataformaAlu']=$anioPlataforma;  
-      $_SESSION['colegio']=$colegio;
-      $_SESSION['idCiclo']=$idciclo;  
-    }
-}
-
-
-  $conn->close();
-
-  // Usuario y contraseña válidos
-
-   header("Location:../alumnos/menualumnos.php");
-   exit();
-} else {
-  // Usuario o contraseña incorrectos
-  session_start();
+  // Setear la variable de sesión con el mensaje de error
   $_SESSION['login_message'] = "Usuario o contraseña incorrectos.";
+  // Redirigir al usuario de vuelta a login.php
+  header('Location: login.php');
+  exit;
 }
-}
-$conn->close();
 
-// Redirigir de vuelta al formulario de inicio de sesión
-header("Location: login.php");
-exit();
+
+
+//FUNCIONES
+
+function verificarAccesoDocente($username, $password, $conn, $datosColegio) {
+  $sql = "SELECT * FROM persona INNER JOIN personal ON persona.idPersona = personal.idPersona WHERE dni = ?";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("s", $username);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+
+    // Verificar si el docente ya tiene un registro en la tabla passwords
+    $sql = "SELECT * FROM passwords INNER JOIN personal ON passwords.legajo = personal.legajo WHERE personal.idPersona = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $row['idPersona']);
+    $stmt->execute();
+    $result_passwords = $stmt->get_result();
+
+    if ($result_passwords->num_rows > 0) {
+      $row_passwords = $result_passwords->fetch_assoc();
+      if ($password == $row_passwords['password']) {
+        // Crear las variables de sesión y procesos que hace cuando el acceso es correcto
+        $_SESSION['doc_nombre'] = $row["nombre"];
+        $_SESSION['doc_apellido'] = $row["apellido"];
+        $_SESSION['doc_dni'] = $row["dni"];
+        $_SESSION['doc_legajo'] = $row["legajo"];
+        $_SESSION['doc_idPersona'] = $row["idPersona"];
+
+        // Verificar si la contraseña es igual a la variable de sesión
+        if ($password == $_SESSION['claveDocente']) {
+          // Actualizar la variable de sesión con la contraseña de la variable de sesión
+          $_SESSION['cambiarClave'] = 1;}
+
+        // Obtener los datos del colegio
+        foreach ($datosColegio as $colegio) {
+            $_SESSION['anioPlataformaDoc'] = $colegio['anioCargaNotas'];
+            $_SESSION['nombreColegio'] = $colegio['nombreColegio'];
+            //$_SESSION['idCiclo'] = $colegio['idciclolectivo'];
+          
+        }
+
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      // Si no tiene un registro en la tabla passwords, verificar si la contraseña es igual a la variable de sesión
+      if ($password == $_SESSION['claveDocente']) {
+        // Crear un registro en la tabla passwords con el legajo y la contraseña de la variable de sesión
+        $sql = "INSERT INTO passwords (legajo, password) VALUES (?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $row['legajo'], $_SESSION['claveDocente']);
+        $stmt->execute();
+
+        // Crear las variables de sesión y procesos que hace cuando el acceso es correcto
+        $_SESSION['doc_nombre'] = $row["nombre"];
+        $_SESSION['doc_apellido'] = $row["apellido"];
+        $_SESSION['doc_dni'] = $row["dni"];
+        $_SESSION['doc_legajo'] = $row["legajo"];
+        $_SESSION['doc_idPersona'] = $row["idPersona"];
+        $_SESSION['cambiarClave'] = 1;
+
+        // Obtener los datos del colegio
+        foreach ($datosColegio as $colegio) {
+            $_SESSION['anioPlataformaDoc'] = $colegio['anioCargaNotas'];
+            $_SESSION['nombreColegio'] = $colegio['nombreColegio'];
+            //$_SESSION['idCiclo'] = $colegio['idciclolectivo'];
+          
+        }
+
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return false;
+}
+
+function verificarAccesoAlumno($username, $password, $conn, $datosColegio) {
+  $sql = "SELECT p.*, a.idAlumno FROM persona p INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona WHERE p.dni = ?";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("s", $username);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+
+    // Verificar si el alumno ya tiene un registro en la tabla passwords_alumnos
+    $sql = "SELECT * FROM passwords_alumnos WHERE idAlumno = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $row['idAlumno']);
+    $stmt->execute();
+    $result_passwords = $stmt->get_result();
+
+    if ($result_passwords->num_rows > 0) {
+      $row_passwords = $result_passwords->fetch_assoc();
+      if ($password == $row_passwords['password']) {
+        // Crear las variables de sesión y procesos que hace cuando el acceso es correcto
+        $_SESSION['alu_nombre'] = $row["nombre"];
+        $_SESSION['alu_apellido'] = $row["apellido"];
+        $_SESSION['alu_dni'] = $row["dni"];
+        $_SESSION['alu_idAlumno'] = $row["idAlumno"];
+        $_SESSION['alu_idPersona'] = $row["idPersona"];
+
+        // Verificar si la contraseña es igual al usuario
+        if ($password == $username) {
+          $_SESSION['cambiarClave'] = 1;
+        }
+
+        // Obtener los datos del colegio
+        foreach ($datosColegio as $colegio) {
+            $_SESSION['anioPlataformaAlu'] = $colegio['anioautoweb'];
+            $_SESSION['nombreColegio'] = $colegio['nombreColegio'];
+           // $_SESSION['idCiclo'] = $colegio['idciclolectivo'];
+          
+        }
+
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      // Si no tiene un registro en la tabla passwords_alumnos, verificar si la contraseña es igual al DNI
+      if ($password == $username) {
+        // Crear un registro en la tabla passwords_alumnos con el idAlumno y de password el DNI
+        $sql = "INSERT INTO passwords_alumnos (idAlumno, password) VALUES (?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $row['idAlumno'], $username);
+        $stmt->execute();
+
+        // Crear las variables de sesión y procesos que hace cuando el acceso es correcto
+        $_SESSION['alu_nombre'] = $row["nombre"];
+        $_SESSION['alu_apellido'] = $row["apellido"];
+        $_SESSION['alu_dni'] = $row["dni"];
+        $_SESSION['alu_idAlumno'] = $row["idAlumno"];
+        $_SESSION['alu_idPersona'] = $row["idPersona"];
+        $_SESSION['cambiarClave'] = 1;
+
+
+        // Obtener los datos del colegio
+        foreach ($datosColegio as $colegio) {
+            $_SESSION['anioPlataformaAlu'] = $colegio['anioautoweb'];
+            $_SESSION['nombreColegio'] = $colegio['nombreColegio'];
+           // $_SESSION['idCiclo'] = $colegio['idciclolectivo'];
+          
+        }
+
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return false;
+}
+?>

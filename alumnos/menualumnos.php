@@ -45,8 +45,10 @@
               <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
                 
                 <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola<?php echo " ".$_SESSION['alu_nombre']." ".$_SESSION["alu_apellido"]; ?></h4>
-                <br>      
-                
+                <a href="cambiarClave.php" class="btn btn-primary">
+  <i class="bi bi-lock-fill"></i> Cambiar Clave
+</a>   <br> 
+                <br>                
                 <div class="alert alert-dismissible alert-danger">
   <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
   <h4 style="color:#333333;">Inscripciones:</h4>
@@ -171,8 +173,26 @@ echo '</div>';
       </div>
     </div>
   </div>
-
  
+</div>
+
+<!-- Modal para cambiar la contraseña -->
+<div class="modal fade" id="cambiarClaveModal" tabindex="-1" role="dialog" aria-labelledby="cambiarClaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cambiarClaveModalLabel">Cambiar contraseña</h5>
+              
+            </div>
+            <div class="modal-body">
+                <p>Su clave es insegura, debe cambiarla.</p>
+            </div>
+            <div class="modal-footer">
+<button type="button" class="btn btn-secondary" onclick="$('#cambiarClaveModal').modal('hide')">Cancelar</button>
+                <a href="cambiarClave.php" class="btn btn-primary">Aceptar</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -319,6 +339,18 @@ echo '</div>';
     }
     ?>
 </script>    
+<?php
+    // Verifica si la variable de sesión cambiarClave es igual a 1
+    if ($_SESSION['cambiarClave'] == 1) {
+        // Muestra un modal para cambiar la contraseña
+        echo '<script>
+            $(document).ready(function() {
+                $("#cambiarClaveModal").modal("show");
+            });
+        </script>';
+    }
+    ?>
+
 <?php include '../funciones/footer.html'; ?>
 </body>
 </html>

@@ -45,19 +45,23 @@
               <div class="card-body text-center" style="margin-left:8%; margin-right:8%;">
 
                 <h4 class="card-title" style="color: #fff; margin-top: 20%;">Hola <?php echo $_SESSION['doc_nombre']." ".$_SESSION["doc_apellido"]; ?></h4>
+                <a href="cambiarClave.php" class="btn btn-primary">
+  <i class="bi bi-lock-fill"></i> Cambiar Clave
+</a>   <br> 
                 <br>
+
                 <div class="alert alert-dismissible alert-secondary">
   <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
   <h4 style="color:#333333;">¡Atención!</h4>
   <p class="mb-0">La carga de actas de exámenes está deshabilitada.</a></p>
 </div>
-                <br>
                 <p class="card-text" style="margin-bottom: 20%;">Aquí puedes cargar calificaciones y asistencias y
                   actualizar tus datos personales. Si se utiliza la carga de Actas desde esta plataforma,
                   se abrirá solo en los períodos de fechas que secretaría habilite.
                   </p>
-
-              </div>
+                  
+<br>
+          </div>
             </div>
                   </div>
 
@@ -135,7 +139,7 @@
     </div>
 
 
-<!-- Modal -->
+<!-- Modal INSCRIPCIONES -->
 <div class="modal" id="inscModal">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -153,6 +157,25 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Modal para cambiar la contraseña -->
+<div class="modal fade" id="cambiarClaveModal" tabindex="-1" role="dialog" aria-labelledby="cambiarClaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cambiarClaveModalLabel">Cambiar contraseña</h5>
+              
+            </div>
+            <div class="modal-body">
+                <p>Su clave es insegura, debe cambiarla.</p>
+            </div>
+            <div class="modal-footer">
+<button type="button" class="btn btn-secondary" onclick="$('#cambiarClaveModal').modal('hide')">Cancelar</button>
+                <a href="cambiarClave.php" class="btn btn-primary">Aceptar</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -250,6 +273,20 @@ $conn->close();
   });
 }
     </script>
+
+    <?php
+    // Verifica si la variable de sesión cambiarClave es igual a 1
+    if ($_SESSION['cambiarClave'] == 1) {
+        // Muestra un modal para cambiar la contraseña
+        echo '<script>
+            $(document).ready(function() {
+                $("#cambiarClaveModal").modal("show");
+            });
+        </script>';
+    }
+    ?>
+
+
     <?php include '../funciones/footer.html'; ?>
 </body>
 </html>
