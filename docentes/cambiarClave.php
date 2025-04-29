@@ -17,15 +17,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $claveNueva = $_POST['claveNueva'];
     $claveNuevaConfirmar = $_POST['claveNuevaConfirmar'];
 
-    // Verifica si las claves son iguales
-    if ($claveNueva == $claveNuevaConfirmar) {
+    // Verifica si las claves son iguales y tienen un mínimo de 4 caracteres
+    if ($claveNueva == $claveNuevaConfirmar && strlen($claveNueva) >= 4) {
         // Actualiza el registro de la tabla passwords
         $sql = "UPDATE passwords SET password = '$claveNueva' WHERE legajo = '".$_SESSION['doc_legajo']."'";
         $conn->query($sql);
 
         // Cierra la conexión a la base de datos
         $conn->close();
-$_SESSION['cambiarClave'] = 0;
+        $_SESSION['cambiarClave'] = 0;
 
         // Muestra un mensaje de éxito
         $mensaje = '<div class="alert alert-success">
@@ -34,8 +34,12 @@ $_SESSION['cambiarClave'] = 0;
         <meta http-equiv="refresh" content="3;url=menudocentes.php">';
    
     } else {
-        // Muestra un mensaje de error si las claves no son iguales
-        $error = 'Las claves no son iguales';
+        // Muestra un mensaje de error si las claves no son iguales o no tienen un mínimo de 4 caracteres
+        if ($claveNueva != $claveNuevaConfirmar) {
+            $error = 'Las claves no son iguales';
+        } elseif (strlen($claveNueva) < 4) {
+            $error = 'La clave nueva debe tener un mínimo de 4 caracteres';
+        }
     }
 }
 
@@ -50,6 +54,11 @@ $_SESSION['cambiarClave'] = 0;
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="[https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .alert {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 
 <body>
@@ -79,15 +88,15 @@ $_SESSION['cambiarClave'] = 0;
         <br>
         <div class="text-center">
         <button type="submit" class="btn btn-primary btn-block">Guardar cambios</button></div>
-        <?php if (isset($mensaje)) { ?>
-          <?php echo $mensaje; ?>
-        <?php } elseif (isset($error)) { ?>
-          <div class="alert alert-danger">
-            <?php echo $error; ?>
-          </div>
-        <?php } ?>
       </form>
     </div>
+    <?php if (isset($error)) { ?>
+      <div class="alert alert-danger">
+        <?php echo $error; ?>
+      </div>
+    <?php } elseif (isset($mensaje)) { ?>
+      <?php echo $mensaje; ?>
+    <?php } ?>
   </div>
 </div>
 
