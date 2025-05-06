@@ -7,7 +7,9 @@ include '../funciones/parametrosWeb.php';
 $username = $_POST['username'];
 $password = $_POST['password'];
 
-if (verificarAccesoDocente($username, $password, $conn, $datosColegio)) {
+if (verificarAccesoAlumnoYDocente($username, $password, $conn, $datosColegio)) {
+  // No hacer nada, ya que se redirigirá a la página de selección de rol
+} elseif (verificarAccesoDocente($username, $password, $conn, $datosColegio)) {
   // Redirigir al menú de docentes
   header('Location: ../docentes/menudocentes.php');
   exit;
@@ -180,6 +182,88 @@ function verificarAccesoAlumno($username, $password, $conn, $datosColegio) {
       } else {
         return false;
       }
+    }
+  }
+
+  return false;
+}
+function verificarAccesoAlumnoYDocente($username, $password, $conn, $datosColegio) {
+  $sql = "SELECT p.*, a.idAlumno, per.legajo FROM persona p 
+          INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona 
+          INNER JOIN personal per ON p.idPersona = per.idPersona 
+          WHERE p.dni = ?";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("s", $username);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+
+    // Verificar si el alumno/docente ya tiene un registro en la tabla passwords_alumnos o passwords
+    $sql = "SELECT * FROM passwords_alumnos WHERE idAlumno = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $row['idAlumno']);
+    $stmt->execute();
+    $result_passwords_alumno = $stmt->get_result();
+
+    $sql = "SELECT * FROM passwords WHERE legajo = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $row['legajo']);
+    $stmt->execute();
+    $result_passwords_docente = $stmt->get_result();
+
+    if ($result_passwords_alumno->num_rows > 0 || $result_passwords_docente->num_rows > 0) {
+      if ($password == $row['dni'] || $password == $_SESSION['claveDocente']) {
+        // Crear un registro en la tabla passwords_alumnos o passwords si no existe
+        if ($result_passwords_alumno->num_rows == 0) {
+          $sql = "INSERT INTO passwords_alumnos (idAlumno, password) VALUES (?, ?)";
+          $stmt = $conn->prepare($sql);
+          $stmt->bind_param("is", $row['idAlumno'], $row['dni']);
+          $stmt->execute();
+        }
+        if ($result_passwords_docente->num_rows == 0) {
+          $sql = "INSERT INTO passwords (legajo, password) VALUES (?, ?)";
+          $stmt = $conn->prepare($sql);
+          $stmt->bind_param("ss", $row['legajo'], $row['dni']);
+          $stmt->execute();
+        }
+
+         // Crear variables de sesión específicas para alumnos
+  $_SESSION['alu_nombre'] = $row['nombre'];
+  $_SESSION['alu_apellido'] = $row['apellido'];
+  $_SESSION['alu_dni'] = $row['dni'];
+  $_SESSION['alu_idAlumno'] = $row['idAlumno'];
+  $_SESSION['alu_idPersona'] = $row['idPersona'];
+
+  // Crear variables de sesión específicas para docentes
+  $_SESSION['doc_nombre'] = $row['nombre'];
+  $_SESSION['doc_apellido'] = $row['apellido'];
+  $_SESSION['doc_dni'] = $row['dni'];
+  $_SESSION['doc_legajo'] = $row['legajo'];
+  $_SESSION['doc_idPersona'] = $row['idPersona'];
+
+  // Verificar si la contraseña es igual a la variable de sesión para docentes o al DNI para alumnos
+  if ($password == $_SESSION['claveDocente'] || $password == $username) {
+    $_SESSION['cambiarClave'] = 1;
+  }
+
+  // Cargar datos del colegio
+  foreach ($datosColegio as $colegio) {
+    $_SESSION['nombreColegio'] = $colegio['nombreColegio'];
+      $_SESSION['anioPlataformaAlu'] = $colegio['anioautoweb'];
+      $_SESSION['anioPlataformaDoc'] = $colegio['anioCargaNotas'];
+      }
+
+        // Redirigir a la página de selección de rol
+        $_SESSION['es_alumno_y_docente'] = true;
+        header('Location: seleccionar_rol.php');
+        exit;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
     }
   }
 

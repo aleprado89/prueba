@@ -220,7 +220,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
   <h3>Datos de contacto</h3>
   <div class="row">
   <div class="col-md-5">
-            <label for="mail">Mail:</label>
+            <label for="mail">Mail de recuperación de clave:</label>
             <input type="email" class="form-control" id="mail" name="mail"><br>
             <label for="mailInstitucional">Mail Institucional:</label>
             <input type="email" class="form-control" id="mailInstitucional" name="mailInstitucional"><br>

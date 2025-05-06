@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
   include 'variablesParticulares.php';
   include '../inicio/conexion.php';
     //busco el nombre colegio segun el id para crear la variable de sesion
@@ -46,8 +49,18 @@ $_SESSION['nombreColegio']=$nombre;
             </div>
             <div class="text-center mt-3">
             <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
+         
             </div>
           </form>
+          <div class="row"><button id="forgot-password" class="btn btn-link">Olvidó su contraseña</button>
+          </div>
+
+          <div id="spinner" style="display: none;">
+        <div class="spinner-border" role="status">
+          <span class="sr-only"></span>
+        </div>
+      </div>
+
         </div>
       </div>
     </div>
@@ -73,8 +86,27 @@ $_SESSION['nombreColegio']=$nombre;
     </div>
   </div>
 </div>
+<!-- Modal para recuperar contraseña -->
+<div class="modal" id="recoverModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Revise su correo para recuperar su contraseña</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="recoverMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-  <script src="../js/jquery-3.7.1.slim.min.js"></script>
+  <script src="../js/jquery-3.7.1.min.js"></script>
  <script src="../js/bootstrap.min.js"></script> 
  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 
@@ -93,6 +125,32 @@ $_SESSION['nombreColegio']=$nombre;
   }
   ?>
 </script>
+<script>
+  $(document).ready(function(){
+    $('#forgot-password').click(function(){
+      // Obtiene el DNI del usuario
+      var dni = $('#username').val();
+      $("#spinner").show(); // Muestra el spinner
 
+      // Envía el correo electrónico
+      $.ajax({
+        type: 'POST',
+        url: '../forgot-password.php',
+        data: {dni: dni},
+        success: function(resultado) {
+          $("#spinner").hide(); // Oculta el spinner
+          //console.log('Resultado:', resultado);
+// Muestra el resultado en el modal
+$("#recoverMessage").text(resultado);
+      $("#recoverModal").modal("show");        },
+        error: function(xhr, status, error) {
+          $("#spinner").hide(); // Oculta el spinner
+
+          console.log('Error:', error);
+        }
+      });
+    });
+  });
+</script>
 </body>
 </html>
