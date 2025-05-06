@@ -35,7 +35,7 @@ $html = '
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Solicitud de inscripción a rendir solamente finales</title>
+    <title>Alumno que debe finales</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -110,7 +110,6 @@ $html = '
 try {
     $dompdf->loadHtml($html);
     $dompdf->render();
-    $dompdf->addInfo('Title', 'Alumno que debe finales'); // Establece el título del PDF
     $dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
 } catch (Exception $e) {
     echo 'Error al generar el PDF: ' . $e->getMessage();

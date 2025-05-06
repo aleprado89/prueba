@@ -35,7 +35,10 @@ $img_base64 = base64_encode($img);
 $solicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo);
 
 // Cargar el contenido HTML
-$html = '
+$html = '<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Solicitudes Examen</title>
 <style>
     body {
         font-family: Arial;
@@ -111,8 +114,6 @@ $html .= '
 try {
     $dompdf->loadHtml($html);
     $dompdf->render();
-    $dompdf->addInfo('Title', 'Solicitudes Examen'); // Establece el título del PDF
-
     $dompdf->stream('solicitudesExam_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
 } catch (Exception $e) {
     echo 'Error al generar el PDF: ' . $e->getMessage();

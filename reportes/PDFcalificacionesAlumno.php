@@ -136,6 +136,4 @@ $html = '
 // Generar el PDF
 $dompdf->loadHtml($html);
 $dompdf->render();
-$dompdf->addInfo('Title', 'Calificaciones'); // Establece el título del PDF
-
 $dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
