@@ -7,3 +7,5 @@ session_start();
   $_SESSION['profeModCiclo']=1;//profes pueden cambiar ciclo lectivo
   $_SESSION['profeModCalifAsis']=1;//profes pueden modificar calificaciones y asistencias
   $_SESSION['claveDocente']="banfield";//clave para el primer acceso a la seccion de docente
+//RECORDAR VER ARCHIVO CONFIGMAIL DE LA RAIZ DEL PROYECTO PARA PONER LA CUENTA QUE ENVIA 
+//PARA RECUPERAR LA CLAVE

@@ -211,6 +211,21 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
      if (!/^[AaPp]*$/.test(asistencia)) {
        alert('La asistencia puede contener letras A, a, P, p');
        $this.text('');
+        // Envía una solicitud AJAX para actualizar la base de datos con un valor vacío
+    $.ajax({
+      type: 'POST',
+      url: 'carga_asist.php',
+      data: {
+        idAlumno: id,
+        anio: anio,
+        mes: mes,
+        dia: dia,
+        valor: ""
+      },
+      success: function(respuesta) {
+        console.log(respuesta);
+      }
+    });
      } else {
        $this.css('background-color', 'lightgreen');
  
