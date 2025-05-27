@@ -1164,3 +1164,57 @@ function actualizarAbandonoCursado($conexion, $idAlumno, $idMateria, $estado){
     }
     return $respuesta;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+///////FIN CONSULTAS CREADAS PARA PLATAFORMA - INICIO CONSULTAS SISTEMA ////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
+//buscar todos los planes
+function buscarTodosPlanes($conexion) {
+      $consulta = "SELECT * FROM plandeestudio";
+    $planes = mysqli_query($conexion, $consulta);
+  
+    $resultados = [];
+    while ($fila = mysqli_fetch_assoc($planes)) {
+        $resultados[] = $fila;
+    }
+    return $resultados;
+}
+function buscarCursosPlanCiclo($conexion, $idPlan, $idCiclo) {
+    $consulta = "SELECT * FROM curso WHERE idPlanEstudio = ? and idciclo=?";
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("ii", $idPlan, $idCiclo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $cursos = array();
+    while ($data = $result->fetch_assoc()) {
+        $cursos[] = $data;
+    }
+    return $cursos;
+}
+
+function materiasPlanCurso($conexion, $idPlan, $idCurso) {
+    $consulta = "SELECT materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
+    FROM materiaterciario 
+    INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso 
+    INNER JOIN cursospredeterminado ON cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado 
+    WHERE materiaterciario.idPlan = ? 
+    AND curso.idCurso = ? 
+    ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
+
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("ii", $idPlan, $idCurso);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $materias = array();
+    while ($data = $result->fetch_assoc()) {
+        $materias[] = array(
+            'nombreMateria' => $data['nombreMateria'],
+            'nombreCurso' => $data['nombreCurso']
+        );
+    }
+    return $materias;
+}

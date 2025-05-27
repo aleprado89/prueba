@@ -133,7 +133,7 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
         </div>
          
         <br><p><small>* Las asistencias se guardan automaticamente en cada modificación. La celda se pinta de verde cuando la calificacion se ha guardado exitosamente. Si no se pinta de verde revise su conexion a internet y/o dispositivo.
-          <br>Valores permitidos:P ó p(presente), A ó a(ausente). Se puede cargar 1 asistencia por día y hasta 5 asistencias por día por alumno(5 horas). 
+          <br>Valores permitidos:P ó p(presente), A ó a(ausente), J ó j(justificado), M o m(media falta). Se puede cargar 1 asistencia por día y hasta 5 asistencias por día por alumno(5 horas). 
           </small></p></div>
           <br>
           <div class="text-center">
@@ -208,8 +208,8 @@ $alumnosAsist=obtenerAsistenciaMateria($conn, $idMateria, $mes, $dia, $idCicloLe
        alert('La asistencia puede tener hasta 5 caracteres');
        $this.text(asistencia.substring(0, 5));
      }
-     if (!/^[AaPp]*$/.test(asistencia)) {
-       alert('La asistencia puede contener letras A, a, P, p');
+  if (!/^[AaPpJjMm]*$/.test(asistencia)) {
+       alert('La asistencia puede contener letras A, a, P, p, J, j,M,m');
        $this.text('');
         // Envía una solicitud AJAX para actualizar la base de datos con un valor vacío
     $.ajax({
