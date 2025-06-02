@@ -3,7 +3,7 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/parametrosWeb.php'; 
-
+include '../funciones/verificarSesion.php';
 // Verifica si el usuario ha iniciado sesión
 if (!isset($_SESSION['doc_legajo'])) {
     // Redirige al usuario a la página de inicio de sesión
@@ -99,6 +99,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php } ?>
   </div>
 </div>
+<?php
+$usuarioDocente = isset($_SESSION["doc_legajo"]) ? htmlspecialchars($_SESSION["doc_legajo"], ENT_QUOTES, "UTF-8") : "";
+$usuarioAlumno = isset($_SESSION["alu_idAlumno"]) ? htmlspecialchars($_SESSION["alu_idAlumno"], ENT_QUOTES, "UTF-8") : "";
+$usuarioActual = $usuarioDocente ?: $usuarioAlumno;
+?>
+
+<script>
+  window.usuarioActual = "<?php echo $usuarioActual; ?>";
+    console.log("usuarioActual cargado:", window.usuarioActual);
+</script>
+    <script src="../funciones/sessionControl.js"></script>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>

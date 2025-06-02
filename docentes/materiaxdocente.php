@@ -15,6 +15,7 @@ if (isset($_COOKIE['parametro'])) {
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
+include '../funciones/verificarSesion.php';
 
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'].", ".$_SESSION['doc_nombre'];
@@ -223,7 +224,8 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
         </div>
   </div>
   
-  
+  <script src="../funciones/sessionControl.js"></script>
+
     <!-- Bootstrap JS y jQuery (necesario para el modal) -->
     <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/popper.min.js"></script>
@@ -249,18 +251,41 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
       });
     }
     //funcion para pasar idmateria,ciclolectivo y plan a la pagina carga_calif.php
-    function setMateria(idMateria, materia,curso, urlForm) {
-      var ciclolectivo = $('#ciclolectivo').find('option:selected').text();
-      var plan = $('#plan').find('option:selected').text();
-      $.ajax({
-        type: 'POST',
-        url: '<?php echo $_SERVER['PHP_SELF']; ?>',
-        data: {idMateria: idMateria, materia: materia, ciclolectivo: ciclolectivo, plan: plan,curso: curso ,urlForm: urlForm},
-        success: function(data) {
-          window.location.href = urlForm;
+   function setMateria(idMateria, materia, curso, urlForm) {
+    var ciclolectivo = $('#ciclolectivo').find('option:selected').text();
+    var plan = $('#plan').find('option:selected').text();
+
+    // Crear formulario
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = urlForm;
+    form.style.display = 'none';
+
+    // Datos a enviar
+    var datos = {
+        idMateria: idMateria,
+        materia: materia,
+        curso: curso,
+        ciclolectivo: ciclolectivo,
+        plan: plan
+    };
+
+    // Crear inputs ocultos
+    for (const key in datos) {
+        if (datos.hasOwnProperty(key)) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = datos[key];
+            form.appendChild(input);
         }
-      });
     }
+
+    // Enviar formulario
+    document.body.appendChild(form);
+    form.submit();
+}
+
   </script>
   <script>
     $(document).ready(function() {

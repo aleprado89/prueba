@@ -1,7 +1,17 @@
 <?php
-ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+if (!isset($_GET['cambioSesion'])) {
+session_start();
+session_unset(); // Eliminar todas las variables de sesión
+session_destroy(); // Destruir la sesiónini_set('display_errors', 1);
+}
+?>
+<script>
+  localStorage.removeItem('usuario_sesion_activa');
+</script>
+
+<?php
   include 'variablesParticulares.php';
   include '../inicio/conexion.php';
     //busco el nombre colegio segun el id para crear la variable de sesion
@@ -10,8 +20,12 @@ $resultado = $conn->query($sql);
 $fila = $resultado->fetch_assoc();
 $nombre = $fila["nombreColegio"];
 $_SESSION['nombreColegio']=$nombre;
-//s$_SESSION['membrete']='../img/membrete_banfield.png';//ubicacion nombre membrete para reportes
-
+//si se cerró la session por timeout
+if (isset($_GET['timeout'])): ?>
+  <div class="alert alert-warning">
+    Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.
+  </div>
+<?php endif;
     ?>
     <!DOCTYPE html>
 <html lang="es">
@@ -52,7 +66,7 @@ $_SESSION['nombreColegio']=$nombre;
          
             </div>
           </form>
-          <div class="row"><button id="forgot-password" class="btn btn-link">Olvidó su contraseña</button>
+          <div class="row"><button id="forgot-password" class="btn btn-link">Olvidé mi contraseña</button>
           </div>
 
           <div id="spinner" style="display: none;">

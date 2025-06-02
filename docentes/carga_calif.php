@@ -1,18 +1,21 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/analisisestado.php';
+include '../funciones/verificarSesion.php';
 
 
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
-$idMateria = $_SESSION['idMateria'];
-$curso= $_SESSION['curso'];
-$ciclolectivo = $_SESSION['ciclolectivo'];
+$idMateria = $_POST['idMateria'];
+$curso = $_POST['curso'];
+$ciclolectivo = $_POST['ciclolectivo'];
 $idCiclo=buscarIdCiclo($conn,$ciclolectivo);
-$plan = $_SESSION['plan'];
-$materia = $_SESSION['materia'];
+$plan = $_POST['plan'];
+$materia = $_POST['materia'];
 $i=0;
 
 
@@ -21,6 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Actualizar la propiedad cursando en la base de datos
     $idAlumno = $_POST['idAlumno'];
     $abandono = $_POST['abandono'];
+    $idMateria = $_POST['idMateria'];
+    $materia = $_POST['materia'];
+    $curso = $_POST['curso'];
+    $plan = $_POST['plan'];
+    $ciclolectivo = $_POST['ciclolectivo'];
+    
     if ($abandono == 'true') {
       $estado = 'Abandonó Cursado';
     }
@@ -29,10 +38,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $resultado=actualizarAbandonoCursado($conn, $idAlumno, $idMateria, $estado);
   } else {
   // Obtiene los datos de la solicitud
+if (
+    isset($_POST['idCalificacion']) &&
+    isset($_POST['columna']) &&
+    isset($_POST['nuevoValor']) &&
+    isset($_POST['idAlumno'])
+) {
   $idCalificacion = $_POST['idCalificacion'];
   $columna = $_POST['columna'];
   $nuevoValor = $_POST['nuevoValor'];
   $idAlumno = $_POST['idAlumno'];
+  $idMateria = $_POST['idMateria'];
+  $ciclolectivo = $_POST['ciclolectivo'];
+  $plan = $_POST['plan'];
+  $materia = $_POST['materia'];
+  $curso = $_POST['curso'];
 
   // Verifica si el valor contiene caracteres no permitidos
   $combinacionesPermitidas = ['AP', 'ap', 'NA', 'na'];
@@ -60,7 +80,7 @@ if (in_array($nuevoValor, $combinacionesPermitidas)) {
   exit;
 }
 }
-
+}
 $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 ?>
 <!DOCTYPE html>
@@ -107,16 +127,24 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
     
       </div>
 
+    <script src="../funciones/sessionControl.js"></script>
 
       <!-- Bootstrap JS y jQuery (necesario para el modal) -->
       <script src="../js/jquery-3.7.1.min.js"></script>
       <script src="../js/popper.min.js"></script>
       <script src="../js/bootstrap.min.js"></script>
 
+<script>
+  var idMateria = "<?php echo htmlspecialchars($idMateria); ?>";
+  var curso = "<?php echo htmlspecialchars($curso); ?>";
+  var ciclolectivo = "<?php echo htmlspecialchars($ciclolectivo); ?>";
+  var plan = "<?php echo htmlspecialchars($plan); ?>";
+  var materia = "<?php echo htmlspecialchars($materia); ?>";
+</script>
+
       <script>
 
         function actualizarCalif(celda, columna) {
-
           var idCalificacion = celda.getAttribute('data-id');
           var nuevoValor = celda.textContent.trim(); // Agrega el método trim() aquí
           var filaPadre = celda.parentNode.parentNode;
@@ -154,9 +182,13 @@ $.ajax({
       idCalificacion: idCalificacion,
       columna: columna,
       nuevoValor: nuevoValor,
-      idAlumno: idAlumno
-
-    },
+      idAlumno: idAlumno,
+      idMateria: idMateria,
+      ciclolectivo: ciclolectivo,
+      plan: plan,
+      materia: materia,
+      curso: curso
+       },
     dataType: 'json',
     success: function(respuesta) {
  var filaPadre = celda.parentNode;
@@ -166,7 +198,7 @@ $.ajax({
         if (filaActual) {
           var estadoParcialCorrecto = filaActual.querySelector('#estadoCursado');
           if (estadoParcialCorrecto) {
-            celda.style.backgroundColor = 'lightgreen';
+celda.style.setProperty('background-color', 'lightgreen', 'important');
             estadoParcialCorrecto.innerHTML = respuesta.resultado;
           } else {
             console.log('No se encontró la celda estadoCursado');
@@ -433,6 +465,12 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
 <script>
 
 $(document).ready(function() {
+    var idMateria = '<?php echo $idMateria; ?>';
+var materia = '<?php echo $materia; ?>';
+var curso = '<?php echo $curso; ?>';
+var plan = '<?php echo $plan; ?>';
+var ciclolectivo = '<?php echo $ciclolectivo; ?>';
+
   // Buscar los checkboxes que estén marcados como "Abandonó Cursado"
   $('input[type="checkbox"][id^="abandono-"]').each(function() {
     if ($(this).is(':checked')) {
@@ -446,6 +484,7 @@ $(document).ready(function() {
 });
 //boton confirmar
 $(document).on('click', '#confirmarAbandonoBtn', function() {
+  
   var checkbox = $('#confirmarAbandono').data('checkbox');
   var fila = checkbox.closest('tr');
   var idAlumno = fila.attr('data-idAlumno');
@@ -457,7 +496,12 @@ $(document).on('click', '#confirmarAbandonoBtn', function() {
     url: "carga_calif.php",
     data: {
       idAlumno: idAlumno,
-      abandono: abandono
+      abandono: abandono,
+      idMateria: idMateria,
+      materia: materia,
+      curso: curso,
+      plan: plan,
+      ciclolectivo: ciclolectivo
     },
     success: function() {
       console.log(abandono);

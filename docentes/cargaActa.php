@@ -4,6 +4,7 @@
    include '../inicio/conexion.php';
    include '../funciones/consultas.php';
    include '../funciones/parametrosWeb.php';
+   include '../funciones/verificarSesion.php';
    
    $doc_legajo = $_SESSION['doc_legajo'];
    $nombreDoc = $_SESSION['doc_apellido'].", ".$_SESSION['doc_nombre'];
@@ -119,6 +120,7 @@
     <?php include '../funciones/footer.html'; ?>
 </body>
 </html>
+  <script src="../funciones/sessionControl.js"></script>
 
 <script>
     

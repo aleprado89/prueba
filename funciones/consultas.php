@@ -570,22 +570,38 @@ function insertarCursadoFinalizado($conexion, $idAlumno, $idPlan, $idCicloLectiv
 //BUSCAR IDCICLO
 function buscarIdCiclo($conexion, $anio)
 {
-    $consulta = "select idCiclolectivo from ciclolectivo where anio= ?";
+    //$idCiclolectivo = null; // Valor por defecto por si no encuentra nada
 
-    $stmt = $conexion->prepare($consulta);
-    $stmt->bind_param("i", $anio);
-    $stmt->execute();
-    $resultado = $stmt->get_result();
+   /* if (empty($anio)) {
+        error_log("buscarIdCiclo: parámetro \$anio vacío");
+        return null;
+    }*/
 
-    if ($resultado) {
-        // Obtener el ciclo lectivo
-        if ($fila = mysqli_fetch_assoc($resultado)) {
-            $idCiclolectivo = $fila['idCiclolectivo']; // Almacenar el idCiclolectivo en una variable
+    $consulta = "SELECT idCiclolectivo FROM ciclolectivo WHERE anio = ?";
+
+    if ($stmt = $conexion->prepare($consulta)) {
+        $stmt->bind_param("s", $anio);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+
+        if ($resultado) {
+            if ($fila = $resultado->fetch_assoc()) {
+                $idCiclolectivo = $fila['idCiclolectivo'];
+            } else {
+            //    error_log("buscarIdCiclo: No se encontró idCiclolectivo para anio=$anio");
+            }
+        } else {
+          //  error_log("buscarIdCiclo: Error en get_result()");
         }
+
+        $stmt->close();
+    } else {
+        //error_log("buscarIdCiclo: Error en prepare(): " . $conexion->error);
     }
 
     return $idCiclolectivo;
 }
+
 
 //buscar el anio por idciclo
 function buscarnombreCiclo($conexion, $idciclo)
@@ -994,12 +1010,12 @@ function actualizarCalifDocente($conexion, $idCalif, $columna, $valor){
 }
 
 //funcion para actualizar asistencia
-function actualizarAsistxDocentes($conexion, $idAlumno, $idCicloLectivo, $mes, $dia, $valor){
+function actualizarAsistxDocentes($conexion, $idAlumno, $idCicloLectivo, $mes, $dia, $valor, $idMateria){
     $dia = mysqli_real_escape_string($conexion, $dia);
-    $consulta = "UPDATE asistenciaterciario SET $dia = ? WHERE idAlumno = ? AND idCicloLectivo = ? AND mes = ?";
+    $consulta = "UPDATE asistenciaterciario SET $dia = ? WHERE idAlumno = ? AND idCicloLectivo = ? AND mes = ? AND idMateria = ?";
 
     $stmt = mysqli_prepare($conexion, $consulta);
-    mysqli_stmt_bind_param($stmt, "siii", $valor, $idAlumno, $idCicloLectivo, $mes);
+    mysqli_stmt_bind_param($stmt, "siiii", $valor, $idAlumno, $idCicloLectivo, $mes, $idMateria);
     $resultado = mysqli_stmt_execute($stmt);
 
     if (!$resultado) {
@@ -1218,3 +1234,17 @@ function materiasPlanCurso($conexion, $idPlan, $idCurso) {
     }
     return $materias;
 }
+
+
+?>
+<!-- /// FIN CONSULTAS /// INICIO PASO DE VARIABLE SESSION AL CLIENTE -->
+<?php
+$usuarioDocente = isset($_SESSION["doc_legajo"]) ? htmlspecialchars($_SESSION["doc_legajo"], ENT_QUOTES, "UTF-8") : "";
+$usuarioAlumno = isset($_SESSION["alu_idAlumno"]) ? htmlspecialchars($_SESSION["alu_idAlumno"], ENT_QUOTES, "UTF-8") : "";
+$usuarioActual = $usuarioDocente ?: $usuarioAlumno;
+?>
+
+<script>
+  window.usuarioActual = "<?php echo $usuarioActual; ?>";
+    console.log("usuarioActual cargado:", window.usuarioActual);
+</script>

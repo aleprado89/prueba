@@ -2,10 +2,14 @@
 session_start(); 
 include 'conexion.php';
 include '../funciones/parametrosWeb.php';
+//include '../funciones/sesionInactiva.php';
+
 
 // Lógica principal
-$username = $_POST['username'];
-$password = $_POST['password'];
+$username = trim($_POST['username'] ?? '');
+$password = trim($_POST['password'] ?? '');
+
+
 
 if (verificarAccesoAlumnoYDocente($username, $password, $conn, $datosColegio)) {
   // No hacer nada, ya que se redirigirá a la página de selección de rol

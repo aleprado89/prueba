@@ -4,6 +4,7 @@ session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
+include '../funciones/verificarSesion.php';
 
 $doc_legajo = $_SESSION['doc_legajo'];
 $nombreDoc = $_SESSION['doc_apellido'].", ".$_SESSION['doc_nombre'];
@@ -200,7 +201,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
         </div>
   </div>
   
-  
+      <script src="../funciones/sessionControl.js"></script>
+
     <!-- Bootstrap JS y jQuery (necesario para el modal) -->
     <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/popper.min.js"></script>
