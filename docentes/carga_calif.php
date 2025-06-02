@@ -74,9 +74,11 @@ if (in_array($nuevoValor, $combinacionesPermitidas)) {
 
   // Llama a la función iniciarAnalisis
   $resultado = iniciarAnalisis($conn, $idMateria, $idAlumno, $idCalificacion);
-
+// Limpia el buffer de salida esto es para que no se sume el script de consultas
+ob_end_clean();
   // Devuelve el resultado
   echo json_encode(array('respuesta' => $respuesta, 'resultado' => $resultado));
+
   exit;
 }
 }
@@ -174,6 +176,8 @@ celda.onblur = function() {
   }
 }
 console.log(nuevoValor);
+console.log('Se está enviando la petición AJAX');
+
 $.ajax({
   
     type: "POST",
@@ -191,27 +195,21 @@ $.ajax({
        },
     dataType: 'json',
     success: function(respuesta) {
- var filaPadre = celda.parentNode;
-          var rowId = filaPadre.rowIndex;
-      if (respuesta.respuesta === "actualizado") {
-        var filaActual = document.querySelectorAll('tr')[rowId];  
-        if (filaActual) {
-          var estadoParcialCorrecto = filaActual.querySelector('#estadoCursado');
-          if (estadoParcialCorrecto) {
-celda.style.setProperty('background-color', 'lightgreen', 'important');
-            estadoParcialCorrecto.innerHTML = respuesta.resultado;
-          } else {
-            console.log('No se encontró la celda estadoCursado');
-          }
-        } else {
-          console.log('No se encontró la fila con el atributo data-row igual a ' + rowId);
-        }
+          console.log('La petición AJAX fue exitosa');
 
-      } else {
-        celda.style.backgroundColor = '';
-      }
-
-    },
+    console.log('Respuesta:', respuesta);
+    var filaActual = celda.closest('tr');
+    console.log('Fila actual:', filaActual);
+    var estadoParcialCorrecto = filaActual.querySelector('#estadoCursado');
+    console.log('Celda estado parcial:', estadoParcialCorrecto);
+    if (estadoParcialCorrecto) {
+      console.log('Celda estado parcial encontrada');
+      celda.style.setProperty('background-color', 'lightgreen', 'important');
+      estadoParcialCorrecto.innerHTML = respuesta.resultado;
+    } else {
+      console.log('No se encontró la celda estadoCursado');
+    }
+  },
   });
 }
 
