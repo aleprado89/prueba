@@ -3,6 +3,7 @@ session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
+include '../funciones/verificarSesion.php';
 //include '../funciones/pruebaSession.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -19,13 +20,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nombreM = $_POST['nombreM'];
     $nombreC = $_POST['nombreC'];
     $idDivision = $_POST['idDivision'];
-    $_SESSION['idM'] = $idM;
-    $_SESSION['nombreM'] = $nombreM;
-    $_SESSION['nombreC'] = $nombreC;
-    $_SESSION['idDivision'] = $idDivision;
-
-    header("Location: ../alumnos/examenes_solicitar.php");
+    
+        // Crear un formulario oculto con los datos
+    $html = '<form id="formulario" method="post" action="../alumnos/examenes_solicitar.php">';
+    $html .= '<input type="hidden" name="idM" value="' . $idM . '">';
+    $html .= '<input type="hidden" name="nombreMateria" value="' . $nombreM . '">';
+    $html .= '<input type="hidden" name="nombreCurso" value="' . $nombreC . '">';
+    $html .= '<input type="hidden" name="idDivision" value="' . $idDivision . '">';
+    $html .= '</form>';
+  
+    // Agregar JavaScript para enviar el formulario automáticamente
+    $html .= '<script>document.getElementById("formulario").submit();</script>';
+  
+    echo $html;
     exit;
+
+    //header("Location: ../alumnos/examenes_solicitar.php");
+   // exit;
   }
 }
 
@@ -221,7 +232,7 @@ $cantidad = count($listadoMaterias);
       </div>
     </div>
   </div>
-
+    <script src="../funciones/sessionControl.js"></script>
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>
@@ -241,10 +252,11 @@ $cantidad = count($listadoMaterias);
         boton.addEventListener('click', function () {
           // Obtener los datos de la fila seleccionada
           var fila = this.closest('tr');
-          var idMateriaSeleccionada = fila.querySelector("td:nth-child(1)").innerText;
-          var nombreMateriaCompleto = fila.querySelector("td:nth-child(2)").innerText;
-          var nombreCursoCompleto = fila.querySelector("td:nth-child(4)").innerText;
-          var idDivision = fila.querySelector("#idDivision").innerText;
+         var idMateriaSeleccionada = fila.querySelector("td[name='idM']").innerText;
+var nombreMateriaCompleto = fila.querySelector("td[name='nombreM']").innerText;
+var nombreCursoCompleto = fila.querySelector("td[name='nombreC']").innerText;
+var idDivision = fila.querySelector("td[name='idDivision']").innerText;
+
           // Cargar Datos
           document.getElementById("idM").value = idMateriaSeleccionada;
           document.getElementById("nombreM").value = nombreMateriaCompleto;

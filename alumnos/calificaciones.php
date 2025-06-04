@@ -2,6 +2,7 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/verificarSesion.php';
 //include '../funciones/pruebaSession.php';
 
 $idAlumno = $_SESSION['alu_idAlumno'];
@@ -215,7 +216,7 @@ $cantidad = count($listadoCalificaciones);
    </table>
  </div>
 </div>
-
+    <script src="../funciones/sessionControl.js"></script>
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>

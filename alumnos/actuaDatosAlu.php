@@ -3,6 +3,7 @@ session_start();
 include '../inicio/conexion.php';
 //include '../funciones/consultas.php';
 //include '../funciones/pruebaSession.php';
+include '../funciones/verificarSesion.php';
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'].", ".$_SESSION['alu_nombre'];
 $message="";
@@ -108,7 +109,7 @@ $sexo="O";
         $_SESSION['message']=$_SESSION['message']. "Error al mover el archivo. ";
       }
   }} else {
-    $_SESSION['message']=$_SESSION['message']. "No se ha subido ningún archivo. ";
+    $_SESSION['message']=$_SESSION['message']. "";//no se subio ningun archivo
     $rutaDestino=$select_FotoCarnet;
   }
   
@@ -267,7 +268,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
 </div>
 
 
-
+    <script src="../funciones/sessionControl.js"></script>
 <!-- JavaScript para mostrar el modal -->
 <script>
 $(document).ready(function() {

@@ -114,7 +114,7 @@ $sexo="O";
         $_SESSION['message']=$_SESSION['message']. "Error al mover el archivo. ";
       }
   }} else {
-    $_SESSION['message']=$_SESSION['message']. "No se ha subido ningún archivo. ";
+    $_SESSION['message']=$_SESSION['message']. "";//No se ha subido ningún archivo. 
     $rutaDestino=$select_FotoCarnet;
   }
   
@@ -285,16 +285,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
     </div>
   </div>
 </div>
-<?php
-$usuarioDocente = isset($_SESSION["doc_legajo"]) ? htmlspecialchars($_SESSION["doc_legajo"], ENT_QUOTES, "UTF-8") : "";
-$usuarioAlumno = isset($_SESSION["alu_idAlumno"]) ? htmlspecialchars($_SESSION["alu_idAlumno"], ENT_QUOTES, "UTF-8") : "";
-$usuarioActual = $usuarioDocente ?: $usuarioAlumno;
-?>
 
-<script>
-  window.usuarioActual = "<?php echo $usuarioActual; ?>";
-    console.log("usuarioActual cargado:", window.usuarioActual);
-</script>
 
   <script src="../funciones/sessionControl.js"></script>
 

@@ -483,14 +483,13 @@ and fechasexamenes.idTurno = ?";
 
 //Listado de fechas a examen por materia y turno
 function buscarFechasExamenTurno($conexion, $idMateria, $idCicloLectivo, $idTurno, $idDivision)
-{
+{// esta consulta  busca las fechas de examen por idUnicoMateria porque puede rendir en otro año donde
+    // la materia tiene otro id y luego filtra por el idDivision para que sea el mismo curso
     $consulta = "SELECT * from fechasexamenes inner join materiaterciario
 on fechasexamenes.idMateria = materiaterciario.idMateria inner join curso
 on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
 on curso.idcursopredeterminado = cursospredeterminado.idcursopredeterminado
-where materiaterciario.idUnicoMateria = 
-(Select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = ?)
-and fechasexamenes.idCicloLectivo = ?
+where materiaterciario.idMateria = ? and fechasexamenes.idCicloLectivo = ?
 and fechasexamenes.idTurno = ? AND curso.idDivision=?";
 
     $stmt = $conexion->prepare($consulta);
@@ -522,7 +521,7 @@ function solicitarExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idF
     (?, ?, ?, ?, 0, 1, ?)";
 
     $stmt = $conexion->prepare($consulta);
-    $stmt->bind_param("iiiii", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $currentDate);
+    $stmt->bind_param("iiiis", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $currentDate);
     $stmt->execute();
 }
 
@@ -1237,14 +1236,3 @@ function materiasPlanCurso($conexion, $idPlan, $idCurso) {
 
 
 ?>
-<!-- /// FIN CONSULTAS /// INICIO PASO DE VARIABLE SESSION AL CLIENTE -->
-<?php
-$usuarioDocente = isset($_SESSION["doc_legajo"]) ? htmlspecialchars($_SESSION["doc_legajo"], ENT_QUOTES, "UTF-8") : "";
-$usuarioAlumno = isset($_SESSION["alu_idAlumno"]) ? htmlspecialchars($_SESSION["alu_idAlumno"], ENT_QUOTES, "UTF-8") : "";
-$usuarioActual = $usuarioDocente ?: $usuarioAlumno;
-?>
-
-<script>
-  window.usuarioActual = "<?php echo $usuarioActual; ?>";
-    console.log("usuarioActual cargado:", window.usuarioActual);
-</script>

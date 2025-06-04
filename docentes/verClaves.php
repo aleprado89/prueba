@@ -88,6 +88,8 @@ if (isset($_POST["dni"])) {
     </div>
   </div>
 </body>
+
+<!-- codigo incluido en verificarsesion (borrar cuando descomente el include)-->
 <?php
 $usuarioDocente = isset($_SESSION["doc_legajo"]) ? htmlspecialchars($_SESSION["doc_legajo"], ENT_QUOTES, "UTF-8") : "";
 $usuarioAlumno = isset($_SESSION["alu_idAlumno"]) ? htmlspecialchars($_SESSION["alu_idAlumno"], ENT_QUOTES, "UTF-8") : "";
@@ -98,5 +100,7 @@ $usuarioActual = $usuarioDocente ?: $usuarioAlumno;
   window.usuarioActual = "<?php echo $usuarioActual; ?>";
     console.log("usuarioActual cargado:", window.usuarioActual);
 </script>
+<!-- fin codigo incluido en verificarsesion -->
+
     <script src="../funciones/sessionControl.js"></script>
 </html>

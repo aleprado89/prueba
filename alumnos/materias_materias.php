@@ -5,8 +5,7 @@ session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
-//include '../funciones/pruebaSession.php';
-
+include '../funciones/verificarSesion.php';
 //VARIABLES
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
@@ -21,18 +20,27 @@ $cicloLectivo =  $datosColegio[0]['anioautoweb'];
      header("Location: ../alumnos/materias_solicitudes_listado.php");
      exit;} 
 
-   //BOTON SOLICITAR
-   if (isset($_POST['submitSolicitar'])) {
-     $idM = $_POST['idM'];
-     $nombreM = $_POST['nombreM'];
-     $nombreC = $_POST['nombreC'];
-     $_SESSION['idM'] = $idM;
-     $_SESSION['nombreM'] = $nombreM;
-     $_SESSION['nombreC'] = $nombreC;
-
-     header("Location: ../alumnos/materias_solicitar.php");
-     exit;
-   }
+  //BOTON SOLICITAR
+  if (isset($_POST['submitSolicitar'])) {
+    $idM = $_POST['idM'];
+    $nombreM = $_POST['nombreM'];
+    $nombreC = $_POST['nombreC'];
+  
+    // Crear un formulario oculto con los datos
+    $html = '<form id="formulario" method="post" action="../alumnos/materias_solicitar.php">';
+    $html .= '<input type="hidden" name="idMateria" value="' . $idM . '">';
+    $html .= '<input type="hidden" name="nombreMateria" value="' . $nombreM . '">';
+    $html .= '<input type="hidden" name="nombreCurso" value="' . $nombreC . '">';
+    $html .= '</form>';
+  
+    // Agregar JavaScript para enviar el formulario automáticamente
+    $html .= '<script>document.getElementById("formulario").submit();</script>';
+  
+    // Redirigir a la página con los datos
+    //header("Location: ../alumnos/materias_solicitar.php");
+    echo $html;
+    exit;
+  }
   if (isset($_POST['curso']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
     $cursoSeleccionado = $_POST['curso'];
     try {
@@ -204,7 +212,7 @@ $cantidad = count($listadoMaterias);
     </div>
   </div>
   
-
+    <script src="../funciones/sessionControl.js"></script>
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.min.js"></script>
   <script src="../js/popper.min.js"></script>

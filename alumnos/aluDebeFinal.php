@@ -5,6 +5,7 @@
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
+include '../funciones/verificarSesion.php';
 
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
@@ -161,6 +162,7 @@ if (isset($idPlan)) {
             </div>
         </div>
     </div>
+        <script src="../funciones/sessionControl.js"></script>
     <!-- Bootstrap JS y jQuery (necesario para el modal) -->
     <script src="../js/jquery-3.7.1.slim.min.js"></script>
     <script src="../js/popper.min.js"></script>

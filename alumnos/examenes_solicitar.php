@@ -6,18 +6,22 @@ session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
+include '../funciones/verificarSesion.php';
 //include '../funciones/pruebaSession.php';
 
 //VARIABLES
-$idCicloLectivo = $_SESSION['idCiclo'];
+$cicloLectivo =  $datosColegio[0]['anioautoweb'];
+$idCicloLectivo = buscarIdCiclo($conn, $cicloLectivo);
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $idPlan = $_SESSION['idP'];
 $nombrePlan = $_SESSION['nombreP'];
-$idMateria = $_SESSION['idM'];
-$nombreMateria = $_SESSION['nombreM'];
-$nombreCurso = $_SESSION['nombreC'];
-$idDivision = $_SESSION['idDivision'];
+$idMateria = $_POST['idM'] ?? '';
+$nombreMateria = $_POST['nombreMateria'] ?? '';
+$nombreCurso = $_POST['nombreCurso'] ?? '';
+$idDivision = $_POST['idDivision'] ?? '';
+
+
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -41,11 +45,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["fechaExamen"])) {//cuando se aprieta el boton solicitar
   $idFechaSeleccionada = $_POST["fechaExamen"];
   $idMateria = $_POST['idM'];
+  $idAlumno = $_SESSION['alu_idAlumno'];
+  $cicloLectivo =  $datosColegio[0]['anioautoweb'];
+  $idCicloLectivo = buscarIdCiclo($conn, $cicloLectivo);
+   
   solicitarExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $idFechaSeleccionada);
 
   // Redirigir a la misma página 
-    header("Location: examenes_solicitar.php");
-  exit();
+   // header("Location: examenes_solicitar.php");
+  //exit();
 }
 
 //FUNCIONES
@@ -126,6 +134,7 @@ $cantidadFechas = count($listadoFechasExamenes);
     <h5 class="padding">Fechas Disponibles</h5>
     <!-- FORM SOLICITAR -->
     <form id="formulario" action="../alumnos/examenes_solicitar.php" method="POST">
+      
       <select class="form-select margenes padding" name="fechaExamen" id="fechaExamen">
         <?php
         $a = 0;
@@ -154,7 +163,10 @@ $cantidadFechas = count($listadoFechasExamenes);
       
       <div class="col-12 col-md-6">
       <br>
-      <input type="hidden" name="idM" value=<?php echo $idMateria; ?> />
+<input type="hidden" name="idM" value="<?php echo $idMateria; ?>" />
+<input type="hidden" name="idDivision" value="<?php echo $idDivision; ?>" />
+<input type="hidden" name="nombreMateria" value="<?php echo $nombreMateria; ?>" />
+<input type="hidden" name="nombreCurso" value="<?php echo $nombreCurso; ?>" />
       <?php if ($habilitado == true) { ?>
 <button type="button" id="btnSolicitar" onclick="abrirModal()" class="btn btn-primary">Solicitar</button>
       <?php } else { ?>
@@ -261,29 +273,52 @@ $cantidadFechas = count($listadoFechasExamenes);
      </div>
    </div>
  </div>
+ <!-- MODAL PARA CANCELACIÓN -->
+<div class="modal" id="confirmarCancelacionModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Cancelación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas cancelar esta solicitud?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button type="button" id="confirmarCancelacionBtn" class="btn btn-danger">Sí, Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+    <script src="../funciones/sessionControl.js"></script>
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
 
   <script>
-    //SCRIPT PARA SELECCIONAR DATOS DE LA SOLICITUD
-    document.addEventListener("DOMContentLoaded", function () {
-      // Agregar un evento de clic a todos los botones con la clase 'cancelar-btn'
-      var botones = document.querySelectorAll('.cancelar-btn');
-      botones.forEach(function (boton) {
-        boton.addEventListener('click', function () {
-          // Obtener los datos de la fila seleccionada
-          var fila = this.closest('tr');
-          var idInscripcionWeb = fila.querySelector("td:nth-child(1)").innerText;          
-          // Cargar Datos
-          document.getElementById("idInscripcionWeb").value = idInscripcionWeb;          
-          // Enviar el formulario
-          document.getElementById("cancelar").submit();
-        });
-      });
-    });
+  let idInscripcionSeleccionado = null;
+
+document.querySelectorAll('.cancelar-btn').forEach(function (boton) {
+  boton.addEventListener('click', function (e) {
+    e.preventDefault();
+    let fila = this.closest('tr');
+    idInscripcionSeleccionado = fila.querySelector("td:nth-child(1)").innerText.trim();
+    $('#confirmarCancelacionModal').modal('show');
+  });
+});
+
+document.getElementById("confirmarCancelacionBtn").addEventListener("click", function () {
+  if (idInscripcionSeleccionado) {
+    document.getElementById("idInscripcionWeb").value = idInscripcionSeleccionado;
+    document.getElementById("cancelar").submit();
+  }
+});
+
     // SCRIPT PARA ABRIR MODAL Y ENVIAR FORMULARIO
     function abrirModal() {
       $('#confirmarSolicitudModal').modal('show');

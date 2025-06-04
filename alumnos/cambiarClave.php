@@ -3,6 +3,7 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/parametrosWeb.php'; 
+include '../funciones/verificarSesion.php';
 
 // Verifica si el alumno ha iniciado sesión
 if (!isset($_SESSION['alu_idAlumno'])) {
@@ -99,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php } ?>
   </div>
 </div>
-
+    <script src="../funciones/sessionControl.js"></script>
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
   <script src="../js/jquery-3.7.1.slim.min.js"></script>
   <script src="../js/popper.min.js"></script>

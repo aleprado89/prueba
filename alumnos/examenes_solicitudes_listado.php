@@ -2,10 +2,12 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-//include '../funciones/pruebaSession.php';
+include '../funciones/verificarSesion.php';
+include '../funciones/parametrosWeb.php';
 
 //VARIABLES
-$idCicloLectivo = $_SESSION['idCiclo'];
+$cicloLectivo =  $datosColegio[0]['anioautoweb'];
+$idCicloLectivo = buscarIdCiclo($conn, $cicloLectivo);
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $idPlan = $_SESSION['idP'];
@@ -119,8 +121,10 @@ $cantidad = count($listadoSolicitudes);
               <?php if ($Estado == "Pendiente") { ?>
                 <form action="examenes_solicitudes_listado.php" method="post">
                   <input type="hidden" name="idInscripcionWeb" value="<?php echo $idInscripcionWeb; ?>">
-                  <button type="submit" class="btn btn-danger">Cancelar</button>
-                </form>
+<button type="button" class="btn btn-danger btn-cancelar" data-bs-toggle="modal" data-bs-target="#confirmarCancelacionModal" data-id="<?php echo $idInscripcionWeb; ?>">
+  Cancelar
+</button>
+               </form>
               <?php } ?>
             </td>
           </tr>
@@ -137,7 +141,42 @@ $cantidad = count($listadoSolicitudes);
     </table>
   </div></div></div>
 
-  <?php include '../funciones/footer.html'; ?>
+    <?php include '../funciones/footer.html'; ?>
+<!-- Modal de cancelacion -->
+<div class="modal fade" id="confirmarCancelacionModal" tabindex="-1" aria-labelledby="confirmarCancelacionLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="examenes_solicitudes_listado.php">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmarCancelacionLabel">Confirmar cancelación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          ¿Estás seguro de que deseas cancelar esta solicitud de examen?
+          <input type="hidden" name="idInscripcionWeb" id="inputIdInscripcionWeb">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+          <button type="submit" class="btn btn-danger">Sí, cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const cancelarButtons = document.querySelectorAll(".btn-cancelar");
+    cancelarButtons.forEach(button => {
+      button.addEventListener("click", function () {
+        const id = this.getAttribute("data-id");
+        document.getElementById("inputIdInscripcionWeb").value = id;
+      });
+    });
+  });
+</script>
+
+
+    <script src="../funciones/sessionControl.js"></script>
 </body>
 </html>

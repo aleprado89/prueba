@@ -1,4 +1,5 @@
-<?php session_start();?>
+<?php session_start();
+include '../funciones/verificarSesion.php'?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -199,6 +200,7 @@ echo '</div>';
 
 
 <!--           FUNCIONES     y SCRIPTS        -->
+  <script src="../funciones/sessionControl.js"></script>
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
 <script src="../js/jquery-3.7.1.min.js"></script>

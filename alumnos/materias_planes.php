@@ -3,7 +3,7 @@ session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
-//include '../funciones/pruebaSession.php';
+include '../funciones/verificarSesion.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -154,7 +154,7 @@ while ($b < $cantidadMaterias) {
         </div>
       </div>
     </div>
-
+    <script src="../funciones/sessionControl.js"></script>
     <script>
 
       var cantidadAprobado = <?php echo $cantidadAprobado; ?>;

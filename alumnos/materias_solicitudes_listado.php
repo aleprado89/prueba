@@ -2,10 +2,11 @@
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-//include '../funciones/pruebaSession.php';
-
+include '../funciones/verificarSesion.php';
+include '../funciones/parametrosWeb.php';
 //VARIABLES
-$idCicloLectivo = $_SESSION['idCiclo'];
+$cicloLectivo = $datosColegio[0]['anioautoweb'];
+$idCicloLectivo =buscarIdCiclo($conn, $cicloLectivo);
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $idPlan = $_SESSION['idP'];
@@ -16,8 +17,8 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
   $idMatriculacionWeb = $_POST["idMatriculacionWeb"];    
   cancelarCursado($conn, $idMatriculacionWeb);
 
-  header("Location: materias_solicitudes_listado.php");
-  exit();
+ // header("Location: materias_solicitudes_listado.php");
+ // exit();
 }
 
 //FUNCIONES
@@ -111,7 +112,7 @@ $fechaFormateada = date('d/m/Y H:i:s', strtotime($fecha));      $a++;
             <?php if ($Estado == "Pendiente") { ?>
               <form action="materias_solicitudes_listado.php" method="post">
                 <input type="hidden" name="idMatriculacionWeb" value="<?php echo $idMatriculacionWeb; ?>">                  
-              <button type="submit" class="btn btn-danger cancelar-btn">Cancelar</button>
+              <button type="button" class="btn btn-danger cancelar-btn">Cancelar</button>
               </form>
             <?php } ?>
           </td>
@@ -127,7 +128,49 @@ $fechaFormateada = date('d/m/Y H:i:s', strtotime($fecha));      $a++;
 </table>
   </div></div></div>
 
+  <!-- Modal de Confirmación -->
+<div class="modal fade" id="modalConfirmarCancelacion" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header  text-dark">
+        <h5 class="modal-title" id="modalLabel">Confirmar cancelación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que querés cancelar esta solicitud?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button type="button" class="btn btn-danger" id="confirmarCancelacionBtn">Sí, cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
   <?php include '../funciones/footer.html'; ?>
 
+  <script>
+document.addEventListener('DOMContentLoaded', function () {
+  let formSeleccionado = null;
+
+  document.querySelectorAll('.cancelar-btn').forEach(boton => {
+    boton.addEventListener('click', function (e) {
+      e.preventDefault();
+      formSeleccionado = this.closest('form');
+      const modal = new bootstrap.Modal(document.getElementById('modalConfirmarCancelacion'));
+      modal.show();
+    });
+  });
+
+  document.getElementById('confirmarCancelacionBtn').addEventListener('click', function () {
+    if (formSeleccionado) {
+      formSeleccionado.submit();
+    }
+  });
+});
+</script>
+
+    <script src="../funciones/sessionControl.js"></script>
 </body>
 </html>

@@ -137,8 +137,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   </div>
 </div>
 
-<?php include '../funciones/footer.html'; 
-include '../funciones/sessionControl.php';?>
+<?php include '../funciones/footer.html'; ?>
 
 <script>
 $(document).ready(function () {
