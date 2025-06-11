@@ -291,9 +291,13 @@ function buscarMateriasAdeuda($conexion, $cicloLectivo, $idAlumno, $idPlan, $idc
 //Listado Cursos Predeterminados por Plan
 function buscarCursoPredeterminado($conexion, $idPlan)
 {
-    $consulta = "SELECT *, cursospredeterminado.nombre as nombreCP FROM `cursospredeterminado` inner join curso on
-    cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado and 
-    curso.idPlanEstudio = ? group by cursospredeterminado.nombre";
+    $consulta = "SELECT *, cursospredeterminado.nombre as nombreCP 
+                 FROM cursospredeterminado 
+                 INNER JOIN curso 
+                 ON cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado 
+                 AND curso.idPlanEstudio = ? 
+                 GROUP BY cursospredeterminado.nombre, cursospredeterminado.idcursopredeterminado
+                 ORDER BY cursospredeterminado.idcursopredeterminado ASC";
 
     $stmt = $conexion->prepare($consulta);
     $stmt->bind_param("i", $idPlan);
@@ -688,7 +692,10 @@ function buscarFechasExamenTurno($conexion, $idMateria, $idCicloLectivo, $idTurn
 on fechasexamenes.idMateria = materiaterciario.idMateria inner join curso
 on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
 on curso.idcursopredeterminado = cursospredeterminado.idcursopredeterminado
-where materiaterciario.idMateria = ? and fechasexamenes.idCicloLectivo = ?
+where materiaterciario.idMateria in 
+(select m.idMateria from materiaterciario m where m.idUnicoMateria = 
+(select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = ?))
+and fechasexamenes.idCicloLectivo = ?
 and fechasexamenes.idTurno = ? AND curso.idDivision=?";
 
     $stmt = $conexion->prepare($consulta);
@@ -1378,6 +1385,52 @@ function actualizarAbandonoCursado($conexion, $idAlumno, $idMateria, $estado){
     }
     return $respuesta;
 }
+
+function materiasAlumnoCurso($conn, $idAlumno, $idPlan, $idCursoPredeterminado)
+{
+    // Preparar la consulta con parámetros
+    $consulta = "SELECT *, 
+                        materiaterciario.nombre AS nombreMateria, 
+                        curso.nombre AS nombreCurso, 
+                        curso.idDivision AS idDivision 
+                 FROM calificacionesterciario 
+                 INNER JOIN materiaterciario ON calificacionesterciario.idMateria = materiaterciario.idMateria 
+                 INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso 
+                 INNER JOIN cursospredeterminado ON cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado 
+                 WHERE calificacionesterciario.idAlumno = ? 
+                   AND materiaterciario.idPlan = ? 
+                   AND cursospredeterminado.idcursopredeterminado = ? 
+                 ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
+
+    // Preparar el statement
+    $stmt = $conn->prepare($consulta);
+    if (!$stmt) {
+        die("Error en la preparación de la consulta: " . $conn->error);
+    }
+
+    // Enlazar los parámetros
+    $stmt->bind_param("iii", $idAlumno, $idPlan, $idCursoPredeterminado);
+    $stmt->execute();
+
+    // Obtener resultados
+    $resultado = $stmt->get_result();
+    $materias = array();
+
+    // Armar array con los datos
+    while ($fila = $resultado->fetch_assoc()) {
+        $materias[] = array(
+            'idMateria'        => $fila['idMateria'],
+            'Materia'          => $fila['nombreMateria'],
+            'Curso'            => $fila['nombreCurso'],
+            'Estado'           => $fila['Estado'],
+            'CalificacionFinal'=> $fila['CalificacionFinal'],
+            'idDivision'       => $fila['idDivision']
+        );
+    }
+
+    return $materias;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
