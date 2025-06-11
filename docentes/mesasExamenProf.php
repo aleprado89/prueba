@@ -19,14 +19,19 @@ $planes = buscarPlanesProfesorMateria($conn,$doc_legajo);
 $primerPlan = $planes[0]['idPlan'];
 $idPlan=$planes[0]['idPlan'];
 
-$fechasExamen=obtenerFechasExamenProfesor($conn,$doc_legajo,$idCicloLectivo,$idturno, $idPlan);
+$fechasExamen=obtenerFechasExamenProfesor($conn,$_SESSION['doc_idPersona'],$idCicloLectivo,$idturno, $idPlan);
 
 //inicio request method
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones'])) {
+    
   $idPlan = $_POST['idPlan'];
   $doc_legajo = $_SESSION['doc_legajo'];
   $idCicloLectivo = buscarIdCiclo($conn, $CicloLectivo);
-  $fechasExamen = obtenerFechasExamenProfesor($conn, $doc_legajo, $idCicloLectivo, $idturno, $idPlan);
+  $fechasExamen = obtenerFechasExamenProfesor($conn, $_SESSION['doc_idPersona'], $idCicloLectivo, $idturno, $idPlan);
+if (empty($fechasExamen)) {
+    echo 'No hay mesas de examen asignadas al docente.';
+    exit;
+}
 
   $materias = array();
   foreach ($fechasExamen as $examen) {
@@ -35,8 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
       }
       $materias[$examen['nombreMateria']][] = $examen;
   }
+  //ob_start();
 
-  $html = '';
+  $html = '<div class="accordion" id="accordionExample">';
   foreach ($materias as $nombreMateria => $examenes) {
       $html .= '<div class="accordion-item">';
       $html .= '<h2 class="accordion-header" id="heading-' . $examenes[0]['idFechaExamen'] . '">';
@@ -53,7 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
       $html .= '</div>';
       $html .= '</div>';
   }
-
+//echo json_encode($html);
+  //ob_end_clean();
   echo $html;
   exit;
 }
@@ -110,28 +117,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
       var idPlan = valor;
       
       // Almacena el estado del acordeón solo la primera vez
-      if (accordionState === null) {
-          accordionState = $('#accordionExample').html();
-      }
+     // if (accordionState === null) {
+      //    accordionState = $('#accordionExample').html();
+     // }
   
       $.ajax({
           type: 'POST',
           url: 'mesasExamenProf.php',
           data: {idPlan: idPlan, actualizarAcordeones: true},
+          dataType: 'html',
           success: function(data) {
-              if (data.trim() === '') {
-                  $('#accordionExample').html('<p>No hay mesas de examen de las materias del profesor.</p>');
-              } else {
-                  // Actualiza el contenido
-                  $('#accordionExample').html(data);
-                  
-                  
-                  // Restaura el estado del acordeón
-                  if (accordionState) {
-                      $('#accordionExample').html(accordionState);
-                  }
-              }
-          }
+    if (data.trim().startsWith('<p>No hay mesas')) {
+        $('#accordionExample').html(data);
+        accordionState = null; // limpiamos estado anterior
+    } else {
+        $('#accordionExample').html(data);
+        accordionState = data; // actualizamos nuevo estado válido
+    }
+}
+
       });
   }
 </script>

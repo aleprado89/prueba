@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
       <div class="col-md-6">
         <label style="font-weight: bold;" for="fecha">SELECCIONE FECHA:</label>
-        <input type="date" id="fecha" name="fecha">
+<input type="date" id="fecha" name="fecha" min="<?= $ciclolectivo . '-01-01' ?>" max="<?= $ciclolectivo . '-12-31' ?>">
       </div>
 
       <br>
@@ -224,6 +224,28 @@ var ciclolectivo = '<?php echo $ciclolectivo; ?>';
       });
     }
   });
+});
+</script>
+
+<script>
+$('#tablaAsistencia').on('keydown', 'td[contenteditable="true"]', function(e) {
+  let $this = $(this);
+  let id = $this.data('id');
+  let asistencia = $this.text().trim();
+
+  if (e.key === 'Enter' || e.key === 'ArrowDown') {
+    let $nextCell = $this.closest('tr').next('tr').find('td[contenteditable="true"]');
+    if ($nextCell.length > 0) {
+      $nextCell.focus();
+    }
+  }
+
+  if (e.key === 'ArrowUp') {
+    let $prevCell = $this.closest('tr').prev('tr').find('td[contenteditable="true"]');
+    if ($prevCell.length > 0) {
+      $prevCell.focus();
+    }
+  }
 });
 </script>
 </body>

@@ -74,7 +74,7 @@ if (isset($_POST['valor'])) {
       <tr class="table-primary">
         <th scope="col">Materias asignadas al docente</th>
         <th scope="col">Curso</th>
-        <th scope="col">Imprimir</th>
+        <th scope="col" class="text-center">Imprimir</th>
       </tr>
     </thead>
     <tbody>';

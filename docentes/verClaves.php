@@ -1,7 +1,16 @@
 <?php
 session_start();
 include "../inicio/conexion.php";
+include "../inicio/variablesParticulares.php";
 //include '../funciones/verificarSesion.php';
+//lo que sigue quitar cuando esto este dentro de autgestion secre
+   //busco el nombre colegio segun el id para crear la variable de sesion
+$sql = "SELECT nombreColegio FROM colegio WHERE codnivel=6"; 
+$resultado = $conn->query($sql);
+$fila = $resultado->fetch_assoc();
+$nombre = $fila["nombreColegio"];
+$_SESSION['nombreColegio']=$nombre;
+/////////////////////////////////////////////quitar hasta aqui
 
 // Verifica si se recibió el DNI
 if (isset($_POST["dni"])) {
@@ -33,7 +42,7 @@ if (isset($_POST["dni"])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Menú de alumnos</title>
+  <title>Ver Claves</title>
     <!-- Bootswatch Material theme -->
     <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">

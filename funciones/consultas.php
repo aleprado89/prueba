@@ -27,8 +27,7 @@ where materiaterciario.idPlan = ? and materiaterciario.idCicloLectivo =
     }
     return $listadoCurricula;
 }
-//Calificaciones de un alumno por Plan
-function buscarMaterias($conexion, $idAlumno, $idPlan)
+/*function buscarMaterias($conexion, $idAlumno, $idPlan)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso,curso.idDivision as idDivision 
 from calificacionesterciario inner join materiaterciario 
@@ -96,7 +95,110 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
         }
     }
     return $listadoCalificaciones;
+}*/
+
+//Calificaciones de un alumno por Plan
+
+function buscarMaterias($conexion, $idAlumno, $idPlan)
+{
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso, curso.idDivision as idDivision 
+    FROM calificacionesterciario 
+    INNER JOIN materiaterciario ON calificacionesterciario.idMateria = materiaterciario.idMateria 
+    INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso 
+    INNER JOIN cursospredeterminado ON cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado 
+    WHERE calificacionesterciario.idAlumno = ? AND materiaterciario.idPlan = ? 
+    ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
+
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("ii", $idAlumno, $idPlan);
+    $stmt->execute();
+    $calif = $stmt->get_result();
+
+    $listadoCalificaciones = array();
+    $i = 0;
+
+    if (!empty($calif)) {
+        while ($data = mysqli_fetch_array($calif)) {
+            $idInscripcionExamen = $data['idInscripcionExamen'];
+
+            // Inicializar calificación final vacía
+            $examen = " ";
+
+            if ($idInscripcionExamen == null || $idInscripcionExamen == 0) {
+                if (
+                    $data['estadoCursado'] == "Aprobación PreSistema" ||
+                    $data['estadoCursado'] == "Aprobación por Equivalencia" ||
+                    $data['estadoCursado'] == "Aprobación por Pase"
+                ) {
+                    $examen = $data['examenIntegrador'];
+                } else {
+                    // Buscar calificaciones desde función auxiliar
+                    $examenes = buscarExamenes($conexion, $idAlumno, $data['idMateria']);
+                    $fechaMax = null;
+                    foreach ($examenes as $ex) {
+                        if (!empty($ex['Calificacion']) && ($fechaMax === null || $ex['Fecha'] > $fechaMax)) {
+                            $fechaMax = $ex['Fecha'];
+                            $examen = $ex['Calificacion'];
+                        }
+                    }
+                }
+            } else {
+                $consultaExamen = "SELECT calificacion FROM inscripcionexamenes WHERE idInscripcion = ?";
+                $stmtExamen = $conexion->prepare($consultaExamen);
+                $stmtExamen->bind_param("i", $idInscripcionExamen);
+                $stmtExamen->execute();
+                $ex = $stmtExamen->get_result();
+                $examen = $ex->fetch_assoc()["calificacion"] ?? "";
+
+                // Si aún está vacía, recurrir a función auxiliar
+                if (empty($examen)) {
+                    $examenes = buscarExamenes($conexion, $idAlumno, $data['idMateria']);
+                    $fechaMax = null;
+                    foreach ($examenes as $ex) {
+                        if (!empty($ex['Calificacion']) && ($fechaMax === null || $ex['Fecha'] > $fechaMax)) {
+                            $fechaMax = $ex['Fecha'];
+                            $examen = $ex['Calificacion'];
+                        }
+                    }
+                }
+            }
+
+            // Armar array de resultados
+            $listadoCalificaciones[$i] = [
+                'idCalificacion'     => $data['idCalificacion'],
+                'idMateria'          => $data['idMateria'],
+                'Materia'            => $data['nombreMateria'],
+                'Curso'              => $data['nombreCurso'],
+                'n1'                 => $data['n1'],
+                'n2'                 => $data['n2'],
+                'n3'                 => $data['n3'],
+                'n4'                 => $data['n4'],
+                'n5'                 => $data['n5'],
+                'n6'                 => $data['n6'],
+                'n7'                 => $data['n7'],
+                'n8'                 => $data['n8'],
+                'r1'                 => $data['r1'],
+                'r2'                 => $data['r2'],
+                'r3'                 => $data['r3'],
+                'r4'                 => $data['r4'],
+                'r5'                 => $data['r5'],
+                'r6'                 => $data['r6'],
+                'r7'                 => $data['r7'],
+                'r8'                 => $data['r8'],
+                'Asistencia'         => $data['asistencia'],
+                'Estado'             => $data['estadoCursado'],
+                'CalificacionFinal'  => $examen,
+                'idDivision'         => $data['idDivision'],
+            ];
+            $i++;
+        }
+    }
+
+    return $listadoCalificaciones;
 }
+
+
+
 
 //Datos cursado de materia de un alumno
 function cursadoMateria($conexion, $idMateria, $idAlumno)
@@ -234,7 +336,7 @@ function buscarCursoMatriculado($conexion, $idPlan, $idAlumno)
     return $cursosM;
 }
 //Calificaciones de un alumno por Plan y Curso
-function buscarMateriasCurso($conexion, $idAlumno, $idPlan, $idCursoPredeterminado)
+/*function buscarMateriasCurso($conexion, $idAlumno, $idPlan, $idCursoPredeterminado)
 {
     $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
 from calificacionesterciario inner join materiaterciario 
@@ -302,7 +404,104 @@ order by curso.idcursopredeterminado, materiaterciario.ubicacion desc";
         }
     }
     return $listadoCalificaciones;
+}*/
+
+function buscarMateriasCurso($conexion, $idAlumno, $idPlan, $idCursoPredeterminado)
+{
+    $consulta = "SELECT *, materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso 
+        FROM calificacionesterciario 
+        INNER JOIN materiaterciario ON calificacionesterciario.idMateria = materiaterciario.idMateria 
+        INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso 
+        INNER JOIN cursospredeterminado ON cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado 
+        WHERE calificacionesterciario.idAlumno = ? 
+        AND materiaterciario.idPlan = ? 
+        AND cursospredeterminado.idcursopredeterminado = ?
+        ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
+
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("iii", $idAlumno, $idPlan, $idCursoPredeterminado);
+    $stmt->execute();
+    $calif = $stmt->get_result();
+
+    $listadoCalificaciones = array();
+    $i = 0;
+
+    if (!empty($calif)) {
+        while ($data = mysqli_fetch_array($calif)) {
+            $idInscripcionExamen = $data['idInscripcionExamen'];
+            $examen = " ";
+
+            if ($idInscripcionExamen == null || $idInscripcionExamen == 0) {
+                if (
+                    $data['estadoCursado'] == "Aprobación PreSistema" ||
+                    $data['estadoCursado'] == "Aprobación por Equivalencia" ||
+                    $data['estadoCursado'] == "Aprobación por Pase"
+                ) {
+                    $examen = $data['examenIntegrador'];
+                } else {
+                    // Buscar examen más reciente desde la función auxiliar
+                    $examenes = buscarExamenes($conexion, $idAlumno, $data['idMateria']);
+                    $fechaMax = null;
+                    foreach ($examenes as $ex) {
+                        if (!empty($ex['Calificacion']) && ($fechaMax === null || $ex['Fecha'] > $fechaMax)) {
+                            $fechaMax = $ex['Fecha'];
+                            $examen = $ex['Calificacion'];
+                        }
+                    }
+                }
+            } else {
+                $consultaExamen = "SELECT calificacion FROM inscripcionexamenes WHERE idInscripcion = ?";
+                $stmtExamen = $conexion->prepare($consultaExamen);
+                $stmtExamen->bind_param("i", $idInscripcionExamen);
+                $stmtExamen->execute();
+                $ex = $stmtExamen->get_result();
+                $examen = $ex->fetch_assoc()["calificacion"] ?? "";
+
+                // Si no hay calificación registrada, buscar entre exámenes
+                if (empty($examen)) {
+                    $examenes = buscarExamenes($conexion, $idAlumno, $data['idMateria']);
+                    $fechaMax = null;
+                    foreach ($examenes as $ex) {
+                        if (!empty($ex['Calificacion']) && ($fechaMax === null || $ex['Fecha'] > $fechaMax)) {
+                            $fechaMax = $ex['Fecha'];
+                            $examen = $ex['Calificacion'];
+                        }
+                    }
+                }
+            }
+
+            $listadoCalificaciones[$i] = [
+                'idMateria'         => $data['idMateria'],
+                'Materia'           => $data['nombreMateria'],
+                'Curso'             => $data['nombreCurso'],
+                'n1'                => $data['n1'],
+                'n2'                => $data['n2'],
+                'n3'                => $data['n3'],
+                'n4'                => $data['n4'],
+                'n5'                => $data['n5'],
+                'n6'                => $data['n6'],
+                'n7'                => $data['n7'],
+                'n8'                => $data['n8'],
+                'r1'                => $data['r1'],
+                'r2'                => $data['r2'],
+                'r3'                => $data['r3'],
+                'r4'                => $data['r4'],
+                'r5'                => $data['r5'],
+                'r6'                => $data['r6'],
+                'r7'                => $data['r7'],
+                'r8'                => $data['r8'],
+                'Asistencia'        => $data['asistencia'],
+                'Estado'            => $data['estadoCursado'],
+                'CalificacionFinal' => $examen
+            ];
+
+            $i++;
+        }
+    }
+
+    return $listadoCalificaciones;
 }
+
 
 //Examenes de un alumno por Materia
 function buscarExamenes($conexion, $idAlumno, $idMateria)

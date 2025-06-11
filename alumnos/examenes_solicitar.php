@@ -37,8 +37,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idInscripcionWeb = $_POST["idInscripcionWeb"];    
     cancelarExamen($conn, $idInscripcionWeb);
 
-    header("Location: examenes_solicitar.php");
-    exit();
+   // header("Location: examenes_solicitar.php");
+   // exit();
   }
 }
 
@@ -184,6 +184,11 @@ $cantidadFechas = count($listadoFechasExamenes);
     <!-- FORM CANCELAR -->
         <form id="cancelar" action="../alumnos/examenes_solicitar.php" method="post">
           <input type="hidden" name="idInscripcionWeb" id="idInscripcionWeb">
+            <input type="hidden" name="idM" value="<?php echo $idMateria; ?>" />
+<input type="hidden" name="nombreMateria" value="<?php echo $nombreMateria; ?>" />
+<input type="hidden" name="nombreCurso" value="<?php echo $nombreCurso; ?>" />
+<input type="hidden" name="idDivision" value="<?php echo $idDivision; ?>" />
+</table>
           <caption>Solicitudes Generadas</caption>
           <table class="table table-hover"  >
             <thead>

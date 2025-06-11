@@ -98,11 +98,11 @@ function verificarPeriodoActas() {
 
   $.ajax({
     type: 'POST',
-    url: 'materiaxdocente.php',
+    url: '../docentes/materiaxdocente.php',
     data: {parametro: parametro},
     success: function(data) {
       console.log('Respuesta del servidor:', data);
-      window.location.href = 'materiaxdocente.php';
+      window.location.href = '../docentes/materiaxdocente.php';
     }
   });
 }

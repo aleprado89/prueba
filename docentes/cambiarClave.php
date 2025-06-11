@@ -53,12 +53,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <title>Cambiar Clave</title>
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
-  <link rel="stylesheet" href="[https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="../js/bootstrap.min.js"></script> 
+
   <style>
     .alert {
       margin-top: 20px;
     }
   </style>
+
 </head>
 
 <body>
@@ -81,6 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <label for="claveNueva">Clave nueva:</label>
           <input type="password" class="form-control" id="claveNueva" name="claveNueva" required>
         </div>
+        <br>
         <div class="form-group">
           <label for="claveNuevaConfirmar">Confirmar clave nueva:</label>
           <input type="password" class="form-control" id="claveNuevaConfirmar" name="claveNuevaConfirmar" required>
@@ -112,7 +116,7 @@ $usuarioActual = $usuarioDocente ?: $usuarioAlumno;
     <script src="../funciones/sessionControl.js"></script>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-  <script src="../js/jquery-3.7.1.slim.min.js"></script>
+  <script src="../js/jquery-3.7.1.min.js"></script>
   <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
 

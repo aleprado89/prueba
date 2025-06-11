@@ -111,9 +111,14 @@ $cantidad = count($listadoSolicitudes);
               $fechaFormateada = $fechaFormato->format('d/m/Y');
               echo $fechaFormateada ?>  <?php echo $Hora ?> 
             </td>
-            <td>
-              <?php echo $Estado ?>
-            </td>
+          <td>
+            <?php echo $Estado ?>
+            <?php if ($Estado == "Aprobada") { ?>
+              <span style="color: green;">&#10004;</span>
+            <?php } elseif ($Estado == "Rechazada" || $Estado == "Cancelada") { ?>
+              <span style="color: red;">&#10006;</span>
+            <?php } ?>
+          </td>
             <td>
               <?php echo $Observaciones ?>
             </td>

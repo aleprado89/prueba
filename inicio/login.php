@@ -1,8 +1,8 @@
 <?php
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-if (!isset($_GET['cambioSesion'])) {
 session_start();
+if (!isset($_GET['cambioSesion']) and !isset($_SESSION['login_message'])) {
 session_unset(); // Eliminar todas las variables de sesión
 session_destroy(); // Destruir la sesiónini_set('display_errors', 1);
 }

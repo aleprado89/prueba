@@ -24,6 +24,7 @@ if (verificarAccesoAlumnoYDocente($username, $password, $conn, $datosColegio)) {
 } else {
   // Setear la variable de sesión con el mensaje de error
   $_SESSION['login_message'] = "Usuario o contraseña incorrectos.";
+
   // Redirigir al usuario de vuelta a login.php
   header('Location: login.php');
   exit;

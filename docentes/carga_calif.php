@@ -223,6 +223,8 @@ $('.table td[contenteditable="true"]').on('keydown', function(e) {
     e.preventDefault();
     $(this).text(''); // Borrar contenido de la celda
   }
+
+  
 });
 
 
