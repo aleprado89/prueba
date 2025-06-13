@@ -4,6 +4,8 @@ include '../vendor/autoload.php';
 include '../inicio/conexion.php';
 ob_start();
 include '../funciones/consultas.php';
+include '../funciones/parametrosWeb.php';
+
 ob_end_clean();
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -22,8 +24,8 @@ $dni=$_SESSION['alu_dni'];
 $idPlan=$_SESSION['idP'];
 $nombrePlan=$_SESSION['nombreP'];
 $membrete=$_SESSION['membrete'];
-$idCicloLectivo = $_SESSION['idCiclo'];
-
+$cicloLectivo =  $datosColegio[0]['anioautoweb'];
+$idCicloLectivo = buscarIdCiclo($conn, $cicloLectivo);
 //busco ciclo lectivo
 //$anio=buscarnombreCiclo($conn,$idCicloLectivo);
 

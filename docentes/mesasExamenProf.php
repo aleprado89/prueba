@@ -152,7 +152,7 @@ if (empty($fechasExamen)) {
       <br>
       <div class="container">
       <?php if (empty($fechasExamen)) { ?>
-    <p>No hay mesas de exámen de las materias del profesor.</p>
+    <p>No hay mesas de examen de las materias del profesor.</p>
   <?php } else { ?>
       
       <div class="accordion" id="accordionExample">

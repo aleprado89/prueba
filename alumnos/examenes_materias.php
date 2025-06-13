@@ -135,7 +135,7 @@ $cantidad = count($listadoMaterias);
                 <th>Materia</th>
                 <th>Curso</th>
                 <th>Estado</th>
-                <th>Solicitar Exámen</th>
+                <th>Solicitar Examen</th>
               </tr>
             </thead>
             <tbody>

@@ -27,7 +27,7 @@
             <a class="nav-link" href="#" onclick="onClickInscCurs()">Insc.Cursado</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#" onclick="onClickInscExam()">Insc. Exámen</a>
+            <a class="nav-link" href="#" onclick="onClickInscExam()">Insc. Examen</a>
           </li>
           <li class="nav-item active">
             <a class="nav-link" href="actuaDatosAlu.php">Datos Personales

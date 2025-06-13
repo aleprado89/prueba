@@ -107,7 +107,7 @@ $cantidadFechas = count($listadoFechasExamenes);
   <li class="breadcrumb-item"><a href="menualumnos.php">Inicio</a></li>
   <li class="breadcrumb-item"><a href="examenes_planes.php">Inscripción a exámenes</a></li>
   <li class="breadcrumb-item"><a href="examenes_materias.php">Materias</a></li>
-  <li class="breadcrumb-item active">Solicitar exámen</li>
+  <li class="breadcrumb-item active">Solicitar examen</li>
 </ol>
 
   <div class="card padding col-12">
