@@ -1,5 +1,107 @@
 <?php
 
+//Armar tabla de asistencias por materia y alumno
+function obtenerAsistencia($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
+    // Consulta SQL para obtener los registros de asistencia del alumno
+    $consulta = "SELECT d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, 
+                        d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, 
+                        d29, d30, d31, idAlumno, idAsistenciaTerciario, idCicloLectivo, 
+                        idMateria, mes, tmp_apenom 
+                 FROM asistenciaterciario 
+                 WHERE idAlumno = ? AND idMateria = ? AND idCicloLectivo = ?";
+
+    // Preparar la consulta y vincular parámetros
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("iii", $idAlumno, $idMateria, $idCicloLectivo);
+    
+    // Ejecutar la consulta
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+
+    // Array para almacenar los resultados de la consulta
+    $tabla = array();
+
+    // Verificar si se obtuvieron resultados
+    if ($resultado->num_rows > 0) {
+        // Almacenar los resultados en el array
+        while ($data = $resultado->fetch_assoc()) {
+            $tabla[] = $data;  // Cada fila del resultado se agrega al array
+        }
+    }
+
+    // Retornar la tabla de asistencia
+    return $tabla;
+}
+
+//Calcular porcentaje asistencia de materia y alumno
+function porcentaje($tabla) {
+    $salida = "";
+
+    $ausente = 0;
+    $presente = 0;
+    $total = 0;
+
+    $cantidad = count($tabla); // número de filas
+
+    for ($a = 0; $a < $cantidad; $a++) {
+        for ($ubicacion = 5; $ubicacion < 36; $ubicacion++) {
+            if (!isset($tabla[$a][$ubicacion])) {
+                continue;
+            }
+
+            $asistencia = strval($tabla[$a][$ubicacion]);
+
+            if ($asistencia !== "") {
+                $aumenta = 0;
+
+                while ($aumenta < strlen($asistencia)) {
+                    $asis = substr($asistencia, $aumenta, 1);
+                    $x = $asis;
+
+                    if ($x == 'A' || $x == 'J') {
+                        $ausente++;
+                    } elseif ($x == 'P' || $x == 'S' || $x == 'T') {
+                        $presente++;
+                    } elseif ($x == 'M') {
+                        $ausente += 0.5;
+                        $presente += 0.5;
+                    }
+
+                    $total++;
+                    $aumenta++;
+                }
+            }
+        }
+    }
+
+    if ($total != 0) {
+        $resultado = round(($presente * 100) / $total, 2);
+        $salida = $resultado . "%";
+    } else {
+        $salida = "S/Asist";
+    }
+
+    return $salida;
+}
+
+//Actualiza porcentaje de asistencia
+function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
+    $consulta = "UPDATE calificacionesterciario SET asistencia = ? 
+    WHERE idAlumno = ? and idMateria = ?";
+
+    $stmt = mysqli_prepare($conexion, $consulta);
+    mysqli_stmt_bind_param($stmt, "si", $valor, $idAlumno, $idMateria);
+    $resultado = mysqli_stmt_execute($stmt);
+
+    if (!$resultado) {
+        $respuesta = "Error: " . mysqli_error($conexion);
+    } else {
+        $respuesta = "actualizado";
+    }
+    return $respuesta;
+}
+
+
 function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
 {
     //DATOS COLEGIO
