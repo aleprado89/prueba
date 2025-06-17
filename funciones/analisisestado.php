@@ -84,7 +84,9 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
     $consulta3 = "SELECT * from matriculacion
     where matriculacion.idPlanDeEstudio = 
     (Select idPlan from materiaterciario where materiaterciario.idMateria = $idMateria)
-    and matriculacion.idAlumno = $idAlumno";
+    and matriculacion.idAlumno = $idAlumno and matriculacion.anio = 
+    (select anio from ciclolectivo where idciclolectivo = 
+    (select idCicloLectivo from materiaterciario where idMateria = $idMateria))";
 
     $trabaja = mysqli_query($conexion, $consulta3);
 
