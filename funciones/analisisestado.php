@@ -90,7 +90,7 @@ function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
     WHERE idAlumno = ? and idMateria = ?";
 
     $stmt = mysqli_prepare($conexion, $consulta);
-    mysqli_stmt_bind_param($stmt, "si", $valor, $idAlumno, $idMateria);
+    mysqli_stmt_bind_param($stmt, "sii", $valor, $idAlumno, $idMateria);
     $resultado = mysqli_stmt_execute($stmt);
 
     if (!$resultado) {
@@ -3473,4 +3473,3 @@ function analisis_estado(
     return array($salida, $wanalisis);
 }
 
-?>

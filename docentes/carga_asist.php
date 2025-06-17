@@ -5,6 +5,7 @@ session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/verificarSesion.php';
+include '../funciones/analisisestado.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idMateria'])) {
 $doc_legajo = $_SESSION['doc_legajo'];
@@ -60,6 +61,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idMateria = $_POST['idMateria'];
     $idCicloLectivo = buscarIdCiclo($conn, $anio);
     $respuesta = actualizarAsistxDocentes($conn, $idAlumno, $idCicloLectivo, $mes, $dia, $valor, $idMateria);
+$asistencia=obtenerAsistencia($conn, $idAlumno, $idMateria, $idCicloLectivo);
+$porcentaje=porcentaje($asistencia);
+actualizarAsistencia($conn, $idAlumno, $idMateria, $porcentaje);
     echo $respuesta;}
   }
 }

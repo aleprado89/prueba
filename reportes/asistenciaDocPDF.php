@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 include '../vendor/autoload.php';
 include '../inicio/conexion.php';
 ob_start();
