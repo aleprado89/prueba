@@ -25,7 +25,7 @@ $plan = $_GET['plan'];
 //$materia = $_SESSION['materia'];
 $membrete=$_SESSION['membrete'];
 
-$alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
+$alumnosCalif = obtenerCalificacionesMateriaPDF($conn, $idMateria);
 
 //preparo imagen para que dompdf la pueda leer
 $img = file_get_contents(__DIR__ . '/'.$membrete);

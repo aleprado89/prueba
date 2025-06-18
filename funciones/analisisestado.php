@@ -3470,4 +3470,3 @@ function analisis_estado(
     return array($salida, $wanalisis);
 }
 
-?>

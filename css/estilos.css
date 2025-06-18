@@ -174,6 +174,36 @@ th, td {
   min-width: 100px;
 }
 
+/* Estilos para la cabecera de la columna Prom */
+.prom-header-content {
+    display: flex;           /* Habilitar Flexbox */
+    flex-direction: column;  /* Apilar los elementos verticalmente (checkbox arriba, Prom abajo) */
+    align-items: center;     /* Centrar los elementos horizontalmente */
+    justify-content: center; /* Centrar verticalmente dentro de la celda */
+    height: 100%;            /* Asegura que el contenedor ocupe la altura completa de la celda */
+    width: 100%;             /* Asegura que el contenedor ocupe el ancho completo de la celda */
+    padding: 0;              /* Eliminar cualquier padding por defecto */
+    margin: 0;               /* Eliminar cualquier margin por defecto */
+}
+
+/* Espacio vertical entre el checkbox y la palabra Prom */
+.prom-header-content #enablePromEdit {
+    margin-bottom: 5px; /* Un pequeño margen inferior para separar el checkbox de la palabra */
+}
+
+/* Opcional: Alinear el texto 'Prom' si fuera necesario */
+.prom-header-content .prom-text {
+    text-align: center; /* Asegura que 'Prom' esté centrado */
+}
+
+/* Ajustes a la celda th si es necesario para el padding */
+#tablaMaterias th {
+    /* Puedes ajustar el padding de la celda th si Flexbox causa algún problema con el espacio */
+    padding: 5px; /* Ejemplo, ajusta según te guste */
+    /* text-align: center;  No es necesario si usas align-items: center en el div */
+}
+
+
 }
 @media (max-width: 1000px) and (min-width: 768px) { /*TAMAÑO ENTRE CELULAR Y PANTALLA GRANDE*/
   .card-link {

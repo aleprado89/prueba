@@ -1158,13 +1158,64 @@ function obtenerCalificacionesMateria($conexion, $idMateria){
             $listadoMateria[$i]['asistencia'] = $data['asistencia'];
             $listadoMateria[$i]['estadoCursado'] = $data['estadoCursado'];
             $listadoMateria[$i]['estado'] = $data['estado'];
+            $listadoMateria[$i]['examenIntegrador'] = $data['examenIntegrador'];
 
             $i++;
         }
     }
     return $listadoMateria;
 }
+function obtenerCalificacionesMateriaPDF($conexion, $idMateria){
+    $consulta = 'SELECT c.*,p.apellido,p.nombre,m.estado 
+                FROM persona p 
+                INNER JOIN alumnosterciario a 
+                ON p.idPersona = a.idPersona 
+                INNER JOIN matriculacionmateria m 
+                ON a.idAlumno = m.idAlumno 
+                INNER JOIN calificacionesterciario c 
+                ON m.idMateria = c.idMateria 
+                AND c.idAlumno = a.idAlumno
+                WHERE m.idMateria = ? AND m.estado != "Abandonó Cursado"
+                ORDER BY p.apellido, p.nombre';
 
+    $stmt = mysqli_prepare($conexion, $consulta);
+    mysqli_stmt_bind_param($stmt, "i", $idMateria);
+    mysqli_stmt_execute($stmt);
+    $querycalif = mysqli_stmt_get_result($stmt);   
+
+    $listadoMateria = array();
+    $i = 0;
+    if (!empty($querycalif)) {
+        while ($data = mysqli_fetch_array($querycalif)) {
+            $listadoMateria[$i]['idCalificacion'] = $data['idCalificacion'];
+            $listadoMateria[$i]['idAlumno'] = $data['idAlumno'];
+            $listadoMateria[$i]['apellido'] = $data['apellido'];
+            $listadoMateria[$i]['nombre'] = $data['nombre'];
+            $listadoMateria[$i]['n1'] = $data['n1'];
+            $listadoMateria[$i]['n2'] = $data['n2'];
+            $listadoMateria[$i]['n3'] = $data['n3'];
+            $listadoMateria[$i]['n4'] = $data['n4'];
+            $listadoMateria[$i]['n5'] = $data['n5'];
+            $listadoMateria[$i]['n6'] = $data['n6'];
+            $listadoMateria[$i]['n7'] = $data['n7'];
+            $listadoMateria[$i]['n8'] = $data['n8'];
+            $listadoMateria[$i]['r1'] = $data['r1'];
+            $listadoMateria[$i]['r2'] = $data['r2'];
+            $listadoMateria[$i]['r3'] = $data['r3'];
+            $listadoMateria[$i]['r4'] = $data['r4'];
+            $listadoMateria[$i]['r5'] = $data['r5'];
+            $listadoMateria[$i]['r6'] = $data['r6'];
+            $listadoMateria[$i]['r7'] = $data['r7'];
+            $listadoMateria[$i]['r8'] = $data['r8'];
+            $listadoMateria[$i]['asistencia'] = $data['asistencia'];
+            $listadoMateria[$i]['estadoCursado'] = $data['estadoCursado'];
+            $listadoMateria[$i]['estado'] = $data['estado'];
+
+            $i++;
+        }
+    }
+    return $listadoMateria;
+}
 
 //obtener asistencia materia
 function obtenerAsistenciaMateria($conexion, $idMateria, $mes, $dia, $idCicloLectivo){
@@ -1232,15 +1283,18 @@ function actualizarAsistxDocentes($conexion, $idAlumno, $idCicloLectivo, $mes, $
 }
 //funcion para obtener asistencias por materia para pdf
 function obtenerAsistenciaMateriaPDF($conexion, $columnas, $idMateria, $mes, $idCicloLectivo){
-    $consulta = 'SELECT p.nombre,p.apellido,' . $columnas . ' 
+    $consulta = 'SELECT p.nombre,p.apellido, ' . $columnas . ' 
                 FROM persona p 
                 INNER JOIN alumnosterciario a 
                 ON p.idPersona = a.idPersona 
                 INNER JOIN asistenciaterciario asis 
-                ON a.idAlumno = asis.idAlumno 
+                ON a.idAlumno = asis.idAlumno
+                INNER JOIN matriculacionmateria mt
+                ON a.idAlumno = mt.idAlumno AND asis.idMateria=mt.idMateria
                 WHERE asis.idMateria = ? 
                 AND asis.mes = ? 
-                AND asis.idCicloLectivo = ? 
+                AND asis.idCicloLectivo = ?
+                AND mt.estado != "Abandonó Cursado" 
                 ORDER BY p.apellido, p.nombre';
 
     $stmt = mysqli_prepare($conexion, $consulta);
@@ -1487,4 +1541,4 @@ function materiasPlanCurso($conexion, $idPlan, $idCurso) {
 }
 
 
-?>
+
