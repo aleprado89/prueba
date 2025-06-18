@@ -1283,7 +1283,7 @@ function actualizarAsistxDocentes($conexion, $idAlumno, $idCicloLectivo, $mes, $
 }
 //funcion para obtener asistencias por materia para pdf
 function obtenerAsistenciaMateriaPDF($conexion, $columnas, $idMateria, $mes, $idCicloLectivo){
-    $consulta = 'SELECT p.nombre,p.apellido,d1 
+    $consulta = 'SELECT p.nombre,p.apellido, ' . $columnas . ' 
                 FROM persona p 
                 INNER JOIN alumnosterciario a 
                 ON p.idPersona = a.idPersona 
