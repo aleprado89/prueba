@@ -1,11 +1,11 @@
 <?php
 
-$servername = "localhost";
-$username = "u577894275_se_system";
-$password = "Srsr4065.pase";
-$dbname = "u577894275_se_system";
+$servername = "46.202.148.69";
+$username = "admin_terc_houssay";
+$password = "san84Jose+entra?carajo";
+$dbname = "admin_terc_houssay";
 
-$idCicloLectivo = 0;
+$idCicloLectivo = 11;
 
 // Crear conexión
 $connexionCorreccion = new mysqli($servername, $username, $password, $dbname);
@@ -1340,7 +1340,7 @@ function analisis_estado(
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
 
 
@@ -1822,7 +1822,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -1867,7 +1867,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -2055,7 +2055,7 @@ function analisis_estado(
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
 
 
@@ -2721,7 +2721,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
 
         }
@@ -2769,7 +2769,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -3095,7 +3095,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -3140,7 +3140,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Asist";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -3318,10 +3318,10 @@ function analisis_estado(
         }
 
         //Salida Analisis
-        if ($regular == "f" || $asistOblig == "f")   //No Regular
+        if ($regular == "f" || $asistOblig == "f")   //Libre
         {
             $salida = 0;
-            $wanalisis = "No Regular";
+            $wanalisis = "Libre";
         }
 
         if ($regular == "t" && $asistOblig == "t")    //$regular
@@ -3330,10 +3330,10 @@ function analisis_estado(
             $wanalisis = "Regular";
         }
 
-        if ($regular == "f" && $sinAsist == "t")      //No Regular S/Asist
+        if ($regular == "f" && $sinAsist == "t")      //Libre S/Asist
         {
             $salida = 3;
-            $wanalisis = "No Regular - S/Asist";
+            $wanalisis = "Libre - S/Asist";
         }
 
         if ($regular == "t" && $sinAsist == "t")      //$regular S/Asist
@@ -3342,22 +3342,22 @@ function analisis_estado(
             $wanalisis = "Regular - S/Asist";
         }
 
-        if ($aprobado == "t" && $asistProm == "t" && $recursa = "f")      //Aprueba
+        if ($aprobado == "t" && $asistProm == "t" && $recursa = "f")      //Promocional
         {
-            $salida = 11;
-            $wanalisis = "Aprueba";
+            $salida = 14;
+            $wanalisis = "Promocional";
         }
 
-        if ($aprobado == "t" && $sinAsist == "t" && $recursa = "f")      //Aprueba S/Asist
+        if ($aprobado == "t" && $sinAsist == "t" && $recursa = "f")      //Promocional S/Asist
         {
-            $salida = 13;
-            $wanalisis = "Aprueba - S/Asist";
+            $salida = 15;
+            $wanalisis = "Promocional - S/Asist";
         }
 
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
 
 
@@ -3544,7 +3544,7 @@ function analisis_estado(
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
     }
 }
