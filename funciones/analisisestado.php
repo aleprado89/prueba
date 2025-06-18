@@ -24,7 +24,7 @@ function obtenerAsistencia($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
     // Verificar si se obtuvieron resultados
     if ($resultado->num_rows > 0) {
         // Almacenar los resultados en el array
-        while ($data = $resultado->fetch_assoc()) {
+        while ($data = $resultado->fetch_row()) {
             $tabla[] = $data;  // Cada fila del resultado se agrega al array
         }
     }
@@ -44,19 +44,16 @@ function porcentaje($tabla) {
     $cantidad = count($tabla); // número de filas
 
     for ($a = 0; $a < $cantidad; $a++) {
-        for ($ubicacion = 5; $ubicacion < 36; $ubicacion++) {
-            if (!isset($tabla[$a][$ubicacion])) {
-                continue;
-            }
+        for ($ubicacion = 0; $ubicacion < 31; $ubicacion++) {           
 
             $asistencia = strval($tabla[$a][$ubicacion]);
 
-            if ($asistencia !== "") {
+            if ($asistencia != "") {
                 $aumenta = 0;
 
                 while ($aumenta < strlen($asistencia)) {
                     $asis = substr($asistencia, $aumenta, 1);
-                    $x = $asis;
+                    $x = strtoupper($asis);
 
                     if ($x == 'A' || $x == 'J') {
                         $ausente++;
@@ -90,7 +87,7 @@ function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
     WHERE idAlumno = ? and idMateria = ?";
 
     $stmt = mysqli_prepare($conexion, $consulta);
-    mysqli_stmt_bind_param($stmt, "si", $valor, $idAlumno, $idMateria);
+    mysqli_stmt_bind_param($stmt, "sii", $valor, $idAlumno, $idMateria);
     $resultado = mysqli_stmt_execute($stmt);
 
     if (!$resultado) {

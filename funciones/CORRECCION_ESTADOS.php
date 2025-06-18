@@ -1,5 +1,7 @@
 <?php
 
+include '../inicio/conexion.php';
+buscarInformacion($conn, 7);
 //BUSCAR TABLA CALIFICACIONESTERCIARIO
 function buscarInformacion($conexion, $idCicloLectivo) {
     $consulta = "SELECT * 
@@ -51,6 +53,8 @@ function buscarInformacion($conexion, $idCicloLectivo) {
         $actualizacionAsistencia = actualizarAsistencia($conexion, $idAlumno, $idMateria, $porcentajeCalculado);
     
         $actualizacionEstado = iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion);
+    
+        echo "Iteración: $idCalificacion - $porcentajeCalculado - $actualizacionEstado\n";
     }
 }
 
@@ -81,7 +85,7 @@ function obtenerAsistencia($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
     // Verificar si se obtuvieron resultados
     if ($resultado->num_rows > 0) {
         // Almacenar los resultados en el array
-        while ($data = $resultado->fetch_assoc()) {
+        while ($data = $resultado->fetch_row()) {
             $tabla[] = $data;  // Cada fila del resultado se agrega al array
         }
     }
@@ -99,21 +103,18 @@ function porcentaje($tabla) {
     $total = 0;
 
     $cantidad = count($tabla); // número de filas
-
+    
     for ($a = 0; $a < $cantidad; $a++) {
-        for ($ubicacion = 5; $ubicacion < 36; $ubicacion++) {
-            if (!isset($tabla[$a][$ubicacion])) {
-                continue;
-            }
+        for ($ubicacion = 0; $ubicacion < 31; $ubicacion++) {
 
             $asistencia = strval($tabla[$a][$ubicacion]);
-
-            if ($asistencia !== "") {
+            
+            if ($asistencia != "") {
                 $aumenta = 0;
 
                 while ($aumenta < strlen($asistencia)) {
                     $asis = substr($asistencia, $aumenta, 1);
-                    $x = $asis;
+                    $x = strtoupper($asis);
 
                     if ($x == 'A' || $x == 'J') {
                         $ausente++;
@@ -130,14 +131,14 @@ function porcentaje($tabla) {
             }
         }
     }
-
+    
     if ($total != 0) {
         $resultado = round(($presente * 100) / $total, 2);
         $salida = $resultado . "%";
     } else {
         $salida = "S/Asist";
     }
-
+    echo "cantidad: $total - Pre: $presente - Aus: $ausente - Res: $salida";
     return $salida;
 }
 
@@ -147,7 +148,7 @@ function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
     WHERE idAlumno = ? and idMateria = ?";
 
     $stmt = mysqli_prepare($conexion, $consulta);
-    mysqli_stmt_bind_param($stmt, "si", $valor, $idAlumno, $idMateria);
+    mysqli_stmt_bind_param($stmt, "sii", $valor, $idAlumno, $idMateria);
     $resultado = mysqli_stmt_execute($stmt);
 
     if (!$resultado) {
@@ -507,20 +508,20 @@ function analisis_estado(
 
     $PRS = 0;
     if ($westadoMatric == "Libre PreSistema") {
-        $wanalisis = "Desaprobado/Recursa (PS)";
+        $wanalisis = "Desaprobado/Recursa PreSistema";
         $salida = 0;
         $PRS = 1;
     }
     if ($westadoMatric == "Regularidad PreSistema") {
-        $wanalisis = "Cursada Aprobada (PS)";
+        $wanalisis = "Regularidad PreSistema";
         $salida = 1;
         $PRS = 1;
     }
     if ($westadoMatric == "Aprobación PreSistema") {
-        $wanalisis = "Aprobación (PS)";
+        $wanalisis = "Aprobación PreSistema";
         $salida = 11;
         $PRS = 1;
-    }
+    }                      
     if ($westadoMatric == "Aprobación por Equivalencia") {
         $wanalisis = "Aprobación por Equivalencia";
         $salida = 11;
@@ -532,7 +533,7 @@ function analisis_estado(
         $PRS = 1;
     }
     if ($westadoMatric == "Desaprob./Recurs. PreSistema") {
-        $wanalisis = "Desaprob./Recurs. (PS)";
+        $wanalisis = "Desaprob./Recurs. PreSistema";
         $salida = 10;
         $PRS = 1;
     }
@@ -1135,7 +1136,7 @@ function analisis_estado(
             $r8 = '10';
         }
         ;
-    }
+    
 
     if ($cod_col == "banfield") {			//////////BANFIELD//////////
 
@@ -3527,6 +3528,7 @@ function analisis_estado(
             $wanalisis = "S/Calif";
         }
     }
+}
 
     //Salida (numeroEstado, textoEstado)
     return array($salida, $wanalisis);
