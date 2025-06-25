@@ -64,7 +64,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $asistencia=obtenerAsistencia($conn, $idAlumno, $idMateria, $idCicloLectivo);
 $porcentaje=porcentaje($asistencia);
 actualizarAsistencia($conn, $idAlumno, $idMateria, $porcentaje);
-    echo $respuesta;}
+$idCalificacion=obtenerIdCalificacion($conn, $idAlumno, $idMateria);
+iniciarAnalisis($conn, $idMateria, $idAlumno, $idCalificacion);    
+echo $respuesta;}
   }
 }
 ?>

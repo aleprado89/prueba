@@ -126,6 +126,7 @@ $html = '
               <th scope="col">RP7</th>
               <th scope="col">RIEFI</th>
               <th scope="col">Asist</th>
+              <th scope="col">Estado cursado</th>
 
                 </tr>
             </thead>
@@ -151,6 +152,7 @@ foreach ($alumnosCalif as $alumno) {
                     <td>' . $alumno['r7'] . '</td>
                     <td>' . $alumno['r8'] . '</td>
                     <td>' . $alumno['asistencia'] . '</td>
+                    <td>' . $alumno['estadoCursado'] . '</td>
 
                 </tr>';
 }

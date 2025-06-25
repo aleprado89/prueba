@@ -83,7 +83,7 @@ function porcentaje($tabla) {
 
 //Actualiza porcentaje de asistencia
 function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
-    $consulta = "UPDATE calificacionesterciario SET asistencia = ? 
+    $consulta = "UPDATE calificacionesterciario SET registroModificacion=1, asistencia = ? 
     WHERE idAlumno = ? and idMateria = ?";
 
     $stmt = mysqli_prepare($conexion, $consulta);
@@ -233,7 +233,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
 
     //Actualizar Estado
     $consulta4 = "update calificacionesterciario
-    set estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = '$estadoCursado' 
+    set registroModificacion=1, estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = '$estadoCursado' 
     where calificacionesterciario.idCalificacion = $idCalificacion";
 
     $calif = mysqli_query($conexion, $consulta4);

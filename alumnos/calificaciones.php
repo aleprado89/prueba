@@ -12,7 +12,9 @@ $nombrePlan = $_SESSION['nombreP'];
 
 $idCursoPredeterminado = " ";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $idCursoPredeterminado = $_POST['curso'];  
+  if (isset($_POST['curso'])) {
+    $idCursoPredeterminado = $_POST['curso'];
+  }
 }
 
 if ($idCursoPredeterminado == " ")
@@ -85,7 +87,7 @@ $cantidad = count($listadoCalificaciones);
         $a = 0;
         while ($a < $cantidadCursos) {
           $idCursoP = $listadoCursosP[$a]['idcursopredeterminado'];
-          $nombreC = $listadoCursosP[$a]['nombreCurso'];
+          $nombreC = $listadoCursosP[$a]['nombreCP']; // Ya ajustado en la función de consultas
           ?>
           <option type="submit" value="<?php echo $idCursoP; ?>"
           <?php if($idCursoPredeterminado == $idCursoP) echo 'selected'; ?>>
@@ -120,21 +122,25 @@ $cantidad = count($listadoCalificaciones);
    <table id="tablamaterias" class="table table-hover">
      <thead>
        <tr class="table-primary">
-         <!-- 24 columnas -->
+         <!-- Columnas existentes ocultas -->
          <th scope="col" style="display:none;">idMateria</th>
          <th scope="col" style="display:none;">Materia Completo</th>
+         <th scope="col" style="display:none;">idCicloLectivoMateria</th> <!-- Para pasar el ID del ciclo -->
+
+         <!-- Columnas visibles -->
          <th scope="col">Materia</th>
-         
+         <th scope="col">Año</th> <!-- Nueva columna para el año de la materia -->
          <th scope="col">Asistencia</th>
          <th scope="col">Estado</th>
          <th scope="col">Exa. Final</th>
          <th scope="col">Ver Calificaciones</th>
+         <th scope="col">Ver Asistencia</th> <!-- Nueva columna para ver asistencia global -->
        </tr>
      </thead>
      <tbody>
        <?php if ($cantidad == 0) { ?>
          <tr>
-           <td colspan="7" >No hay registros</td>
+           <td colspan="9" >No hay registros</td>
          </tr>
        <?php } else { ?>
          <?php
@@ -148,38 +154,26 @@ $cantidad = count($listadoCalificaciones);
            $idMateria = $listadoCalificaciones[$a]['idMateria'];
            $Materia = $listadoCalificaciones[$a]['Materia'];
            $MateriaCompleto = $Materia;
+           $idCicloLectivoMateria = $listadoCalificaciones[$a]['idCicloLectivoMateria']; // Obtener el ID del ciclo
+           $anioCiclo = $listadoCalificaciones[$a]['anioCiclo']; // Obtener el año
+
+           // Esto era para limitar las palabras del nombre de la materia, lo mantengo si es necesario
            $MateriaArray = explode(" ", $Materia);
            $cantidadPabras = count($MateriaArray);
+           $nombreMateriaCorta = "";
            $b = 0;
            while ($b < $cantidadPabras) {
              if ($b == 0) {
-               $Materia = $MateriaArray[$b];
+               $nombreMateriaCorta = $MateriaArray[$b];
              } else {
-               $Materia = $Materia . " " . $MateriaArray[$b];
+               $nombreMateriaCorta = $nombreMateriaCorta . " " . $MateriaArray[$b];
              }
              $b++;
              if ($b == 8) {
-               $Materia = $Materia . "...";
+               $nombreMateriaCorta = $nombreMateriaCorta . "...";
                break;
              }
            }
-           $Curso = $listadoCalificaciones[$a]['Curso'];
-           $n1 = $listadoCalificaciones[$a]['n1'];
-           $n2 = $listadoCalificaciones[$a]['n2'];
-           $n3 = $listadoCalificaciones[$a]['n3'];
-           $n4 = $listadoCalificaciones[$a]['n4'];
-           $n5 = $listadoCalificaciones[$a]['n5'];
-           $n6 = $listadoCalificaciones[$a]['n5'];
-           $n7 = $listadoCalificaciones[$a]['n5'];
-           $n8 = $listadoCalificaciones[$a]['n5'];
-           $r1 = $listadoCalificaciones[$a]['n5'];
-           $r2 = $listadoCalificaciones[$a]['n5'];
-           $r3 = $listadoCalificaciones[$a]['n5'];
-           $r4 = $listadoCalificaciones[$a]['n5'];
-           $r5 = $listadoCalificaciones[$a]['n5'];
-           $r6 = $listadoCalificaciones[$a]['n5'];
-           $r7 = $listadoCalificaciones[$a]['n5'];
-           $r8 = $listadoCalificaciones[$a]['n5'];
            $Asistencia = $listadoCalificaciones[$a]['Asistencia'];
            $Estado = $listadoCalificaciones[$a]['Estado'];
            $CalificacionFinal = $listadoCalificaciones[$a]['CalificacionFinal'];
@@ -193,11 +187,20 @@ $cantidad = count($listadoCalificaciones);
              <td style="display:none;">
                <?php echo $MateriaCompleto ?>
              </td>
+             <td style="display:none;">
+               <?php echo $idCicloLectivoMateria ?> <!-- ID del ciclolectivo para pasar a la vista de asistencia -->
+             </td>
              <td style="color:#2196F3">
-               <?php echo $Materia ?>
-             </td>           
+               <?php echo $nombreMateriaCorta ?>
+             </td>
              <td>
-               <?php echo $Asistencia ?>
+               <?php echo $anioCiclo ?> <!-- Mostrar el año de la materia -->
+             </td>          
+             <td>
+                <!-- Enlace en la columna Asistencia -->
+                <a href="../alumnos/calificaciones_verAsistencias.php?idCiclo=<?php echo $idCicloLectivoMateria; ?>" class="text-decoration-none">
+                    <?php echo $Asistencia ?>
+                </a>
              </td>
              <td>
                <?php echo $Estado ?>
@@ -206,6 +209,10 @@ $cantidad = count($listadoCalificaciones);
                <?php echo $CalificacionFinal ?>
              </td>
              <td><button type="button" onclick="verCalificaciones(this)" class="btn btn-primary">Ver Calificaciones</button></td>
+             <td>
+                <!-- Nuevo botón "Ver Asistencia" -->
+                <button type="button" onclick="verTodaAsistencia(this)" class="btn btn-info">Ver Asistencia</button>
+             </td>
            </tr>
  
            <?php
@@ -225,26 +232,43 @@ $cantidad = count($listadoCalificaciones);
   <script>
     function verCalificaciones(boton) {
       // Cargar idMateria y nombreMateria para pasar
-      var idMateriaSeleccionada = boton.closest('tr').querySelector('td:nth-child(1)').textContent;
-      var nombreMateriaCompleto = boton.closest('tr').querySelector('td:nth-child(2)').textContent;
+      var row = boton.closest('tr');
+      // Indices de las celdas ocultas: 0 (idMateria), 1 (Materia Completo), 2 (idCicloLectivoMateria)
+      var idMateriaSeleccionada = row.cells[0].textContent.trim();
+      var nombreMateriaCompleto = row.cells[1].textContent.trim();
+      
       // Redirigir a otra página y pasar los datos como parámetro en la URL
       window.location.href =
         '../alumnos/calificaciones_verCalificaciones.php?idM=' + encodeURIComponent(idMateriaSeleccionada) +
         '&nombreM=' + encodeURIComponent(nombreMateriaCompleto);
     }
-//FUNCION PARA QUE SI HAGO CLICK EN UNA FILA HACA LO MISMO DEL BOTON VER CALIFICACINES
-    document.addEventListener("DOMContentLoaded", function() {
-    var table = document.getElementById("tablamaterias");
-    if (table) {
-      var rows = table.getElementsByTagName("tr");
-      for (var i = 0; i < rows.length; i++) {
-        rows[i].onclick = function() {
-          // Acción a realizar cuando se hace clic en una fila
-          verCalificaciones(this);
-                };
-      }
+
+    // Nueva función para el botón "Ver Asistencia" al final
+    function verTodaAsistencia(boton) {
+        var row = boton.closest('tr');
+        // Obtener el idCicloLectivoMateria de la tercera columna oculta (índice 2)
+        var idCicloLectivoMateria = row.cells[2].textContent.trim();
+        // Redirigir a la nueva página de asistencia
+        window.location.href = '../alumnos/calificaciones_verAsistencias.php?idCiclo=' + encodeURIComponent(idCicloLectivoMateria);
     }
-  });
+    
+    // Función para que al hacer click en la fila (excepto en un enlace/botón)
+    // se comporte como el botón "Ver Calificaciones"
+    document.addEventListener("DOMContentLoaded", function() {
+        var table = document.getElementById("tablamaterias");
+        if (table) {
+            var rows = table.getElementsByTagName("tr");
+            for (var i = 0; i < rows.length; i++) {
+                rows[i].addEventListener('click', function(event) {
+                    // Evitar que el evento se propague si se hizo clic en un enlace o botón dentro de la fila
+                    if (event.target.closest('a') || event.target.closest('button')) {
+                        return; // Si el clic fue en un enlace o botón, no hacer nada para la fila
+                    }
+                    verCalificaciones(this); // Llamar a la función principal para ver calificaciones
+                });
+            }
+        }
+    });
   </script>
   
  

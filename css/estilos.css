@@ -1,3 +1,4 @@
+/* Secciones preexistentes en tu estilos.css */
 .celda-actualizada {
   background-color: lightgreen;
 }
@@ -5,112 +6,271 @@
   background-color: #ff0000;
 }
 footer {
- /* position: relative;*/
+  /* position: relative; */ /* Esto podría generar problemas de layout en algunos casos, se sugiere 'position: fixed' para un footer pegado abajo */
   margin-bottom: -10px;
   width: 100%;
-  background-color: #ffffff; /* Color de fondo del pie de página */
-  padding: 10px; /* Espaciado interno del pie de página */
-  text-align: center; /* Alinear el texto al centro */
+  background-color: #ffffff;
+  padding: 10px;
+  text-align: center;
 }
 .breadcrumb-item a {
-  color: #2e8b97; /* Cambiar el color */
-  text-decoration: none; /* Quitar el subrayado */
-
+  color: #2e8b97;
+  text-decoration: none;
 }
-    .card-link {
-    text-decoration: none; /* Para quitar el subrayado del enlace */
-    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-    color: #ffffff;  /*Color de texto por defecto */
-    transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
-    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-    border-radius: 5px;
-  
-  }
-  .card-link:hover {
-    color: #fff; /* Color de texto al pasar el mouse */
-    background-color: #40848d; /* Color de fondo al pasar el mouse */
-    border-radius: 5px; /* Bordes redondeados al pasar el mouse */
-  
-  }
-  .card-link .icono {
-    color: #597c81; /* Nuevo color al hacer hover sobre la card */
-  }
-  .card-link:hover .icono {
-    color: #739FA5; /* Nuevo color al hacer hover sobre la card */
-  }
-  .card-link-act{
-    text-decoration: none; /* Para quitar el subrayado del enlace */
-    color: #2c3236; /* Color de texto por defecto */
-    transition: all 0.3s; /* Transición suave de los estilos al pasar el mouse */
-  }
-  .card-link-act:hover{
-    color: #fff; /* Color de texto al pasar el mouse */
-    /* background-color: #19608f; Color de fondo al pasar el mouse */
-  }
-  .card-link-act .icono {
-    color: #597c81; /* Nuevo color al hacer hover sobre la card */
-  }
-  .card-link-act:hover .icono {
-    color: #40848d; /* Nuevo color al hacer hover sobre la card */
-  }
-
-  
-  /* Estilo para padding de cuadritos diferenciados en celulares */
-  .elemento {
-    margin-bottom: 3%; /* padding inferior por defecto */
-  }
-    
-  .est-logo{
-    display: block; 
-    /* max-width:3%;     */
-    width: 100px;
-    height: auto; 
-    margin-top: 5px; 
-     margin-bottom: 5px;
-  }
-  .header {
-      display: flex;
-    justify-content: center; /* Centra horizontalmente */
-    align-items: center; /* Centra verticalmente */
-    background-color:#ffff;
-    margin-top:0%;
-    margin-bottom: -1%;
-  }
-
-  .fondo{
-    background-color: #E6EAE8;
-    /*overflow-x: hidden; */
-    max-width: 100%;
-    min-height: 100vh; /* Minimo 100% del viewport height(del alto) */
-    /*min-width: 100vw;*/ /* Minimo 100% del viewport width(del ancho) */
-  }
-
-  .padding{
-padding-top: 1%;    
-padding-bottom: 1%;
-padding-left: 2%;
-padding-right: 1%;
-  }
-.margenes{
-margin-left: 1%;
-margin-bottom: 1%;
+.card-link {
+  text-decoration: none;
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  transition: all 0.3s;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
 }
-.barralateralmenu{
-min-height: 650px;
-
+.card-link:hover {
+  color: #fff;
+  background-color: #40848d;
+  border-radius: 5px;
+}
+.card-link .icono {
+  color: #597c81;
+}
+.card-link:hover .icono {
+  color: #739FA5;
+}
+.card-link-act {
+  text-decoration: none;
+  color: #2c3236;
+  transition: all 0.3s;
+}
+.card-link-act:hover {
+  color: #fff;
+}
+.card-link-act .icono {
+  color: #597c81;
+}
+.card-link-act:hover .icono {
+  color: #40848d;
 }
 
+/* Estilo para padding de cuadritos diferenciados en celulares */
+.elemento {
+  margin-bottom: 3%;
+}
+
+.est-logo {
+  display: block;
+  width: 100px;
+  height: auto;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffff;
+  margin-top: 0%;
+  margin-bottom: -1%;
+}
+
+.fondo {
+  background-color: #E6EAE8;
+  max-width: 100%;
+  min-height: 100vh;
+}
+
+.padding {
+  padding-top: 1%;
+  padding-bottom: 1%;
+  padding-left: 2%;
+  padding-right: 1%;
+}
+.margenes {
+  margin-left: 1%;
+  margin-bottom: 1%;
+}
+.barralateralmenu {
+  min-height: 650px;
+}
+
+/* Menu Links on hover (blanco) */
 .navbar-nav .nav-link:hover {
-  color: #2e8b97; /* Cambia el color del texto a blanco para mayor contraste */
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Active menu link (blanco y subrayado) */
+.navbar-nav .nav-link.active {
+  color: #FFFFFF;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Para asegurar que el hover no afecte al elemento activo (si ya está subrayado) */
+.navbar-nav .nav-link.active:hover {
+  color: #FFFFFF;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* --- ESTILOS ESPECÍFICOS DE menusecretaria.php - CONSOLIDADOS Y PRIORIZADOS --- */
+
+/* Estilos de body (consolidado) */
+body {
+  background-color: #f8f9fa; /* Color de fondo ligero */
+}
+
+/* Estilos de Navbar (consolidado) */
+.navbar-custom {
+  background-color: #40848D; /* Color de la barra de navegación */
+}
+
+/* Encabezados de Card con color de navbar (consolidado) */
+.card-header-custom {
+  background-color: #f8f9fa; /* Este es el color deseado para los card-header-custom */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  /* Asegurarse que el texto dentro de este header no sea blanco si el fondo es claro */
+  color: inherit; /* O un color específico como #333 */
+}
+/* Asegura que los íconos dentro de los encabezados de card tengan el color de texto por defecto */
+.card-header-custom .bi {
+  color: inherit; /* O un color específico como #333 */
 }
 
 
-@media only screen and (max-width: 767px) {/*TAMAÑO CELULARES*/
+/* Botones con el color de la navbar (consolidado) */
+.btn-navbar-color {
+  background-color: #40848D;
+  border-color: #40848D;
+  color: white;
+}
+.btn-navbar-color:hover {
+  background-color: #40848D; /* Mantuve el mismo color en hover para el botón */
+  border-color: #40848D;
+  color: white;
+}
 
- .form-control{
-  text-align: left;
- }
-  .estadisticas{
+/* Nuevos colores para los estados (manteniendo !important para asegurar la prevalencia) */
+.status-card-header {
+  font-weight: bold;
+  cursor: pointer;
+  /* color: ya definido por las clases específicas de estado */
+}
+.status-abierta {
+  background-color: #739FA5 !important;
+  color: white !important;
+} /* Azul verdoso */
+.status-solo-lectura {
+  background-color: #C1D7DA !important;
+  color: #333 !important;
+} /* Gris claro, texto oscuro para contraste */
+.status-cerrada {
+  background-color: #333333 !important;
+  color: white !important;
+} /* Gris oscuro, texto blanco */
+.status-cerrada-btn-normal {
+  background-color: #E0E0E0 !important;
+  color: #333 !important;
+} /* Gris muy claro, texto oscuro */
+
+/* Editable params (consolidado) */
+.editable-param {
+  cursor: pointer;
+  display: inline-block;
+}
+.editable-param:hover {
+  text-decoration: underline;
+}
+
+/* Estilos para el calendario FullCalendar (consolidado) */
+#calendar {
+  max-width: 90%;
+  margin: 0 auto;
+  height: auto; /* Permite que el calendario ajuste su altura */
+  overflow: hidden; /* Oculta posibles barras de desplazamiento del contenedor principal */
+  font-size: 0.8em;
+}
+.fc .fc-scrollgrid {
+  height: auto !important;
+}
+.fc .fc-view-harness {
+  height: auto !important;
+}
+.fc-event {
+  background-color: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  text-align: center;
+}
+.fc-event-main-frame {
+  justify-content: center;
+  align-items: center;
+}
+.fc-daygrid-event-dot {
+  display: none;
+}
+.fc-event-title.fc-sticky {
+  display: none;
+}
+.bi-info-circle-fill {
+  color: #739FA5; /* Color del icono de información */
+  font-size: 1.2rem;
+}
+
+/* Estilos para los botones del calendario (consolidado) */
+.fc .fc-button-primary {
+  background-color: #E0E0E0 !important; /* Gris claro (status-cerrada-btn-normal) */
+  color: #333 !important; /* Texto oscuro */
+  border-color: #E0E0E0 !important;
+}
+.fc .fc-button-primary:hover {
+  background-color: #D0D0D0 !important; /* Un gris un poco más oscuro al pasar el mouse */
+  border-color: #D0D0D0 !important;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: #739FA5 !important; /* Azul verdoso (status-abierta) */
+  color: white !important;
+  border-color: #739FA5 !important;
+}
+
+/* Color para el día actual en el calendario (consolidado) */
+.fc-day-today {
+  background-color: #C1D7DA !important; /* Color solo lectura */
+}
+.fc-day-today .fc-daygrid-day-number {
+  color: #333 !important;
+  font-weight: bold;
+}
+
+/* Estilos para la sección "Información del día" con scroll (consolidado) */
+#info-del-dia-content {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 15px;
+}
+#info-del-dia-content::-webkit-scrollbar {
+  width: 8px;
+}
+#info-del-dia-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+#info-del-dia-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+#info-del-dia-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* --- MEDIA QUERIES (consolidado) --- */
+@media only screen and (max-width: 767px) {
+  /*TAMAÑO CELULARES*/
+  .form-control {
+    text-align: left;
+  }
+  .estadisticas {
     margin-left: 15%;
     margin-top: 15%;
     margin-right: 15%;
@@ -118,126 +278,109 @@ min-height: 650px;
   }
 
   .padding-bottom {
-
-  padding-bottom: 30%
-
+    padding-bottom: 30%;
   }
 
   footer {
-    position: relative;
+    position: relative; /* Revisa si quieres 'relative' o 'fixed' para móviles */
     bottom: 0;
     width: 100%;
-    background-color: #f8f9fa; /* Color de fondo del pie de página */
-    padding: 10px; /* Espaciado interno del pie de página */
-    text-align: center; /* Alinear el texto al centro */
-    
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: center;
   }
   .elemento {
-    margin-bottom: 0%; /* padding inferior para celulares */
+    margin-bottom: 0%;
   }
   .est-logo {
-    width: 100px; /* Ancho de 303 píxeles */
-    height: auto; /* Altura automática */
-    margin-top: 0px; 
-     margin-bottom: 0px;
-}
-.centrarlogomenu{
-  margin: 0 auto;
-  width: 100%;
-}
-.margenbottom{
-  margin-bottom: 5%;
-}
-.custom-card{
-  border: none; 
-  box-shadow: none ;
-  width: 100vw;
+    width: 100px;
+    height: auto;
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+  .centrarlogomenu {
+    margin: 0 auto;
+    width: 100%;
+  }
+  .margenbottom {
+    margin-bottom: 5%;
+  }
+  .custom-card {
+    border: none;
+    box-shadow: none;
+    width: 100vw;
     height: 100vh;
     background-color: #E6EAE8;
+  }
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
 
-}
-table {
-  display: block;
-  width: 100%;
-  overflow-x: auto; 
-  /* white-space: nowrap; */
-}
+  .tabla-calificaciones-planes {
+    display: grid;
+    width: 100%;
+    overflow-x: auto;
+    white-space: inherit;
+  }
 
-.tabla-calificaciones-planes {
-  display: grid;
-  width: 100%;
-  overflow-x: auto; 
-  white-space: inherit;
-}
+  th,
+  td {
+    min-width: 100px;
+  }
 
-th, td {
-  min-width: 100px;
+  /* Estilos para la cabecera de la columna Prom */
+  .prom-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  .prom-header-content #enablePromEdit {
+    margin-bottom: 5px;
+  }
+  .prom-header-content .prom-text {
+    text-align: center;
+  }
+  #tablaMaterias th {
+    padding: 5px;
+  }
 }
-
-/* Estilos para la cabecera de la columna Prom */
-.prom-header-content {
-    display: flex;           /* Habilitar Flexbox */
-    flex-direction: column;  /* Apilar los elementos verticalmente (checkbox arriba, Prom abajo) */
-    align-items: center;     /* Centrar los elementos horizontalmente */
-    justify-content: center; /* Centrar verticalmente dentro de la celda */
-    height: 100%;            /* Asegura que el contenedor ocupe la altura completa de la celda */
-    width: 100%;             /* Asegura que el contenedor ocupe el ancho completo de la celda */
-    padding: 0;              /* Eliminar cualquier padding por defecto */
-    margin: 0;               /* Eliminar cualquier margin por defecto */
-}
-
-/* Espacio vertical entre el checkbox y la palabra Prom */
-.prom-header-content #enablePromEdit {
-    margin-bottom: 5px; /* Un pequeño margen inferior para separar el checkbox de la palabra */
-}
-
-/* Opcional: Alinear el texto 'Prom' si fuera necesario */
-.prom-header-content .prom-text {
-    text-align: center; /* Asegura que 'Prom' esté centrado */
-}
-
-/* Ajustes a la celda th si es necesario para el padding */
-#tablaMaterias th {
-    /* Puedes ajustar el padding de la celda th si Flexbox causa algún problema con el espacio */
-    padding: 5px; /* Ejemplo, ajusta según te guste */
-    /* text-align: center;  No es necesario si usas align-items: center en el div */
-}
-
-
-}
-@media (max-width: 1000px) and (min-width: 768px) { /*TAMAÑO ENTRE CELULAR Y PANTALLA GRANDE*/
+@media (max-width: 1000px) and (min-width: 768px) {
+  /*TAMAÑO ENTRE CELULAR Y PANTALLA GRANDE*/
   .card-link {
     min-height: 250px;
   }
-.card {
+  .card {
     min-height: 250px;
+  }
 }
-}
-@media  (min-width:800px) {
+@media (min-width: 800px) {
   .carddoc-link {
     min-height: 280px;
   }
 }
 
-@media (min-width:768px)  {/*ESTE TAMAÑO ES PARA TODOS MENOS CELULARES*/
-
-.carddoc {
+@media (min-width: 768px) {
+  /*ESTE TAMAÑO ES PARA TODOS MENOS CELULARES*/
+  .carddoc {
     min-height: 280px;
-}
-.fondo{
-  background-color: #E6EAE8;
-  /*overflow-x: hidden; */
-  max-width: 100%;
-  min-height: 100vh; /* Minimo 100% del viewport height(del alto) */
-  /*min-width: 100vw;*/ /* Minimo 100% del viewport width(del ancho) */
-}
-
-
-
+  }
+  .fondo {
+    background-color: #E6EAE8;
+    max-width: 100%;
+    min-height: 100vh;
+  }
 }
 
-@media only screen and (max-width: 380px) {/*TAMAÑO CELULARES CHIQUITOS*/
-  .margenbottom2{
+@media only screen and (max-width: 380px) {
+  /*TAMAÑO CELULARES CHIQUITOS*/
+  .margenbottom2 {
     margin-bottom: 100px;
-}
+  }
 }

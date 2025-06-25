@@ -1,121 +1,86 @@
-<nav class="navbar navbar-expand-lg " data-bs-theme="light">
-    <div class="container ">
-      <div class="d-flex flex-column align-items-center centrarlogomenu ">
-        <img src="<?php echo $_SESSION['logo']; ?>" class="est-logo img-fluid mx-auto" alt="logo">
-      </div>
-      <button class="navbar-toggler margenbottom ms-auto" type="button" data-bs-toggle="collapse"
-        data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
-        aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarColor01">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link " href="menusecretaria.php">Inicio
-
-            </a>
-          </li>
-          <li class="nav-item active">
-          <a class="nav-link" href="#" onclick="cargarParametro('carga_calif.php')">Carga de calificaciones</a>              <span class="visually-hidden">(current)</span>
-            </a>
-          </li>
-          <li class="nav-item">
-          <a class="nav-link" href="#" onclick="cargarParametro('carga_asist.php')">Carga de asistencias</a>          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" onclick="verificarFechaActasVolantes()">Carga de actas</a>
-          </li>
-          <li class="nav-item active">
-          <a class="nav-link" href="actuaDatosDoc.php" >Datos Personales</a>
-                        <span class="visually-hidden">(current)</span>
-            </a>
-          </li>
-        </ul>
-        <ul class="ms-auto" style="list-style-type: none;">
-          <li class="nav-item">
-            <a class="nav-link" href="../funciones/cerrarsesion.php" style="display: flex; flex-direction: column; align-items: center;"
-              onmouseover="this.style.color='#2e8b97'" onmouseleave="this.style.color='#646261'"><i
-                class="bi bi-power"></i>Cerrar Sesión</a>
-          </li>
-
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-
-
-
-  <!-- Modal -->
-<div class="modal" id="inscModal">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Carga de actas deshabilitada</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true"></span>
+<!-- Barra de Navegación Superior -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <?php if (isset($_SESSION['logoSE']) && !empty($_SESSION['logoSE'])): ?>
+                <a href="../secretaria/menusecretaria.php"><img src="<?php echo htmlspecialchars($_SESSION['logoSE']); ?>" alt="Logo SE" width="80" class="d-inline-block align-text-top"></a>
+            <?php else: ?>
+                logo_SE
+            <?php endif; ?>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
         </button>
-      </div>
-      <div class="modal-body">
-      <p id="mensajeModal"></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
-      </div>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <!-- Nuevo Menú Inicio -->
+                <li class="nav-item">
+                    <a class="nav-link" href="../secretaria/menusecretaria.php">
+                        <i class="bi bi-house-door-fill"></i> Inicio <!-- Icono de casita para Inicio -->
+                    </a>
+                </li>
+
+                <!-- Menú Alumnos -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAlumnos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-fill"></i> Alumnos
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownAlumnos">
+                        <li><h6 class="dropdown-header">Gestión de Alumnos</h6></li>
+                        <li><a class="dropdown-item" href="../secretaria/legajoAlu.php">Legajo</a></li>
+                        <li><a class="dropdown-item" href="../secretaria/matriculacion.php">Matriculación</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Calificaciones</h6></li>
+                        <li><a class="dropdown-item" href="../secretaria/carga_calif_secre_xalu.php">Calificaciones por Alumno</a></li>
+                        <li><a class="dropdown-item" href="../secretaria/carga_calif_secretaria.php">Calificaciones por Materia</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Asistencias</h6></li>
+                        <li><a class="dropdown-item" href="../secretaria/carga_asist_secretaria.php">Asistencias</a></li>
+                    </ul>
+                </li>
+                
+                <!-- Menú Colegio -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownColegio" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-building"></i> Colegio
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownColegio">
+                        <li><a class="dropdown-item" href="../secretaria/editParametrosWeb.php">Parámetros Web</a></li>
+                    </ul>
+                </li>
+               
+                <!-- Menú Funciones Web -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownFuncWeb" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-globe"></i> Func. web
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownFuncWeb">
+                        <li><h6 class="dropdown-header">Solicitudes de Inscripción</h6></li>
+                        <li><a class="dropdown-item" href="../secretaria/solicitudExam.php">Examen</a></li>
+                        <li><a class="dropdown-item" href="../secretaria/solicitudCurs.php">Cursado</a></li>
+                    </ul>
+                </li>
+                
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <!-- Nuevo item de menú para el usuario -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person"></i> <!-- Ícono de usuario -->
+                        <?php echo htmlspecialchars($_SESSION['sec_nombreUsuario'] ?? 'Usuario'); ?> <!-- Muestra el nombre de usuario -->
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                        <li><a class="dropdown-item" href="#">Cambiar contraseña</a></li> <!-- Opción de cambiar contraseña -->
+                        <!-- Otros ítems relacionados con el usuario pueden ir aquí -->
+                    </ul>
+                </li>
+                <!-- Fin del nuevo item de menú para el usuario -->
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../funciones/cerrarsesion.php"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+                </li>
+            </ul>
+        </div>
     </div>
-  </div>
-</div>
-
-
-<?php
-// Verifica si el período de actas está abierto
-function verificarPeriodoActas() {
-    $fechaActual = date('Y-m-d');
-    include '../inicio/conexion.php';
-    $sql = "SELECT cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE cargaActaVolDesde <= '$fechaActual' AND cargaActaVolHasta >= '$fechaActual'";
-    $resultado = $conn->query($sql);
-    if ($resultado->num_rows > 0) {
-        return true;
-    } else {
-        return false;
-    }
-    mysqli_close($conn);
-}
-?>
-
-
-       <!--           FUNCIONES     y SCRIPTS        -->
-
-<!-- Bootstrap JS y jQuery (necesario para el modal) -->
-<script src="../js/jquery-3.7.1.min.js"></script>
- <script src="../js/bootstrap.min.js"></script> 
- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-  
-  <script> //cargo el parametro en el hipervinculo
-    function cargarParametro(parametro) {
-  // Establece la cookie con el valor de la variable de sesión
-  document.cookie = "parametro=" + parametro + "; expires=" + new Date(Date.now() + 3600000).toUTCString();
-
-  $.ajax({
-    type: 'POST',
-    url: 'materiasSecre.php',
-    data: {parametro: parametro},
-    success: function(data) {
-      console.log('Respuesta del servidor:', data);
-      window.location.href = 'materiasSecre.php';
-    }
-  });
-}
-
-function verificarFechaActasVolantes() {
-        var periodoActasAbierto = '<?php echo verificarPeriodoActas() ? "abierto" : "cerrado"; ?>';
-        if (periodoActasAbierto == 'abierto') {
-            window.location.href = 'mesasExamenProf.php';
-        } else {
-            $('#inscModal').modal('show');
-            $('#mensajeModal').text("La carga de actas está cerrada. Los períodos de carga de actas están definidos por secretaria.");
-        }
-    }
-
-
-</script>
+</nav>
+<link rel="stylesheet" href="../css/estilos.css">

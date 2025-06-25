@@ -117,13 +117,28 @@ $sexo="O";
 
     include '../inicio/conexion.php';
 // Realizar la consulta para actualizar datos
-$sql = "UPDATE persona p INNER JOIN alumnosterciario a ON p.idPersona=a.idPersona
-SET p.fechaNac='".$fechaNac."',p.FotoCarnet='".$rutaDestino."', p.nacionalidad='".$nacionalidad."',p.sexo='".$sexo."',
-p.lugarNac='".$lugarNacimiento."',p.provincia='".$provincia."',p.ciudad='".$ciudad."',
-p.direccion='".$direccion."',p.barrio='".$barrio."',p.codigoPostal='".$codigoPostal."',
-p.mail='".$mail."',a.mailInstitucional='".$mailInstitucional."',p.telefono='".$telefono."',
-p.celular='".$celular."',p.telefonoEmergencia='".$telefonoEmergencia."'
-WHERE a.idAlumno=".$idAlumno; 
+$sql = "UPDATE persona p 
+INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
+SET 
+  p.fechaNac = '$fechaNac',
+  p.FotoCarnet = '$rutaDestino',
+  p.nacionalidad = '$nacionalidad',
+  p.sexo = '$sexo',
+  p.lugarNac = '$lugarNacimiento',
+  p.provincia = '$provincia',
+  p.ciudad = '$ciudad',
+  p.direccion = '$direccion',
+  p.barrio = '$barrio',
+  p.codigoPostal = '$codigoPostal',
+  p.mail = '$mail',
+  a.mailInstitucional = '$mailInstitucional',
+  p.telefono = '$telefono',
+  p.celular = '$celular',
+  p.telefonoEmergencia = '$telefonoEmergencia',
+  p.registroModificacion = 1,
+  a.registroModificacion = 1
+WHERE a.idAlumno = $idAlumno";
+
 if ($conn->query($sql) === TRUE) {
   $_SESSION['message']=$_SESSION['message']. "Datos actualizados correctamente. ";
 } else {
