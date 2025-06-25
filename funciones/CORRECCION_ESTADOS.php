@@ -1,15 +1,34 @@
 <?php
 
-include '../inicio/conexion.php';
-buscarInformacion($conn, 7);
+$servername = "46.202.148.69";
+$username = "admin_terc_houssay";
+$password = "san84Jose+entra?carajo";
+$dbname = "admin_terc_houssay";
+
+$idCicloLectivo = 11;
+
+// Crear conexión
+$connexionCorreccion = new mysqli($servername, $username, $password, $dbname);
+
+// Verificar la conexión
+if ($connexionCorreccion->connect_error) {
+    die("Error de conexión a la base de datos: " . $connexionCorreccion->connect_error);
+}
+
+// Establecer el juego de caracteres a UTF-8 (opcional)
+$connexionCorreccion->set_charset("utf8mb4");
+
+
+
+buscarInformacion($connexionCorreccion, $idCicloLectivo);
 //BUSCAR TABLA CALIFICACIONESTERCIARIO
-function buscarInformacion($conexion, $idCicloLectivo) {
+function buscarInformacion($connexionCorreccion, $idCicloLectivo) {
     $consulta = "SELECT * 
                  FROM calificacionesterciario 
                  INNER JOIN materiaterciario ON materiaterciario.idMateria = calificacionesterciario.idMateria 
                  WHERE materiaterciario.idCicloLectivo = ?";
 
-    $stmt = $conexion->prepare($consulta);
+    $stmt = $connexionCorreccion->prepare($consulta);
     $stmt->bind_param("i", $idCicloLectivo);  // Solo es necesario un parámetro (idCicloLectivo)
     
     // Ejecutar la consulta
@@ -48,11 +67,11 @@ function buscarInformacion($conexion, $idCicloLectivo) {
         // Llamar a otra función pasando idAlumno, idMateria e idCalificacion
         // Por ejemplo:
         // otraFuncion($idAlumno, $idMateria);
-        $tablaAsistencia = obtenerAsistencia($conexion, $idAlumno, $idMateria, $idCicloLectivo);
+        $tablaAsistencia = obtenerAsistencia($connexionCorreccion, $idAlumno, $idMateria, $idCicloLectivo);
         $porcentajeCalculado = porcentaje($tablaAsistencia);
-        $actualizacionAsistencia = actualizarAsistencia($conexion, $idAlumno, $idMateria, $porcentajeCalculado);
+        $actualizacionAsistencia = actualizarAsistencia($connexionCorreccion, $idAlumno, $idMateria, $porcentajeCalculado);
     
-        $actualizacionEstado = iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion);
+        $actualizacionEstado = iniciarAnalisis($connexionCorreccion, $idMateria, $idAlumno, $idCalificacion);
     
         echo "Iteración: $idCalificacion - $porcentajeCalculado - $actualizacionEstado\n";
     }
@@ -62,7 +81,7 @@ function buscarInformacion($conexion, $idCicloLectivo) {
 
 //FUNCIONES DE ASISTENCIA
 //Armar tabla de asistencias por materia y alumno
-function obtenerAsistencia($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
+function obtenerAsistencia($connexionCorreccion, $idAlumno, $idMateria, $idCicloLectivo) {
     // Consulta SQL para obtener los registros de asistencia del alumno
     $consulta = "SELECT d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, 
                         d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, 
@@ -72,7 +91,7 @@ function obtenerAsistencia($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
                  WHERE idAlumno = ? AND idMateria = ? AND idCicloLectivo = ?";
 
     // Preparar la consulta y vincular parámetros
-    $stmt = $conexion->prepare($consulta);
+    $stmt = $connexionCorreccion->prepare($consulta);
     $stmt->bind_param("iii", $idAlumno, $idMateria, $idCicloLectivo);
     
     // Ejecutar la consulta
@@ -143,16 +162,16 @@ function porcentaje($tabla) {
 }
 
 //Actualiza porcentaje de asistencia
-function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
+function actualizarAsistencia($connexionCorreccion, $idAlumno, $idMateria, $valor){
     $consulta = "UPDATE calificacionesterciario SET asistencia = ? 
     WHERE idAlumno = ? and idMateria = ?";
 
-    $stmt = mysqli_prepare($conexion, $consulta);
+    $stmt = mysqli_prepare($connexionCorreccion, $consulta);
     mysqli_stmt_bind_param($stmt, "sii", $valor, $idAlumno, $idMateria);
     $resultado = mysqli_stmt_execute($stmt);
 
     if (!$resultado) {
-        $respuesta = "Error: " . mysqli_error($conexion);
+        $respuesta = "Error: " . mysqli_error($connexionCorreccion);
     } else {
         $respuesta = "actualizado";
     }
@@ -162,11 +181,11 @@ function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
 
 
 //FUNCIONES DE ANALISIS ESTADO
-function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
+function iniciarAnalisis($connexionCorreccion, $idMateria, $idAlumno, $idCalificacion)
 {
     //DATOS COLEGIO
     $consulta = "SELECT * from colegio where nivel = 'Terciario'";
-    $colegio = mysqli_query($conexion, $consulta);
+    $colegio = mysqli_query($connexionCorreccion, $consulta);
 
     if (!empty($colegio)) {
         while ($data = mysqli_fetch_array($colegio)) {
@@ -179,7 +198,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
     $consulta = "SELECT * from materiaterciario 
     where materiaterciario.idMateria = $idMateria";
 
-    $datos = mysqli_query($conexion, $consulta);
+    $datos = mysqli_query($connexionCorreccion, $consulta);
 
     if (!empty($datos)) {
         while ($data = mysqli_fetch_array($datos)) {
@@ -200,7 +219,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
     $consulta1 = "SELECT * from matriculacionmateria 
     where matriculacionmateria.idMateria = $idMateria and matriculacionmateria.idAlumno = $idAlumno";
 
-    $matriculacion = mysqli_query($conexion, $consulta1);
+    $matriculacion = mysqli_query($connexionCorreccion, $consulta1);
 
     if (!empty($matriculacion)) {
         while ($data = mysqli_fetch_array($matriculacion)) {
@@ -214,7 +233,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
     from calificacionesterciario 
     where calificacionesterciario.idMateria = $idMateria and calificacionesterciario.idAlumno = $idAlumno";
 
-    $calif = mysqli_query($conexion, $consulta2);
+    $calif = mysqli_query($connexionCorreccion, $consulta2);
 
     $cursadoMateria = array();
     $i = 0;
@@ -250,7 +269,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
     (select anio from ciclolectivo where idciclolectivo = 
     (select idCicloLectivo from materiaterciario where idMateria = $idMateria))";
 
-    $trabaja = mysqli_query($conexion, $consulta3);
+    $trabaja = mysqli_query($connexionCorreccion, $consulta3);
 
     if (!empty($trabaja)) {
         while ($data = mysqli_fetch_array($trabaja)) {
@@ -299,7 +318,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
     set estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = '$estadoCursado' 
     where calificacionesterciario.idCalificacion = $idCalificacion";
 
-    $calif = mysqli_query($conexion, $consulta4);
+    $calif = mysqli_query($connexionCorreccion, $consulta4);
 
     return $estadoCursado;
 }
@@ -1321,7 +1340,7 @@ function analisis_estado(
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
 
 
@@ -1803,7 +1822,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -1848,7 +1867,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -2036,7 +2055,7 @@ function analisis_estado(
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
 
 
@@ -2702,7 +2721,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
 
         }
@@ -2750,7 +2769,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -3076,7 +3095,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Calif";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -3121,7 +3140,7 @@ function analisis_estado(
             if ($sinCalif == "t")       //S/Calif
             {
                 $salida = 6;
-                $wanalisis = "S/Asist";
+                $wanalisis = "Sin Calificaciones";
             }
         }
 
@@ -3299,10 +3318,10 @@ function analisis_estado(
         }
 
         //Salida Analisis
-        if ($regular == "f" || $asistOblig == "f")   //No Regular
+        if ($regular == "f" || $asistOblig == "f")   //Libre
         {
             $salida = 0;
-            $wanalisis = "No Regular";
+            $wanalisis = "Libre";
         }
 
         if ($regular == "t" && $asistOblig == "t")    //$regular
@@ -3311,10 +3330,10 @@ function analisis_estado(
             $wanalisis = "Regular";
         }
 
-        if ($regular == "f" && $sinAsist == "t")      //No Regular S/Asist
+        if ($regular == "f" && $sinAsist == "t")      //Libre S/Asist
         {
             $salida = 3;
-            $wanalisis = "No Regular - S/Asist";
+            $wanalisis = "Libre - S/Asist";
         }
 
         if ($regular == "t" && $sinAsist == "t")      //$regular S/Asist
@@ -3323,22 +3342,22 @@ function analisis_estado(
             $wanalisis = "Regular - S/Asist";
         }
 
-        if ($aprobado == "t" && $asistProm == "t" && $recursa = "f")      //Aprueba
+        if ($aprobado == "t" && $asistProm == "t" && $recursa = "f")      //Promocional
         {
-            $salida = 11;
-            $wanalisis = "Aprueba";
+            $salida = 14;
+            $wanalisis = "Promocional";
         }
 
-        if ($aprobado == "t" && $sinAsist == "t" && $recursa = "f")      //Aprueba S/Asist
+        if ($aprobado == "t" && $sinAsist == "t" && $recursa = "f")      //Promocional S/Asist
         {
-            $salida = 13;
-            $wanalisis = "Aprueba - S/Asist";
+            $salida = 15;
+            $wanalisis = "Promocional - S/Asist";
         }
 
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
 
 
@@ -3525,7 +3544,7 @@ function analisis_estado(
         if ($sinCalif == "t")       //S/Calif
         {
             $salida = 6;
-            $wanalisis = "S/Calif";
+            $wanalisis = "Sin Calificaciones";
         }
     }
 }
