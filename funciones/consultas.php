@@ -968,17 +968,21 @@ function buscarPlanesProfesorMateria($conexion, $legajo)
 
 //obtener registros decalificaciones de todos los alumnos de una materia
 function obtenerCalificacionesMateria($conexion, $idMateria){
-  $consulta = 'SELECT c.*,p.apellido,p.nombre,m.estado
-        FROM persona p
-        INNER JOIN alumnosterciario a
-        ON p.idPersona = a.idPersona
-        INNER JOIN matriculacionmateria m
-        ON a.idAlumno = m.idAlumno
-        INNER JOIN calificacionesterciario c
-        ON m.idMateria = c.idMateria
-        AND c.idAlumno = a.idAlumno
-        WHERE m.idMateria = ?
-        ORDER BY p.apellido, p.nombre';
+  $consulta = 'SELECT c.*, p.apellido, p.nombre, m.estado
+    FROM persona p
+    INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
+    INNER JOIN matriculacionmateria m ON a.idAlumno = m.idAlumno
+    INNER JOIN calificacionesterciario c ON m.idMateria = c.idMateria AND c.idAlumno = a.idAlumno
+    WHERE m.idMateria = ?
+    AND m.estado NOT IN (
+        "Libre PreSistema", 
+        "Regularidad PreSistema", 
+        "Aprobación PreSistema", 
+        "Aprobación por Equivalencia", 
+        "Aprobación por Pase"
+    )
+    ORDER BY p.apellido, p.nombre';
+
 
   $stmt = mysqli_prepare($conexion, $consulta);
   mysqli_stmt_bind_param($stmt, "i", $idMateria);
@@ -1073,21 +1077,25 @@ function obtenerCalificacionesMateriaPDF($conexion, $idMateria){
 
 //obtener asistencia materia
 function obtenerAsistenciaMateria($conexion, $idMateria, $mes, $dia, $idCicloLectivo){
-  $consulta = 'SELECT p.nombre,p.apellido, asis.' . $dia . ', a.idAlumno
+  // Asegurarse de que $dia sea seguro para usar en el nombre de la columna
+  $dia_columna_escaped = mysqli_real_escape_string($conexion, $dia);
+
+  $consulta = 'SELECT p.nombre, p.apellido, asis.' . $dia_columna_escaped . ', a.idAlumno, mm.estado
         FROM persona p
         INNER JOIN alumnosterciario a
         ON p.idPersona = a.idPersona
         INNER JOIN asistenciaterciario asis
         ON a.idAlumno = asis.idAlumno
+        INNER JOIN matriculacionmateria mm ON a.idAlumno = mm.idAlumno AND asis.idMateria = mm.idMateria
         WHERE asis.idMateria = ?
         AND asis.mes = ?
         AND asis.idCicloLectivo = ?
         ORDER BY p.apellido, p.nombre';
 
-  $stmt = mysqli_prepare($conexion, $consulta);
-  mysqli_stmt_bind_param($stmt, "iii", $idMateria, $mes, $idCicloLectivo);
-  mysqli_stmt_execute($stmt);
-  $queryasist = mysqli_stmt_get_result($stmt);
+  $stmt = $conexion->prepare($consulta);
+  $stmt->bind_param("iii", $idMateria, $mes, $idCicloLectivo);
+  $stmt->execute();
+  $queryasist = $stmt->get_result();
 
   $lista = array();
   $i = 0;
@@ -1096,7 +1104,8 @@ function obtenerAsistenciaMateria($conexion, $idMateria, $mes, $dia, $idCicloLec
       $lista[$i]['idAlumno'] = $data['idAlumno'];
       $lista[$i]['apellido'] = $data['apellido'];
       $lista[$i]['nombre'] = $data['nombre'];
-      $lista[$i]['dia'] = $data[$dia];
+      $lista[$i]['dia'] = $data[$dia_columna_escaped];
+      $lista[$i]['estado'] = $data['estado']; // <-- Añadido: el estado de la matriculación
       $i++;
     }
   }
@@ -1174,17 +1183,32 @@ function obtenerAsistenciaMateriaPDF($conexion, $columnas, $idMateria, $mes, $id
 }
 
 // *** NUEVA FUNCION PARA OBTENER MESES CON ASISTENCIA PARA EL ALUMNO EN UN CICLO ***
-function obtenerMesesConAsistencia($conexion, $idAlumno, $idCicloLectivo) {
-    $consulta = 'SELECT DISTINCT mes FROM asistenciaterciario WHERE idAlumno = ? AND idCicloLectivo = ? ORDER BY mes ASC';
-    $stmt = mysqli_prepare($conexion, $consulta);
-    mysqli_stmt_bind_param($stmt, "ii", $idAlumno, $idCicloLectivo);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+function obtenerMesesConAsistenciaMateria($conn, $idAlumno, $idMateria, $idCicloLectivo) {
     $meses = [];
-    while ($row = mysqli_fetch_assoc($result)) {
-        $meses[] = $row['mes'];
+    $stmt = $conn->prepare("SELECT DISTINCT mes FROM asistenciaterciario WHERE idAlumno = ? AND idMateria = ? AND idCicloLectivo = ? ORDER BY mes ASC");
+    if ($stmt) {
+        $stmt->bind_param("iii", $idAlumno, $idMateria, $idCicloLectivo);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $meses[] = (int)$row['mes'];
+        }
+        $stmt->close();
     }
     return $meses;
+}
+// NUEVA: Obtener el registro completo de asistencia de una materia para un mes y alumno específico.
+function obtenerAsistenciaRegistroMateriaMes($conn, $idAlumno, $idMateria, $mes, $idCicloLectivo) {
+    $stmt = $conn->prepare("SELECT * FROM asistenciaterciario WHERE idAlumno = ? AND idMateria = ? AND mes = ? AND idCicloLectivo = ?");
+    if ($stmt) {
+        $stmt->bind_param("iiii", $idAlumno, $idMateria, $mes, $idCicloLectivo);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $asistencia = $result->fetch_assoc();
+        $stmt->close();
+        return $asistencia; // Retorna un array asociativo con todas las columnas d1-d31, o null si no hay.
+    }
+    return null;
 }
 
 // *** NUEVA FUNCION PARA OBTENER TODAS LAS MATERIAS DE UN ALUMNO EN UN CICLO ***

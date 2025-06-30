@@ -1,19 +1,39 @@
 <?php
 session_start();
 
-// 1. Obtener la URL de redirección antes de destruir la sesión.
-// Se le da una URL por defecto en caso de que $_SESSION['redirect_after_logout'] no esté definida.
-$redirect_url = '../inicio/login.php'; // Redirige por defecto al login general
-if (isset($_SESSION['redirect_after_logout'])) {
+// 1. Determine redirect URL based on the most reliable information
+$redirect_url = '../inicio/login.php'; // Default fallback to general login
+
+// Priority 1: Check `prev_user_type` from JS (most reliable for "another login" scenario)
+if (isset($_GET['prev_user_type'])) {
+    switch ($_GET['prev_user_type']) {
+        case 'sec':
+            $redirect_url = '../inicio/loginAdmin.php';
+            break;
+        case 'general': // This will cover alu, doc, (or dual a-d)
+            $redirect_url = '../inicio/login.php';
+            break;
+        // Add more cases if you have other distinct login pages
+    }
+}
+// Priority 2: Fallback to `$_SESSION['redirect_after_logout']` (for manual logout/inactivity, where session is likely still intact)
+// This remains important for graceful logouts not triggered by `sessionControl.js`'s storage event.
+elseif (isset($_SESSION['redirect_after_logout'])) {
     $redirect_url = $_SESSION['redirect_after_logout'];
-} else if (isset($_SESSION['sec_id'])) { // Si detectamos que era secretaria, pero no había redirect_after_logout
+}
+// Priority 3: Fallback to `$_SESSION['sec_id']` (less reliable as it might have been cleared by another tab, but good as a last resort)
+elseif (isset($_SESSION['sec_id'])) {
     $redirect_url = '../inicio/loginAdmin.php';
 }
 
-// 2. Destruir todas las variables de sesión.
-$_SESSION = array();
+// 2. Construct 'motivo' URL parameter
+$motivoUrlParam = '';
+if (isset($_GET['motivo'])) {
+    $motivoUrlParam = 'motivo=' . urlencode($_GET['motivo']);
+}
 
-// 3. Destruir la cookie de sesión (opcional pero recomendado para una limpieza completa).
+// 3. Destroy all session variables (AFTER reading necessary info for redirect)
+$_SESSION = array();
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
@@ -21,15 +41,21 @@ if (ini_get("session.use_cookies")) {
         $params["secure"], $params["httponly"]
     );
 }
-
-// 4. Finalmente, destruir la sesión en el servidor.
 session_destroy();
 
-// 5. Usar JavaScript para limpiar localStorage (crucial para el control entre pestañas)
-// y luego redirigir a la URL determinada.
+// 4. Clean localStorage and redirect
+$finalRedirectUrl = htmlspecialchars($redirect_url);
+if (!empty($motivoUrlParam)) {
+    if (strpos($finalRedirectUrl, '?') !== false) {
+        $finalRedirectUrl .= '&' . $motivoUrlParam;
+    } else {
+        $finalRedirectUrl .= '?' . $motivoUrlParam;
+    }
+}
+
 echo '<script type="text/javascript">';
-echo 'localStorage.removeItem("usuario_sesion_activa_global");'; // Nombre de clave usado en sessionControl.js
-echo 'window.location.href = "' . htmlspecialchars($redirect_url) . '";';
+echo 'localStorage.removeItem("usuario_sesion_activa_global");';
+echo 'window.location.href = "' . $finalRedirectUrl . '";';
 echo '</script>';
 exit();
 ?>

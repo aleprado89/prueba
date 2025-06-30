@@ -1,5 +1,5 @@
 <?php
-session_start();
+//session_start();
   //$_SESSION['idColegio']=1;// en banfield es el 1 pero puede ser 0 en otro hay que buscar el registro de nivel terciario. Esto esta por si hubiera mas de un terciario
   $_SESSION['aluDebeFinal']=1;//1 usa alumnos que deben finales(banfield) - 0 no lo usa
   $_SESSION['logo']='../img/logo_banfield.jpg';//ubicación nombre logo para login

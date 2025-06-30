@@ -153,7 +153,7 @@ $cantidad = count($listadoCalificaciones);
          
            $idMateria = $listadoCalificaciones[$a]['idMateria'];
            $Materia = $listadoCalificaciones[$a]['Materia'];
-           $MateriaCompleto = $Materia;
+           $MateriaCompleto = $Materia; // Asegúrate de tener el nombre completo para pasar
            $idCicloLectivoMateria = $listadoCalificaciones[$a]['idCicloLectivoMateria']; // Obtener el ID del ciclo
            $anioCiclo = $listadoCalificaciones[$a]['anioCiclo']; // Obtener el año
 
@@ -197,8 +197,8 @@ $cantidad = count($listadoCalificaciones);
                <?php echo $anioCiclo ?> <!-- Mostrar el año de la materia -->
              </td>          
              <td>
-                <!-- Enlace en la columna Asistencia -->
-                <a href="../alumnos/calificaciones_verAsistencias.php?idCiclo=<?php echo $idCicloLectivoMateria; ?>" class="text-decoration-none">
+                <!-- Enlace en la columna Asistencia modificado -->
+                <a href="../alumnos/calificaciones_verAsistencias.php?idMateria=<?php echo $idMateria; ?>&idCiclo=<?php echo $idCicloLectivoMateria; ?>&nombreMateria=<?php echo urlencode($MateriaCompleto); ?>" class="text-decoration-none">
                     <?php echo $Asistencia ?>
                 </a>
              </td>
@@ -210,8 +210,8 @@ $cantidad = count($listadoCalificaciones);
              </td>
              <td><button type="button" onclick="verCalificaciones(this)" class="btn btn-primary">Ver Calificaciones</button></td>
              <td>
-                <!-- Nuevo botón "Ver Asistencia" -->
-                <button type="button" onclick="verTodaAsistencia(this)" class="btn btn-info">Ver Asistencia</button>
+                <!-- Nuevo botón "Ver Asistencia" modificado -->
+                <button type="button" onclick="verTodaAsistencia(this)" class="btn btn-primary">Ver Asistencia</button>
              </td>
            </tr>
  
@@ -243,13 +243,18 @@ $cantidad = count($listadoCalificaciones);
         '&nombreM=' + encodeURIComponent(nombreMateriaCompleto);
     }
 
-    // Nueva función para el botón "Ver Asistencia" al final
+    // Función para el botón "Ver Asistencia" y el porcentaje
     function verTodaAsistencia(boton) {
         var row = boton.closest('tr');
-        // Obtener el idCicloLectivoMateria de la tercera columna oculta (índice 2)
-        var idCicloLectivoMateria = row.cells[2].textContent.trim();
-        // Redirigir a la nueva página de asistencia
-        window.location.href = '../alumnos/calificaciones_verAsistencias.php?idCiclo=' + encodeURIComponent(idCicloLectivoMateria);
+        var idMateriaSeleccionada = row.cells[0].textContent.trim(); // idMateria está en la columna 0 (oculta)
+        var nombreMateriaCompleto = row.cells[1].textContent.trim(); // Materia Completo está en la columna 1 (oculta)
+        var idCicloLectivoMateria = row.cells[2].textContent.trim(); // idCicloLectivoMateria está en la columna 2 (oculta)
+        
+        // Redirigir a la nueva página de asistencia, pasando todos los parámetros necesarios
+        window.location.href = '../alumnos/calificaciones_verAsistencias.php?' +
+            'idMateria=' + encodeURIComponent(idMateriaSeleccionada) +
+            '&idCiclo=' + encodeURIComponent(idCicloLectivoMateria) +
+            '&nombreMateria=' + encodeURIComponent(nombreMateriaCompleto);
     }
     
     // Función para que al hacer click en la fila (excepto en un enlace/botón)
@@ -259,6 +264,7 @@ $cantidad = count($listadoCalificaciones);
         if (table) {
             var rows = table.getElementsByTagName("tr");
             for (var i = 0; i < rows.length; i++) {
+                if (rows[i].querySelector('th')) continue; // Skip header row
                 rows[i].addEventListener('click', function(event) {
                     // Evitar que el evento se propague si se hizo clic en un enlace o botón dentro de la fila
                     if (event.target.closest('a') || event.target.closest('button')) {

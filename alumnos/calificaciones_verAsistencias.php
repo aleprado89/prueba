@@ -7,33 +7,33 @@ include '../funciones/verificarSesion.php';
 $idAlumno = $_SESSION['alu_idAlumno'];
 $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 
-// Obtener el ID del ciclo lectivo desde la URL
+// Capturar los nuevos parámetros de la URL
+$idMateria = isset($_GET['idMateria']) ? filter_var($_GET['idMateria'], FILTER_SANITIZE_NUMBER_INT) : null;
 $idCicloLectivo = isset($_GET['idCiclo']) ? filter_var($_GET['idCiclo'], FILTER_SANITIZE_NUMBER_INT) : null;
-$mesSeleccionado = isset($_GET['mes']) ? filter_var($_GET['mes'], FILTER_SANITIZE_NUMBER_INT) : date('n'); // Por defecto, el mes actual
+$nombreMateria = isset($_GET['nombreMateria']) ? urldecode(filter_var($_GET['nombreMateria'], FILTER_SANITIZE_STRING)) : 'Materia Desconocida';
 
-// Si no se proporcionó un idCiclo, o el idCiclo no es válido, intentar obtener el más reciente del alumno
-if (!$idCicloLectivo || !is_numeric($idCicloLectivo)) {
-    $primerMateria = null;
-    // Esto es un parche para obtener el idCicloLectivo si el usuario llega aquí sin él.
-    // Lo ideal es que siempre llegue con un idCiclo
-    $materiasAlumno = buscarMaterias($conn, $idAlumno, $_SESSION['idP']); // Asume que $_SESSION['idP'] es el plan actual
-    if (!empty($materiasAlumno)) {
-        // Tomamos el idCicloLectivo de la primera materia
-        $idCicloLectivo = $materiasAlumno[0]['idCicloLectivoMateria'];
-    }
+// Redireccionar si faltan parámetros críticos
+if (!$idMateria || !$idCicloLectivo) {
+    // Podrías redirigir a una página de error o a calificaciones.php
+    header('Location: calificaciones.php');
+    exit();
 }
 
-$anioCiclo = $idCicloLectivo ? buscarnombreCiclo($conn, $idCicloLectivo) : 'N/A';
+$anioCiclo = buscarnombreCiclo($conn, $idCicloLectivo);
 
-// Obtener los meses con registro de asistencia para el alumno en el ciclo lectivo seleccionado
-$mesesConAsistencia = obtenerMesesConAsistencia($conn, $idAlumno, $idCicloLectivo);
+// Obtener los meses con registro de asistencia para ESTA MATERIA en este ciclo lectivo.
+$mesesConAsistencia = obtenerMesesConAsistenciaMateria($conn, $idAlumno, $idMateria, $idCicloLectivo);
 
-// Si el mes seleccionado no tiene asistencia, o no se ha seleccionado ninguno y hay meses con asistencia,
-// seleccionar el primer mes con asistencia si existe.
+// Determinar el mes seleccionado: por defecto el mes actual, o el primer mes con asistencia si el actual no tiene.
+$mesActual = date('n');
+$mesSeleccionado = isset($_GET['mes']) ? filter_var($_GET['mes'], FILTER_SANITIZE_NUMBER_INT) : $mesActual;
+
+// Si el mes seleccionado (o el actual por defecto) no tiene registros para esta materia,
+// y hay otros meses con asistencia, selecciona el primer mes con asistencia.
 if (!in_array($mesSeleccionado, $mesesConAsistencia) && !empty($mesesConAsistencia)) {
     $mesSeleccionado = $mesesConAsistencia[0];
 } elseif (empty($mesesConAsistencia)) {
-    $mesSeleccionado = null; // No hay meses con asistencia
+    $mesSeleccionado = null; // No hay asistencia para ningún mes en esta materia
 }
 
 // Nombres de los meses
@@ -43,18 +43,9 @@ $nombreMeses = array(
     9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
 );
 
-$listadoMateriasAsistencia = [];
-if ($idCicloLectivo && $mesSeleccionado) {
-    $listadoMaterias = obtenerMateriasDeAlumnoEnCiclo($conn, $idAlumno, $idCicloLectivo);
-    foreach ($listadoMaterias as $materia) {
-        $asistenciaMateria = obtenerAsistenciaDeMateriaParaAlumno($conn, $idAlumno, $materia['idMateria'], $mesSeleccionado, $idCicloLectivo);
-        if ($asistenciaMateria) { // Solo si hay registro para esa materia en ese mes
-            $listadoMateriasAsistencia[] = [
-                'nombreMateria' => $materia['nombreMateria'],
-                'asistencia' => $asistenciaMateria
-            ];
-        }
-    }
+$asistenciaRecord = null; // Variable para almacenar el registro de asistencia del mes
+if ($idMateria && $idCicloLectivo && $mesSeleccionado && $anioCiclo != 'N/A') {
+    $asistenciaRecord = obtenerAsistenciaRegistroMateriaMes($conn, $idAlumno, $idMateria, $mesSeleccionado, $idCicloLectivo);
 }
 
 // Obtener el número de días del mes seleccionado para limitar el bucle.
@@ -66,39 +57,12 @@ $num_dias_mes_seleccionado = ($mesSeleccionado && $anioCiclo != 'N/A') ? cal_day
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ver Asistencia</title>
+  <title>Asistencia por Materia</title>
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="../js/bootstrap.min.js"></script>
-  <style>
-    .attendance-card {
-      margin-bottom: 15px;
-      padding: 15px;
-      border: 1px solid #dee2e6;
-      border-radius: 5px;
-      background-color: #f8f9fa;
-    }
-    .attendance-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .attendance-item {
-      display: inline-block;
-      margin-right: 15px;
-      margin-bottom: 5px;
-      font-size: 0.9em;
-    }
-    .attendance-item strong {
-        font-weight: normal; /* No negrita para el día */
-        color: #0056b3; /* Color para los valores */
-    }
-    .attendance-item span {
-        font-weight: bold; /* Negrita para el código de asistencia */
-        color: #212529;
-    }
-  </style>
+  <!-- Ya no se necesita el estilo personalizado attendance-table -->
 </head>
 
 <body>
@@ -116,18 +80,19 @@ $num_dias_mes_seleccionado = ($mesSeleccionado && $anioCiclo != 'N/A') ? cal_day
 
     <div class="card padding col-12">
       <h5><?php echo "Alumno: " . $nombreAlumno; ?> </h5>
+      <h5><?php echo "Materia: " . $nombreMateria; ?> </h5>
       <h5><?php echo "Ciclo Lectivo: " . $anioCiclo; ?></h5>
-    </div>
-    <br>
-
-    <div class="row">
-      <div class="col-md-6 mb-3">
+      <br>
+      <!-- Selector de mes se mueve aquí, dentro del card -->
+      <div class="row col-12 col-md-4">
         <form method="get" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" id="form-filter">
+            <input type="hidden" name="idMateria" value="<?php echo $idMateria; ?>">
             <input type="hidden" name="idCiclo" value="<?php echo $idCicloLectivo; ?>">
+            <input type="hidden" name="nombreMateria" value="<?php echo urlencode($nombreMateria); ?>">
             <label for="mes_asistencia">Seleccionar Mes:</label>
             <select class="form-select" id="mes_asistencia" name="mes" onchange="this.form.submit()">
                 <?php if (empty($mesesConAsistencia)): ?>
-                    <option value="">No hay meses con asistencia</option>
+                      <option value="">No hay meses con asistencia</option>
                 <?php else: ?>
                     <?php foreach ($mesesConAsistencia as $mes): ?>
                         <option value="<?php echo $mes; ?>" <?php echo ($mes == $mesSeleccionado) ? 'selected' : ''; ?>>
@@ -138,39 +103,46 @@ $num_dias_mes_seleccionado = ($mesSeleccionado && $anioCiclo != 'N/A') ? cal_day
             </select>
         </form>
       </div>
-      <!-- Se ha eliminado el botón de "Imprimir Asistencia del Mes" -->
     </div>
+    <br> <!-- Este <br> es para separar el card principal de la tabla de asistencia -->
 
-    <h4>Asistencia del mes de <?php echo !empty($mesSeleccionado) ? $nombreMeses[$mesSeleccionado] : 'N/A'; ?></h4>
+    <h4>Asistencia para <?php echo $nombreMateria; ?> en <?php echo !empty($mesSeleccionado) ? $nombreMeses[$mesSeleccionado] . " de " . $anioCiclo : 'el mes seleccionado'; ?></h4>
 
-    <?php if ($mesSeleccionado && !empty($listadoMateriasAsistencia)): ?>
-      <?php foreach ($listadoMateriasAsistencia as $materiaData): ?>
-        <div class="attendance-card">
-          <h5>Materia: <?php echo $materiaData['nombreMateria']; ?></h5>
-          <ul class="attendance-list">
+    <div class="container mt-5">
+      <?php if ($asistenciaRecord && $num_dias_mes_seleccionado > 0): ?>
+        <table class="table table-hover"> <!-- Clases de tabla de calificaciones.php -->
+          <thead>
+            <tr class="table-primary">
+              <th>Fecha</th>
+              <th>Asistencia</th>
+            </tr>
+          </thead>
+          <tbody>
             <?php
-            $asistencia_detallada = [];
+            $hasData = false;
             for ($i = 1; $i <= $num_dias_mes_seleccionado; $i++) {
                 $dia_key = 'd' . $i;
-                if (!empty($materiaData['asistencia'][$dia_key])) {
-                    $asistencia_detallada[] = "<strong>" . $i . "/" . $mesSeleccionado . ":</strong> <span>" . $materiaData['asistencia'][$dia_key] . "</span>";
+                if (isset($asistenciaRecord[$dia_key]) && !empty(trim($asistenciaRecord[$dia_key]))) {
+                    $hasData = true;
+                    $fecha = sprintf("%02d/%02d/%s", $i, $mesSeleccionado, $anioCiclo);
+                    echo '<tr class="table-light">'; // Clase de fila de calificaciones.php
+                    echo '<td>' . $fecha . '</td>';
+                    echo '<td>' . trim($asistenciaRecord[$dia_key]) . '</td>';
+                    echo '</tr>';
                 }
             }
-            echo '<li class="attendance-item">' . (empty($asistencia_detallada) ? 'No hay registros de asistencia para este mes.' : implode(', </li><li class="attendance-item">', $asistencia_detallada)) . '</li>';
+            if (!$hasData) {
+                echo '<tr class="table-light"><td colspan="2">No hay registros de asistencia para el mes seleccionado en esta materia.</td></tr>';
+            }
             ?>
-          </ul>
-        </div>
-      <?php endforeach; ?>
-    <?php elseif ($mesSeleccionado === null && !empty($mesesConAsistencia)): ?>
+          </tbody>
+        </table>
+      <?php else: ?>
         <div class="alert alert-info" role="alert">
-            Por favor, seleccione un mes de la lista para ver la asistencia.
+          No hay registros de asistencia disponibles para esta materia en el ciclo lectivo <?php echo $anioCiclo; ?> o en el mes seleccionado.
         </div>
-    <?php else: ?>
-      <div class="alert alert-info" role="alert">
-        No hay registros de asistencia disponibles para este alumno en el ciclo lectivo <?php echo $anioCiclo; ?> o en el mes seleccionado.
-      </div>
-    <?php endif; ?>
-
+      <?php endif; ?>
+    </div>
   </div>
 </div>
 

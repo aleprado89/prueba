@@ -3,8 +3,8 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
-session_start();
+include '../funciones/verificarSesion.php';
+//session_start();
 
 if (!isset($_SESSION['sec_nombreUsuario'])) {
     header('Location: loginAdmin.php');
@@ -449,6 +449,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
+<script src="../funciones/sessionControl.js"></script>
 </body>
 </html>

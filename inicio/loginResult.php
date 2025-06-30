@@ -114,7 +114,7 @@ if ($loggedInUser) {
     if ($userType === 'alumno_docente') {
         // Combinamos IDs para un identificador único para este tipo de usuario dual
         $_SESSION['active_user_identifier'] = 'ad_' . $loggedInUser['alu_idAlumno'] . '_' . $loggedInUser['doc_legajo'];
-        $_SESSION['is_alumno_and_docente'] = true; // Flag para seleccionar_rol.php
+        $_SESSION['es_alumno_y_docente'] = true; // Flag para seleccionar_rol.php
     } elseif ($userType === 'alumno') {
         $_SESSION['active_user_identifier'] = 'alu_' . $_SESSION['alu_idAlumno'];
     } elseif ($userType === 'docente') {
@@ -315,23 +315,146 @@ function verificarAccesoAlumno($dni, $passwordInput, $conn) {
  * Retorna datos de ambos roles si las credenciales son válidas y ambos registros existen.
  */
 function verificarAccesoAlumnoYDocente($dni, $passwordInput, $conn, $CLAVE_DOCENTE_POR_DEFECTO) {
-    // Intentar obtener datos como alumno
-    $alumnoData = verificarAccesoAlumno($dni, $passwordInput, $conn);
-    // Intentar obtener datos como docente
-    $docenteData = verificarAccesoDocente($dni, $passwordInput, $conn, $CLAVE_DOCENTE_POR_DEFECTO);
+    // 1. Obtener idPersona
+    $stmt = $conn->prepare("SELECT idPersona FROM persona WHERE dni = ?");
+    if (!$stmt) { error_log("Error preparando stmt persona: " . $conn->error); return false; }
+    $stmt->bind_param("s", $dni);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if (!$res || $res->num_rows !== 1) return false;
+    $idPersona = $res->fetch_assoc()['idPersona'];
+    $stmt->close();
 
-    // Solo si el usuario es AMBOS (alumno y docente)
-    if ($alumnoData && $docenteData) {
-        $colegioData = getColegioConfig($conn);
-        return array_merge($alumnoData, $docenteData, [
-            'anioPlataformaAlu' => $colegioData['anioautoweb'],
-            'anioPlataformaDoc' => $colegioData['anioCargaNotas'],
-            'force_clave_change_alu' => $alumnoData['force_clave_change_alu'], // Asegurar que estas flags se pasen
-            'force_clave_change_doc' => $docenteData['force_clave_change_doc']
-        ]);
+    // 2. Verificar si es alumno
+    $stmt = $conn->prepare("SELECT p.nombre, p.apellido, p.dni, p.idPersona, a.idAlumno
+                            FROM persona p INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
+                            WHERE p.idPersona = ?");
+    $stmt->bind_param("i", $idPersona);
+    $stmt->execute();
+    $resAlumno = $stmt->get_result();
+    $esAlumno = ($resAlumno && $resAlumno->num_rows === 1);
+    $alumnoData = $esAlumno ? $resAlumno->fetch_assoc() : null;
+    $stmt->close();
+
+    // 3. Verificar si es docente
+    $stmt = $conn->prepare("SELECT p.nombre, p.apellido, p.dni, p.idPersona, per.legajo
+                            FROM persona p INNER JOIN personal per ON p.idPersona = per.idPersona
+                            WHERE p.idPersona = ?");
+    $stmt->bind_param("i", $idPersona);
+    $stmt->execute();
+    $resDocente = $stmt->get_result();
+    $esDocente = ($resDocente && $resDocente->num_rows === 1);
+    $docenteData = $esDocente ? $resDocente->fetch_assoc() : null;
+    $stmt->close();
+
+    // Necesita ser ambos para aplicar esta función
+    if (!$esAlumno || !$esDocente) return false;
+
+    // ------------------------------------------
+    // 4. Verificar clave del ALUMNO
+    $claveAlumnoCorrecta = false;
+    $forceClaveChangeAlu = false;
+
+    if ($alumnoData) {
+        $stmt = $conn->prepare("SELECT password FROM passwords_alumnos WHERE idAlumno = ?");
+        $stmt->bind_param("i", $alumnoData['idAlumno']);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = ($res && $res->num_rows === 1) ? $res->fetch_assoc() : null;
+        $stmt->close();
+
+        if ($row) {
+            if ($passwordInput === $row['password']) {
+                $claveAlumnoCorrecta = true;
+                $forceClaveChangeAlu = ($passwordInput === $dni);
+            }
+        } else if ($passwordInput === $dni) {
+            // Crear clave por defecto
+            $stmt = $conn->prepare("INSERT INTO passwords_alumnos (idAlumno, password) VALUES (?, ?)");
+            $stmt->bind_param("is", $alumnoData['idAlumno'], $dni);
+            if ($stmt->execute()) {
+                $claveAlumnoCorrecta = true;
+                $forceClaveChangeAlu = true;
+            }
+            $stmt->close();
+        }
     }
-    return false;
+
+    // ------------------------------------------
+    // 5. Verificar clave del DOCENTE
+    $claveDocenteCorrecta = false;
+    $forceClaveChangeDoc = false;
+
+    if ($docenteData) {
+        $stmt = $conn->prepare("SELECT password FROM passwords WHERE legajo = ?");
+        $stmt->bind_param("i", $docenteData['legajo']);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = ($res && $res->num_rows === 1) ? $res->fetch_assoc() : null;
+        $stmt->close();
+
+        if ($row) {
+            if ($passwordInput === $row['password']) {
+                $claveDocenteCorrecta = true;
+                $forceClaveChangeDoc = (strtolower($passwordInput) === strtolower($CLAVE_DOCENTE_POR_DEFECTO));
+            }
+        } else if ($passwordInput === $CLAVE_DOCENTE_POR_DEFECTO) {
+            // Crear clave por defecto
+            $stmt = $conn->prepare("INSERT INTO passwords (legajo, password) VALUES (?, ?)");
+            $stmt->bind_param("is", $docenteData['legajo'], $CLAVE_DOCENTE_POR_DEFECTO);
+            if ($stmt->execute()) {
+                $claveDocenteCorrecta = true;
+                $forceClaveChangeDoc = true;
+            }
+            $stmt->close();
+        }
+    }
+
+    // ------------------------------------------
+    // 6. ¿Alguna clave fue válida?
+    if (!$claveAlumnoCorrecta && !$claveDocenteCorrecta) {
+        return false;
+    }
+
+    // 7. Devolver datos completos
+    $colegioData = getColegioConfig($conn);
+    return [
+        'alu_nombre' => $alumnoData['nombre'],
+        'alu_apellido' => $alumnoData['apellido'],
+        'alu_dni' => $alumnoData['dni'],
+        'alu_idAlumno' => $alumnoData['idAlumno'],
+        'alu_idPersona' => $alumnoData['idPersona'],
+        'doc_nombre' => $docenteData['nombre'],
+        'doc_apellido' => $docenteData['apellido'],
+        'doc_dni' => $docenteData['dni'],
+        'doc_legajo' => $docenteData['legajo'],
+        'doc_idPersona' => $docenteData['idPersona'],
+        'anioPlataformaAlu' => $colegioData['anioautoweb'],
+        'anioPlataformaDoc' => $colegioData['anioCargaNotas'],
+        'force_clave_change_alu' => $forceClaveChangeAlu,
+        'force_clave_change_doc' => $forceClaveChangeDoc
+    ];
 }
+
+
+function existeAlumno($conn, $idPersona) {
+    $sql = "SELECT 1 FROM alumnosterciario WHERE idPersona = ? LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idPersona);
+    $stmt->execute();
+    $stmt->store_result();
+    return $stmt->num_rows > 0;
+}
+
+function existeDocente($conn, $idPersona) {
+    $sql = "SELECT 1 FROM personal WHERE idPersona = ? LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idPersona);
+    $stmt->execute();
+    $stmt->store_result();
+    return $stmt->num_rows > 0;
+}
+
 
 /**
  * Función auxiliar para obtener la configuración del colegio.

@@ -3,22 +3,19 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
-// Lógica para limpiar la sesión al cargar la página de login si no hay un mensaje específico
-$skip_session_clear = false;
-if (isset($_GET['motivo'])) { // Parámetros desde logout.php
-    $skip_session_clear = true;
-}
-if (isset($_SESSION['login_message'])) { // Mensajes desde loginResult.php
-    $skip_session_clear = true;
-}
-// También se puede añadir lógica para evitar la limpieza si se viene de un flujo de olvido de contraseña
-// if (isset($_GET['olvido_pass_flow'])) { // Por ejemplo, si forgot-password.php añade este GET
-//     $skip_session_clear = true;
-// }
+// Lógica para determinar si debemos limpiar la sesión o si hay un mensaje de login pendiente
+$should_clear_session = true; // Por defecto, limpia la sesión
 
+// Si existe un mensaje en $_SESSION['login_message'], es porque venimos de un loginResult.php
+// y ese mensaje necesita ser procesado antes de limpiar la sesión.
+if (isset($_SESSION['login_message'])) {
+    $should_clear_session = false; // No limpiar la sesión ahora, necesitamos el mensaje.
+}
 
-if (!$skip_session_clear) {
-    $_SESSION = array(); // Borrar todas las variables de sesión
+if ($should_clear_session) {
+    // Es crucial vaciar completamente el array $_SESSION antes de destruirla
+    // para asegurar que no queden referencias a datos de la sesión antigua.
+    $_SESSION = array();
     session_destroy();    // Destruir la sesión actual (incluyendo la cookie)
     session_start();      // Iniciar una nueva sesión.
                           // Necesario para que $_SESSION['login_message'] funcione si lo enviamos desde otro script.
@@ -119,12 +116,12 @@ if (!$skip_session_clear) {
       <img src="<?php echo $_SESSION['logo'] ?? ''; ?>" class="mx-auto d-block " alt="logo" style="max-width: 40%; height: auto;">
         <div>
           <br>
-          <h3 class="text-center">Inicio de sesión</h3>
+          <h3 class="text-center">Inicio de Sesión</h3><h4 class="text-center">Autogestión Docente y Estudiantes</h4>
         </div>
         <div class="card-body">
           <form id="loginForm" method="POST" action="loginResult.php" class="was-validated">
             <div class="form-group mb-3">
-              <label for="username">Usuario (DNI):</label>
+              <label for="username">Usuario:</label>
               <input type="text" class="form-control" id="username" name="username" required minlength="8">
             </div>
             <div class="form-group mb-3">
