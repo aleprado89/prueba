@@ -98,6 +98,35 @@ function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
     return $respuesta;
 }
 
+function debeMateria($conexion, $idAlumno, $idMateria) {
+    $consulta = "
+        SELECT COUNT(*) AS total
+        FROM correlatividadesterciario cr
+        INNER JOIN materiaterciario mt 
+            ON cr.idUnicoMatCorrelativa = mt.idUnicoMateria
+            AND cr.condicionCorrelatividad = 1
+            AND cr.tipoInscripcion = 1
+        INNER JOIN calificacionesterciario cl 
+            ON cl.idMateria = mt.idMateria 
+            AND cl.idAlumno = ?
+        WHERE cl.materiaAprobada != 1 
+        AND cr.idUnicoMateria = (
+            SELECT mt2.idUnicoMateria 
+            FROM materiaterciario mt2 
+            WHERE mt2.idMateria = ?
+        )";
+
+    $stmt = mysqli_prepare($conexion, $consulta);
+    mysqli_stmt_bind_param($stmt, "ii", $idAlumno, $idMateria);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $total);
+    mysqli_stmt_fetch($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $total; // será 0 o mayor a 0
+}
+
 
 function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
 {
@@ -3469,4 +3498,3 @@ function analisis_estado(
     //Salida (numeroEstado, textoEstado)
     return array($salida, $wanalisis);
 }
-
