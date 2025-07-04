@@ -244,7 +244,7 @@ function buscarCursoPredeterminado($conexion, $idPlan)
   if (!empty($cursosP)) {
     while ($data = mysqli_fetch_array($cursosP)) {
       $listadoCursosP[$i]['idcursopredeterminado'] = $data['idcursopredeterminado'];
-      $listadoCursosP[$i]['nombreCP'] = $data['nombreCP']; // Asegúrate de que este campo se use para el nombre
+      $listadoCursosP[$i]['nombreCurso'] = $data['nombreCP']; // Asegúrate de que este campo se use para el nombre
       $i++;
     }
   }
@@ -581,6 +581,7 @@ and fechasexamenes.idTurno = ? AND curso.idDivision=?";
       $listadoFechasExamenes[$i]['idFechaExamen'] = $data['idFechaExamen'];
       $listadoFechasExamenes[$i]['Fecha'] = $data['fecha'];
       $listadoFechasExamenes[$i]['Hora'] = $data['hora'];
+      $listadoFechasExamenes[$i]['idMateria']=$data['idMateria'];
       $i++;
     }
   }
@@ -590,16 +591,16 @@ and fechasexamenes.idTurno = ? AND curso.idDivision=?";
 //Generar solicitud a examen
 function solicitarExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen)
 {
-  $timestamp = time();
-  $currentDate = gmdate('Y-m-d H:i:s', $timestamp);
+    $timestamp = time();
+    $currentDate = gmdate('Y-m-d H:i:s', $timestamp);
 
-  $consulta = "insert into inscripcionexamenes_web
-  (idAlumno, idMateria, idCicloLectivo, idCondicion, estado, fechhora_inscri) values
-  (?, ?, ?, 0, 1, ?)";
+    $consulta = "insert into inscripcionexamenes_web
+    (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion, estado, fechhora_inscri) values
+    (?, ?, ?, ?, 0, 1, ?)";
 
-  $stmt = $conexion->prepare($consulta);
-  $stmt->bind_param("iiiis", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $currentDate);
-  $stmt->execute();
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("iiiis", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $currentDate);
+    $stmt->execute();
 }
 
 //Cancelar solicitud a examen
@@ -947,7 +948,7 @@ function buscarPlanesProfesorMateria($conexion, $legajo)
         INNER JOIN plandeestudio p
         ON m.idPlan = p.idPlan
         WHERE pm.idPersonal = ?
-        GROUP BY p.nombre";
+        GROUP BY p.idPlan";
 
   $stmt = mysqli_prepare($conexion, $consulta);
   mysqli_stmt_bind_param($stmt, "i", $legajo);
@@ -968,20 +969,25 @@ function buscarPlanesProfesorMateria($conexion, $legajo)
 
 //obtener registros decalificaciones de todos los alumnos de una materia
 function obtenerCalificacionesMateria($conexion, $idMateria){
-  $consulta = 'SELECT c.*, p.apellido, p.nombre, m.estado
-    FROM persona p
-    INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
-    INNER JOIN matriculacionmateria m ON a.idAlumno = m.idAlumno
-    INNER JOIN calificacionesterciario c ON m.idMateria = c.idMateria AND c.idAlumno = a.idAlumno
-    WHERE m.idMateria = ?
-    AND m.estado NOT IN (
-        "Libre PreSistema", 
-        "Regularidad PreSistema", 
-        "Aprobación PreSistema", 
-        "Aprobación por Equivalencia", 
-        "Aprobación por Pase"
-    )
-    ORDER BY p.apellido, p.nombre';
+  $consulta = "SELECT c.*,p.apellido,p.nombre,m.estado 
+                FROM persona p 
+                INNER JOIN alumnosterciario a 
+                ON p.idPersona = a.idPersona 
+                INNER JOIN matriculacionmateria m 
+                ON a.idAlumno = m.idAlumno 
+                and m.estado not in 
+                ('PreSistema',
+                'Desaprob./Recurs. PreSistema',
+                'Libre PreSistema',
+                'Regularidad PreSistema',
+                'Aprobación PreSistema',
+                'Aprobación por Equivalencia',
+                'Aprobación por Pase')
+                INNER JOIN calificacionesterciario c 
+                ON m.idMateria = c.idMateria 
+                AND c.idAlumno = a.idAlumno
+                WHERE m.idMateria = ? 
+                ORDER BY p.apellido, p.nombre";
 
 
   $stmt = mysqli_prepare($conexion, $consulta);
@@ -1024,17 +1030,25 @@ function obtenerCalificacionesMateria($conexion, $idMateria){
   return $listadoMateria;
 }
 function obtenerCalificacionesMateriaPDF($conexion, $idMateria){
-  $consulta = 'SELECT c.*,p.apellido,p.nombre,m.estado
-        FROM persona p
-        INNER JOIN alumnosterciario a
-        ON p.idPersona = a.idPersona
-        INNER JOIN matriculacionmateria m
-        ON a.idAlumno = m.idAlumno
-        INNER JOIN calificacionesterciario c
-        ON m.idMateria = c.idMateria
-        AND c.idAlumno = a.idAlumno
-        WHERE m.idMateria = ? AND m.estado != "Abandonó Cursado"
-        ORDER BY p.apellido, p.nombre';
+  $consulta = "SELECT c.*,p.apellido,p.nombre,m.estado 
+                FROM persona p 
+                INNER JOIN alumnosterciario a 
+                ON p.idPersona = a.idPersona 
+                INNER JOIN matriculacionmateria m 
+                ON a.idAlumno = m.idAlumno 
+                and m.estado not in 
+                ('PreSistema',
+                'Desaprob./Recurs. PreSistema',
+                'Libre PreSistema',
+                'Regularidad PreSistema',
+                'Aprobación PreSistema',
+                'Aprobación por Equivalencia',
+                'Aprobación por Pase')
+                INNER JOIN calificacionesterciario c 
+                ON m.idMateria = c.idMateria 
+                AND c.idAlumno = a.idAlumno
+                WHERE m.idMateria = ? AND m.estado != 'Abandonó Cursado'
+                ORDER BY p.apellido, p.nombre";
 
   $stmt = mysqli_prepare($conexion, $consulta);
   mysqli_stmt_bind_param($stmt, "i", $idMateria);
@@ -1454,6 +1468,19 @@ function obtenerIdCalificacion($conexion, $idAlumno, $idMateria) {
     $stmt->close();
     return null;
   }
+}
+function obtenerIdMateriaPorFechaExamen(mysqli $conn, int $idFechaExamen): int
+{
+    $sql  = "SELECT idMateria FROM fechasexamenes 
+             WHERE idFechaExamen = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idFechaExamen);
+    $stmt->execute();
+    $stmt->bind_result($idMateria);
+    $stmt->fetch();
+    $stmt->close();
+
+    return $idMateria ?? 0;   // 0 o lanza excepción si no lo encuentras
 }
 
 

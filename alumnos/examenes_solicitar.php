@@ -1,7 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-
 <?php 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start(); 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
@@ -44,11 +44,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["fechaExamen"])) {//cuando se aprieta el boton solicitar
   $idFechaSeleccionada = $_POST["fechaExamen"];
-  $idMateria = $_POST['idM'];
   $idAlumno = $_SESSION['alu_idAlumno'];
   $cicloLectivo =  $datosColegio[0]['anioautoweb'];
   $idCicloLectivo = buscarIdCiclo($conn, $cicloLectivo);
-   
+  $idMateria = obtenerIdMateriaPorFechaExamen($conn, $idFechaSeleccionada); 
   solicitarExamen($conn, $idAlumno, $idMateria, $idCicloLectivo, $idFechaSeleccionada);
 
   // Redirigir a la misma página 
@@ -78,6 +77,8 @@ $listadoFechasExamenes = buscarFechasExamenTurno(conexion: $conn, idMateria: $id
 $cantidadFechas = count($listadoFechasExamenes);
 ?>
 
+<!DOCTYPE html>
+<html lang="es"></html>
 <head>
 
   <meta charset="UTF-8">

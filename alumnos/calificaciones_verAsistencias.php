@@ -138,7 +138,7 @@ $num_dias_mes_seleccionado = ($mesSeleccionado && $anioCiclo != 'N/A') ? cal_day
           </tbody>
         </table>
       <?php else: ?>
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-danger" role="alert">
           No hay registros de asistencia disponibles para esta materia en el ciclo lectivo <?php echo $anioCiclo; ?> o en el mes seleccionado.
         </div>
       <?php endif; ?>

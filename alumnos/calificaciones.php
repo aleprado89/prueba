@@ -87,7 +87,7 @@ $cantidad = count($listadoCalificaciones);
         $a = 0;
         while ($a < $cantidadCursos) {
           $idCursoP = $listadoCursosP[$a]['idcursopredeterminado'];
-          $nombreC = $listadoCursosP[$a]['nombreCP']; // Ya ajustado en la función de consultas
+          $nombreC = $listadoCursosP[$a]['nombreCurso']; // Ya ajustado en la función de consultas
           ?>
           <option type="submit" value="<?php echo $idCursoP; ?>"
           <?php if($idCursoPredeterminado == $idCursoP) echo 'selected'; ?>>

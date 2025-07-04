@@ -152,7 +152,7 @@ function actualizarCalif(celda, columna) {
 
     // Validation for allowed values
     var valoresNumericosPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    var valoresStringPermitidos = ['A', 'a']; // For Ausente
+    var valoresStringPermitidos = ['A', 'a','n']; // For Ausente
     var valoresMultiplesPermitidos = ['AP', 'ap', 'NA', 'na']; // For Aprobado/No Aprobado
 
     var isValid = false;

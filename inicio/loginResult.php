@@ -153,10 +153,10 @@ function verificarAccesoDocente($dni, $passwordInput, $conn, $CLAVE_DOCENTE_POR_
 
     $sql = "SELECT p.nombre, p.apellido, p.dni, p.idPersona, per.legajo
             FROM persona p INNER JOIN personal per ON p.idPersona = per.idPersona
-            WHERE p.dni = ?";
+            WHERE p.dni = ? AND per.nivel = 6"; // <--- CAMBIO AQUÍ: Añadimos AND per.nivel = 6
     $stmt = $conn->prepare($sql);
     if (!$stmt) { error_log("Error preparando stmt docente: " . $conn->error); return false; }
-    $stmt->bind_param("s", $dni);
+    $stmt->bind_param("s", $dni); // El parámetro 's' para $dni sigue siendo correcto
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -339,11 +339,11 @@ function verificarAccesoAlumnoYDocente($dni, $passwordInput, $conn, $CLAVE_DOCEN
     // 3. Verificar si es docente
     $stmt = $conn->prepare("SELECT p.nombre, p.apellido, p.dni, p.idPersona, per.legajo
                             FROM persona p INNER JOIN personal per ON p.idPersona = per.idPersona
-                            WHERE p.idPersona = ?");
-    $stmt->bind_param("i", $idPersona);
+                            WHERE p.idPersona = ? AND per.nivel = 6"); // <--- CAMBIO AQUÍ: Añadimos AND per.nivel = 6
+    $stmt->bind_param("i", $idPersona); // El parámetro 'i' para $idPersona sigue siendo correcto
     $stmt->execute();
     $resDocente = $stmt->get_result();
-    $esDocente = ($resDocente && $resDocente->num_rows === 1);
+    $esDocente = ($resDocente && $resDocente->num_rows === 1); // Importante: num_rows === 1 ahora aplicará al registro filtrado por nivel
     $docenteData = $esDocente ? $resDocente->fetch_assoc() : null;
     $stmt->close();
 

@@ -225,7 +225,7 @@ $(document).ready(function () {
               '&materia=' + encodeURIComponent(materia) +
               '&curso=' + encodeURIComponent(curso) +
               '&plan=' + encodeURIComponent(plan) +
-              '&ciclolectivo=' + encodeURIComponent(ciclolectivo_str) + // <--- Se envía el AÑO STRING
+              '&ciclolectivo=' + encodeURIComponent(idCiclo_num) + 
               '&mes=' + mes;
 
     $('#imprimir-asistencias').attr('href', url);

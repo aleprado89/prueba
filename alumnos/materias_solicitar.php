@@ -21,7 +21,7 @@ $idMateria = $_POST['idMateria'] ?? '';
 $nombreMateria = $_POST['nombreMateria'] ?? '';
 $nombreCurso = $_POST['nombreCurso'] ?? '';
 
-echo $idMateria." - ".$nombreMateria." - ".$nombreCurso;
+//echo $idMateria." - ".$nombreMateria." - ".$nombreCurso;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
    //BOTON SOLICITAR
