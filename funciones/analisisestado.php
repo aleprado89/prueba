@@ -83,7 +83,7 @@ function porcentaje($tabla) {
 
 //Actualiza porcentaje de asistencia
 function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
-    $consulta = "UPDATE calificacionesterciario SET asistencia = ? 
+    $consulta = "UPDATE calificacionesterciario SET registroModificacion=1, asistencia = ? 
     WHERE idAlumno = ? and idMateria = ?";
 
     $stmt = mysqli_prepare($conexion, $consulta);
@@ -96,6 +96,35 @@ function actualizarAsistencia($conexion, $idAlumno, $idMateria, $valor){
         $respuesta = "actualizado";
     }
     return $respuesta;
+}
+
+function debeMateria($conexion, $idAlumno, $idMateria) {
+    $consulta = "
+        SELECT COUNT(*) AS total
+        FROM correlatividadesterciario cr
+        INNER JOIN materiaterciario mt 
+            ON cr.idUnicoMatCorrelativa = mt.idUnicoMateria
+            AND cr.condicionCorrelatividad = 1
+            AND cr.tipoInscripcion = 1
+        INNER JOIN calificacionesterciario cl 
+            ON cl.idMateria = mt.idMateria 
+            AND cl.idAlumno = ?
+        WHERE cl.materiaAprobada != 1 
+        AND cr.idUnicoMateria = (
+            SELECT mt2.idUnicoMateria 
+            FROM materiaterciario mt2 
+            WHERE mt2.idMateria = ?
+        )";
+
+    $stmt = mysqli_prepare($conexion, $consulta);
+    mysqli_stmt_bind_param($stmt, "ii", $idAlumno, $idMateria);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $total);
+    mysqli_stmt_fetch($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $total; // será 0 o mayor a 0
 }
 
 
@@ -233,7 +262,7 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
 
     //Actualizar Estado
     $consulta4 = "update calificacionesterciario
-    set estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = '$estadoCursado' 
+    set registroModificacion=1, estadoCursadoNumero = $estadoCursadoNumero, estadoCursado = '$estadoCursado' 
     where calificacionesterciario.idCalificacion = $idCalificacion";
 
     $calif = mysqli_query($conexion, $consulta4);
@@ -3469,4 +3498,3 @@ function analisis_estado(
     //Salida (numeroEstado, textoEstado)
     return array($salida, $wanalisis);
 }
-

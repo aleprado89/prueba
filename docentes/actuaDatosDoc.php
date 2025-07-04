@@ -122,13 +122,30 @@ $sexo="O";
 
     include '../inicio/conexion.php';
 // Realizar la consulta para actualizar datos
-$sql = "UPDATE persona p INNER JOIN personal l ON p.idPersona=l.idPersona
-SET p.fechaNac='".$fechaNac."',p.FotoCarnet='".$rutaDestino."', p.nacionalidad='".$nacionalidad."',p.sexo='".$sexo."',
-p.lugarNac='".$lugarNacimiento."',p.provincia='".$provincia."',p.ciudad='".$ciudad."',
-p.direccion='".$direccion."',p.barrio='".$barrio."',p.codigoPostal='".$codigoPostal."',
-p.mail='".$mail."',l.mailInst='".$mailInstitucional."',p.telefono='".$telefono."',
-p.celular='".$celular."',p.telefonoEmergencia='".$telefonoEmergencia."',l.estadoCivil='".$estadoCivil."',l.titulo='".$titulo."'
-WHERE l.legajo=".$doc_legajo; 
+$sql = "UPDATE persona p 
+INNER JOIN personal l ON p.idPersona = l.idPersona
+SET 
+  p.fechaNac = '$fechaNac',
+  p.FotoCarnet = '$rutaDestino',
+  p.nacionalidad = '$nacionalidad',
+  p.sexo = '$sexo',
+  p.lugarNac = '$lugarNacimiento',
+  p.provincia = '$provincia',
+  p.ciudad = '$ciudad',
+  p.direccion = '$direccion',
+  p.barrio = '$barrio',
+  p.codigoPostal = '$codigoPostal',
+  p.mail = '$mail',
+  l.mailInst = '$mailInstitucional',
+  p.telefono = '$telefono',
+  p.celular = '$celular',
+  p.telefonoEmergencia = '$telefonoEmergencia',
+  l.estadoCivil = '$estadoCivil',
+  l.titulo = '$titulo',
+  p.registroModificacion = 1,
+  l.registroModificacion = 1
+WHERE l.legajo = $doc_legajo";
+
 //var_dump($sql);
 
 if ($conn->query($sql) === TRUE) {
