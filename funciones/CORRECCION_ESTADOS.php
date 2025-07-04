@@ -1,11 +1,11 @@
 <?php
-
-$servername = "46.202.148.69";
-$username = "admin_terc_houssay";
+/*
+$servername = "sistemasescolares3.com";
+$username = "admin_terc_banfield";
 $password = "san84Jose+entra?carajo";
-$dbname = "admin_terc_houssay";
+$dbname = "admin_terc_banfield";
 
-$idCicloLectivo = 11;
+$idCicloLectivo = 11;*/
 
 // Crear conexión
 $connexionCorreccion = new mysqli($servername, $username, $password, $dbname);
@@ -26,7 +26,9 @@ function buscarInformacion($connexionCorreccion, $idCicloLectivo) {
     $consulta = "SELECT * 
                  FROM calificacionesterciario 
                  INNER JOIN materiaterciario ON materiaterciario.idMateria = calificacionesterciario.idMateria 
-                 WHERE materiaterciario.idCicloLectivo = ?";
+                 WHERE materiaterciario.idCicloLectivo = ? AND
+                 calificacionesterciario.idCalificacion < 155000 and 
+                 calificacionesterciario.idCalificacion >= 151028";
 
     $stmt = $connexionCorreccion->prepare($consulta);
     $stmt->bind_param("i", $idCicloLectivo);  // Solo es necesario un parámetro (idCicloLectivo)
