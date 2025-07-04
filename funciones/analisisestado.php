@@ -257,6 +257,19 @@ function iniciarAnalisis($conexion, $idMateria, $idAlumno, $idCalificacion)
         $cod_col
     );
 
+    if ($cod_col == "houssay")
+    {
+        if ($analisis[0] == 14 || $analisis[0] == 15)
+        {
+            $debe = debeMateria($conexion, $idAlumno, $idMateria);
+            if ($debe == 1)
+            {
+                $analisis[0] = 1;
+                $analisis[1] = "Regular";
+            }
+        }
+    }
+
     $estadoCursadoNumero = $analisis[0];
     $estadoCursado = $analisis[1];
 
