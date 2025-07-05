@@ -20,9 +20,9 @@ $connexionCorreccion->set_charset("utf8mb4");
 
 
 
-buscarInformacion($connexionCorreccion, $idCicloLectivo);
+buscarInformacionCORRECCION($connexionCorreccion, $idCicloLectivo);
 //BUSCAR TABLA CALIFICACIONESTERCIARIO
-function buscarInformacion($connexionCorreccion, $idCicloLectivo) {
+function buscarInformacionCORRECCION($connexionCorreccion, $idCicloLectivo) {
     $consulta = "SELECT * 
                  FROM calificacionesterciario 
                  INNER JOIN materiaterciario ON materiaterciario.idMateria = calificacionesterciario.idMateria 
@@ -69,11 +69,11 @@ function buscarInformacion($connexionCorreccion, $idCicloLectivo) {
         // Llamar a otra función pasando idAlumno, idMateria e idCalificacion
         // Por ejemplo:
         // otraFuncion($idAlumno, $idMateria);
-        $tablaAsistencia = obtenerAsistencia($connexionCorreccion, $idAlumno, $idMateria, $idCicloLectivo);
-        $porcentajeCalculado = porcentaje($tablaAsistencia);
-        $actualizacionAsistencia = actualizarAsistencia($connexionCorreccion, $idAlumno, $idMateria, $porcentajeCalculado);
+        $tablaAsistencia = obtenerAsistenciaCORRECCION($connexionCorreccion, $idAlumno, $idMateria, $idCicloLectivo);
+        $porcentajeCalculado = porcentajeCORRECCION($tablaAsistencia);
+        $actualizacionAsistencia = actualizarAsistenciaCORRECCION($connexionCorreccion, $idAlumno, $idMateria, $porcentajeCalculado);
     
-        $actualizacionEstado = iniciarAnalisis($connexionCorreccion, $idMateria, $idAlumno, $idCalificacion);
+        $actualizacionEstado = iniciarAnalisisCORRECCION($connexionCorreccion, $idMateria, $idAlumno, $idCalificacion);
     
         echo "Iteración: $idCalificacion - $porcentajeCalculado - $actualizacionEstado\n";
     }
@@ -83,7 +83,7 @@ function buscarInformacion($connexionCorreccion, $idCicloLectivo) {
 
 //FUNCIONES DE ASISTENCIA
 //Armar tabla de asistencias por materia y alumno
-function obtenerAsistencia($connexionCorreccion, $idAlumno, $idMateria, $idCicloLectivo) {
+function obtenerAsistenciaCORRECCION($connexionCorreccion, $idAlumno, $idMateria, $idCicloLectivo) {
     // Consulta SQL para obtener los registros de asistencia del alumno
     $consulta = "SELECT d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, 
                         d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, 
@@ -116,7 +116,7 @@ function obtenerAsistencia($connexionCorreccion, $idAlumno, $idMateria, $idCiclo
 }
 
 //Calcular porcentaje asistencia de materia y alumno
-function porcentaje($tabla) {
+function porcentajeCORRECCION($tabla) {
     $salida = "";
 
     $ausente = 0;
@@ -164,7 +164,7 @@ function porcentaje($tabla) {
 }
 
 //Actualiza porcentaje de asistencia
-function actualizarAsistencia($connexionCorreccion, $idAlumno, $idMateria, $valor){
+function actualizarAsistenciaCORRECCION($connexionCorreccion, $idAlumno, $idMateria, $valor){
     $consulta = "UPDATE calificacionesterciario SET asistencia = ? 
     WHERE idAlumno = ? and idMateria = ?";
 
@@ -180,10 +180,38 @@ function actualizarAsistencia($connexionCorreccion, $idAlumno, $idMateria, $valo
     return $respuesta;
 }
 
+//HOUSSAY
+function debeMateriaCORRECCION($connexionCorreccion, $idAlumno, $idMateria) {
+    $consulta = "
+        SELECT COUNT(*) AS total
+        FROM correlatividadesterciario cr
+        INNER JOIN materiaterciario mt 
+            ON cr.idUnicoMatCorrelativa = mt.idUnicoMateria
+            AND cr.condicionCorrelatividad = 1
+            AND cr.tipoInscripcion = 1
+        INNER JOIN calificacionesterciario cl 
+            ON cl.idMateria = mt.idMateria 
+            AND cl.idAlumno = ?
+        WHERE cl.materiaAprobada != 1 
+        AND cr.idUnicoMateria = (
+            SELECT mt2.idUnicoMateria 
+            FROM materiaterciario mt2 
+            WHERE mt2.idMateria = ?
+        )";
 
+    $stmt = mysqli_prepare($connexionCorreccion, $consulta);
+    mysqli_stmt_bind_param($stmt, "ii", $idAlumno, $idMateria);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $total);
+    mysqli_stmt_fetch($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $total; // será 0 o mayor a 0
+}
 
 //FUNCIONES DE ANALISIS ESTADO
-function iniciarAnalisis($connexionCorreccion, $idMateria, $idAlumno, $idCalificacion)
+function iniciarAnalisisCORRECCION($connexionCorreccion, $idMateria, $idAlumno, $idCalificacion)
 {
     //DATOS COLEGIO
     $consulta = "SELECT * from colegio where nivel = 'Terciario'";
@@ -280,7 +308,7 @@ function iniciarAnalisis($connexionCorreccion, $idMateria, $idAlumno, $idCalific
         }
     }
 
-    $analisis = analisis_estado(
+    $analisis = analisis_estadoCORRECCION(
         $widtipomateria,
         $wasistenciaPromocionRed,
         $wasistenciaRegularRed,
@@ -312,6 +340,19 @@ function iniciarAnalisis($connexionCorreccion, $idMateria, $idAlumno, $idCalific
         $cod_col
     );
 
+    if ($cod_col == "houssay")
+    {
+        if ($analisis[0] == 14 || $analisis[0] == 15)
+        {
+            $debe = debeMateriaCORRECCION($connexionCorreccion, $idAlumno, $idMateria);
+            if ($debe == 1)
+            {
+                $analisis[0] = 1;
+                $analisis[1] = "Regular";
+            }
+        }
+    }
+
     $estadoCursadoNumero = $analisis[0];
     $estadoCursado = $analisis[1];
 
@@ -332,7 +373,7 @@ function iniciarAnalisis($connexionCorreccion, $idMateria, $idAlumno, $idCalific
 
 //[glo_codcol] es el nombre del colegio
 
-function analisis_estado(
+function analisis_estadoCORRECCION(
     $widtipomateria,
     $wasistenciaPromocionRed,
     $wasistenciaRegularRed,
