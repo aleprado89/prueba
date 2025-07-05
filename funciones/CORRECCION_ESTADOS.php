@@ -192,7 +192,7 @@ function debeMateriaCORRECCION($connexionCorreccion, $idAlumno, $idMateria) {
         INNER JOIN calificacionesterciario cl 
             ON cl.idMateria = mt.idMateria 
             AND cl.idAlumno = ?
-        WHERE cl.materiaAprobada != 1 
+        WHERE (cl.materiaAprobada != 1 || cl.materiaAprobada is null)
         AND cr.idUnicoMateria = (
             SELECT mt2.idUnicoMateria 
             FROM materiaterciario mt2 
