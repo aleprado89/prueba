@@ -1654,3 +1654,408 @@ function obtenerAsistenciaMateriaSecretaria($conexion, $idMateria, $mes, $dia, $
   }
   return $lista;
 }
+
+function buscarAlumnos($conexion, $apellido = '', $nombre = '') {
+    $sql = "SELECT p.idPersona, p.apellido, p.nombre, p.dni, a.idAlumno
+            FROM persona p
+            INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
+            WHERE p.apellido LIKE ? AND p.nombre LIKE ?
+            ORDER BY p.apellido, p.nombre";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar la consulta (buscarAlumnos): " . $conexion->error);
+        return [];
+    }
+
+    $paramApellido = '%' . $apellido . '%';
+    $paramNombre = '%' . $nombre . '%';
+    $stmt->bind_param("ss", $paramApellido, $paramNombre);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $alumnos = [];
+    while ($row = $result->fetch_assoc()) {
+        $alumnos[] = $row;
+    }
+    $stmt->close();
+    return $alumnos;
+}
+
+// NEW/MODIFIED: obtaining all student data
+function obtenerDatosAlumno($conexion, $idAlumno) {
+    if (!$idAlumno) return null;
+
+    // Updated query to match the revised field mappings and assumed schema
+    $sql = "SELECT p.idPersona, p.apellido, p.nombre, p.dni, p.sexo, p.fechaNac AS fechaNacimiento,
+                   p.nacionalidad AS nacionalidadNacimiento, p.provincia AS provinciaNacimiento, p.ciudad AS localidadNacimiento,
+                   p.mail AS email, p.telefono, p.celular, p.direccion AS domicilio, p.codigoPostal AS cp,
+                   p.cuilPre, p.cuilPost, p.telefonoEmergencia, p.FotoCarnet AS fotoURL,
+                   a.idAlumno, a.vivePadre, a.viveMadre, a.egresado, a.trabaja, a.retiroBiblioteca,
+                   a.observaciones AS observacionesAlumno, a.mailInstitucional, a.documentacion, a.materiasAdeuda, a.idFamilia
+            FROM persona p
+            INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
+            WHERE a.idAlumno = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error preparing obtenerDatosAlumno: " . $conexion->error);
+        return null;
+    }
+    $stmt->bind_param("i", $idAlumno);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_assoc();
+    $stmt->close();
+    return $data;
+}
+
+// NEW: function for inserting persona data
+function insertPersona($conexion, $data) {
+    $sql = "INSERT INTO persona (apellido, nombre, dni, sexo, fechaNac, nacionalidad, provincia, ciudad, mail, telefono, celular, cuilPre, cuilPost, telefonoEmergencia, direccion, codigoPostal, FotoCarnet)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error preparing insertPersona: " . $conexion->error);
+        return false;
+    }
+    // 17 's' por los 17 campos VARCHAR/DATE/etc. (FechaNac -> s, FotoCarnet -> s)
+    // fechaNacimiento puede ser null, pero mysqli_stmt_bind_param lo espera como string o null.
+    // PHP 8+ handles null for 's' type correctly, converting to SQL NULL. Older PHP might require explicit NULL.
+    // Assuming PHP 8+ compatible or a custom wrapper for null handling.
+    $stmt->bind_param("sssssssssssssssss",
+        $data['apellido'], $data['nombre'], $data['dni'], $data['sexo'], $data['fechaNacimiento'],
+        $data['nacionalidadNacimiento'], $data['provinciaNacimiento'], $data['localidadNacimiento'],
+        $data['email'], $data['telefono'], $data['celular'], $data['cuilPre'], $data['cuilPost'],
+        $data['telefonoEmergencia'], $data['domicilio'], $data['cp'], $data['fotoURL']
+    );
+    $success = $stmt->execute();
+    $id = $conexion->insert_id;
+    $stmt->close();
+    return $success ? $id : false;
+}
+
+// NEW: function for updating persona data
+function updatePersona($conexion, $idPersona, $data) {
+    $sql = "UPDATE persona SET apellido=?, nombre=?, dni=?, sexo=?, fechaNac=?, nacionalidad=?, provincia=?, ciudad=?, mail=?, telefono=?, celular=?, cuilPre=?, cuilPost=?, telefonoEmergencia=?, direccion=?, codigoPostal=?, FotoCarnet=?
+            WHERE idPersona=?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error preparing updatePersona: " . $conexion->error);
+        return false;
+    }
+    // 17 's' para los campos SET, y 1 'i' para el WHERE idPersona. Total 18.
+    $stmt->bind_param("sssssssssssssssssi",
+        $data['apellido'], $data['nombre'], $data['dni'], $data['sexo'], $data['fechaNacimiento'],
+        $data['nacionalidadNacimiento'], $data['provinciaNacimiento'], $data['localidadNacimiento'],
+        $data['email'], $data['telefono'], $data['celular'], $data['cuilPre'], $data['cuilPost'],
+        $data['telefonoEmergencia'], $data['domicilio'], $data['cp'], $data['fotoURL'],
+        $idPersona
+    );
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+// NEW: function for inserting alumnosterciario data
+function insertAlumnoTerciario($conexion, $idPersona, $data) {
+    $sql = "INSERT INTO alumnosterciario (idPersona, vivePadre, viveMadre, egresado, trabaja, retiroBiblioteca, observaciones, mailInstitucional, documentacion, materiasAdeuda, idFamilia)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error preparing insertAlumnoTerciario: " . $conexion->error);
+        return false;
+    }
+    // 6 'i' (idPersona, vivePadre, viveMadre, egresado, trabaja, retiroBiblioteca)
+    // 4 's' (observaciones, mailInstitucional, documentacion, materiasAdeuda)
+    // 1 'i' (idFamilia).
+    // Total 11 variables. String de tipos: "iiiiisssisi"
+    $stmt->bind_param("iiiiisssisi", // String de tipos correcta
+        $idPersona, $data['vivePadre'], $data['viveMadre'], $data['egresado'],
+        $data['trabaja'], $data['retiroBiblioteca'], $data['observacionesAlumno'], $data['mailInstitucional'],
+        $data['documentacion'], $data['materiasAdeuda'], $data['idFamilia']
+    );
+    $success = $stmt->execute();
+    $id = $conexion->insert_id;
+    $stmt->close();
+    return $success ? $id : false;
+}
+
+// NEW: function for updating alumnosterciario data
+function updateAlumnoTerciario($conexion, $idPersona, $data) {
+    $sql = "UPDATE alumnosterciario SET vivePadre=?, viveMadre=?, egresado=?, trabaja=?, retiroBiblioteca=?, observaciones=?, mailInstitucional=?, documentacion=?, materiasAdeuda=?, idFamilia=?
+            WHERE idPersona=?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error preparing updateAlumnoTerciario: " . $conexion->error);
+        return false;
+    }
+    // 5 'i' (vivePadre, viveMadre, egresado, trabaja, retiroBiblioteca)
+    // 4 's' (observaciones, mailInstitucional, documentacion, materiasAdeuda)
+    // 2 'i' (idFamilia, idPersona en WHERE).
+    // Total 11 variables. String de tipos: "iiiiisssii"
+    $stmt->bind_param("iiiiisssisi", // String de tipos correcta (5i, 4s, 1i, 1i -> 5+4+1+1 = 11)
+        $data['vivePadre'], $data['viveMadre'], $data['egresado'],
+        $data['trabaja'], $data['retiroBiblioteca'], $data['observacionesAlumno'], $data['mailInstitucional'],
+        $data['documentacion'], $data['materiasAdeuda'], $data['idFamilia'],
+        $idPersona
+    );
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+// Existing function for DNI existence check
+function dniExiste($conexion, $dni, $excludeIdPersona = null) {
+    $sql = "SELECT COUNT(*) AS count FROM persona WHERE dni = ?";
+    if ($excludeIdPersona) {
+        $sql .= " AND idPersona != ?";
+    }
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar la consulta (dniExiste): " . $conexion->error);
+        return true; // Asumir que existe para evitar inconsistencias si hay error
+    }
+    if ($excludeIdPersona) {
+        $stmt->bind_param("si", $dni, $excludeIdPersona);
+    } else {
+        $stmt->bind_param("s", $dni);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    return $row['count'] > 0;
+}
+
+// --- NUEVAS FUNCIONES PARA MATRICULACIÓN DE PLAN/CURSO ---
+
+function insertarMatriculacionPlan($conexion, $data) {
+    $sql = "INSERT INTO matriculacion (idNivel, idCurso, idAlumno, fechaMatriculacion, anio, estado, tarde, idPlanDeEstudio, pagoMatricula, pagoMonto, certificadoSalud, fechaBajaMatriculacion, certificadoTrabajo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error en preparar insertarMatriculacionPlan: " . $conexion->error);
+        return false;
+    }
+
+    // Convertir fechas vacías a NULL
+    $fechaMatriculacion = !empty($data['fechaMatriculacion']) ? $data['fechaMatriculacion'] : null;
+    $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacion']) ? $data['fechaBajaMatriculacion'] : null;
+
+    // Convertir pagoMonto a NULL si es 0 o vacío y pagoMatricula es 0
+    $pagoMonto = ($data['pagoMatricula'] == 0 || empty($data['pagoMonto'])) ? null : $data['pagoMonto'];
+    $estado = empty($fechaBajaMatriculacion) ? 'Activo' : 'De Baja'; // Determina el estado
+    
+    $idNivel = 6; // Siempre 6 según la especificación
+    $anio = date('Y'); // Año actual
+
+    // Tipos de datos: i (int), s (string), d (double), b (blob)
+    // Parámetros: idNivel(i), idCurso(i), idAlumno(i), fechaMatriculacion(s), anio(i), estado(s), tarde(i), idPlanDeEstudio(i), pagoMatricula(i), pagoMonto(s), certificadoSalud(i), fechaBajaMatriculacion(s), certificadoTrabajo(i)
+    // Total: 6 ints, 4 strings
+    $stmt->bind_param("iiisisiiisisi", // String de tipos corregida: 6i, 4s, 3i = 13 (idCurso, idAlumno, anio, tarde, pagoMatricula, certificadoSalud, certificadoTrabajo)
+        $idNivel,
+        $data['idCurso'],
+        $data['idAlumno'],
+        $fechaMatriculacion,
+        $anio,
+        $estado,
+        $data['tarde'],
+        $data['idPlanDeEstudio'],
+        $data['pagoMatricula'], // 0 o 1
+        $pagoMonto, // Puede ser null
+        $data['certificadoSalud'], // Asumimos que viene como 0 si no hay campo específico o si es el checkbox, será 1 o 0
+        $fechaBajaMatriculacion, // Puede ser null
+        $data['certificadoTrabajo'] // 0 o 1
+    );
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+function obtenerMatriculacionesPlanAlumno($conexion, $idAlumno) {
+    $sql = "SELECT m.idMatriculacion, pe.nombre AS nombrePlan, c.nombre AS nombreCurso, m.fechaMatriculacion, m.estado, m.pagoMatricula, m.pagoMonto, m.fechaBajaMatriculacion, m.certificadoTrabajo, m.idPlanDeEstudio, m.idCurso
+            FROM matriculacion m
+            INNER JOIN plandeestudio pe ON m.idPlanDeEstudio = pe.idPlan
+            INNER JOIN curso c ON m.idCurso = c.idCurso
+            WHERE m.idAlumno = ? ORDER BY m.fechaMatriculacion DESC";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("i", $idAlumno);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $matriculaciones = [];
+    while ($row = $result->fetch_assoc()) {
+        $matriculaciones[] = $row;
+    }
+    $stmt->close();
+    return $matriculaciones;
+}
+
+function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
+    $sql = "UPDATE matriculacion SET idNivel=?, idCurso=?, idAlumno=?, fechaMatriculacion=?, anio=?, estado=?, tarde=?, idPlanDeEstudio=?, pagoMatricula=?, pagoMonto=?, certificadoSalud=?, fechaBajaMatriculacion=?, certificadoTrabajo=?
+            WHERE idMatriculacion=?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error en preparar actualizarMatriculacionPlan: " . $conexion->error);
+        return false;
+    }
+
+    $fechaMatriculacion = !empty($data['fechaMatriculacion']) ? $data['fechaMatriculacion'] : null;
+    $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacion']) ? $data['fechaBajaMatriculacion'] : null;
+    $pagoMonto = ($data['pagoMatricula'] == 0 || empty($data['pagoMonto'])) ? null : $data['pagoMonto'];
+    $estado = empty($fechaBajaMatriculacion) ? 'Activo' : 'De Baja';
+    
+    $idNivel = 6;
+    $anio = date('Y');
+
+    // parámetros: (idNivel(i), idCurso(i), idAlumno(i), fechaMatriculacion(s), anio(i), estado(s), tarde(i), idPlanDeEstudio(i), pagoMatricula(i), pagoMonto(s), certificadoSalud(i), fechaBajaMatriculacion(s), certificadoTrabajo(i), idMatriculacion(i))
+    // Totales: 7 int, 4 string
+    $stmt->bind_param("iiisisiiisisi", // String de tipos corregida: (6i, 4s, 3i, 1i)
+        $idNivel,
+        $data['idCurso'],
+        $data['idAlumno'],
+        $fechaMatriculacion,
+        $anio,
+        $estado,
+        $data['tarde'],
+        $data['idPlanDeEstudio'],
+        $data['pagoMatricula'],
+        $pagoMonto,
+        $data['certificadoSalud'],
+        $fechaBajaMatriculacion,
+        $data['certificadoTrabajo'],
+        $idMatriculacion
+    );
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+function eliminarMatriculacionPlan($conexion, $idMatriculacion) {
+    $sql = "DELETE FROM matriculacion WHERE idMatriculacion = ?"; // Se podria hacer un soft delete con un campo 'activo'
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("i", $idMatriculacion);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+
+// --- NUEVAS FUNCIONES PARA MATRICULACIÓN DE MATERIAS ---
+
+function insertarMatriculacionMateria($conexion, $data) {
+    $sql = "INSERT INTO matriculacionmateria (idAlumno, idNivel, idMateria, fechaMatriculacion, fechaBajaMatriculacion, estado, idCicloLectivo)
+            VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error en preparar insertarMatriculacionMateria: " . $conexion->error);
+        return false;
+    }
+
+    $fechaMatriculacion = !empty($data['fechaMatriculacionMateria']) ? $data['fechaMatriculacionMateria'] : date('Y-m-d');
+    $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacionMateria']) ? $data['fechaBajaMatriculacionMateria'] : null;
+    $idNivel = 6; // Siempre 6
+    $estado = empty($fechaBajaMatriculacion) ? 'Regular' : 'De Baja'; // Estado por defecto 'Regular'
+    
+    // Obtener idCicloLectivo del año de la fecha de matriculación de la materia
+    $anio_matriculacion = date('Y', strtotime($fechaMatriculacion));
+    $idCicloLectivo = buscarIdCiclo($conexion, $anio_matriculacion);
+    if (is_null($idCicloLectivo)) {
+        error_log("No se encontró idCicloLectivo para el año: " . $anio_matriculacion);
+        return false;
+    }
+
+    // iiissis (idAlumno, idNivel, idMateria, fechaMatriculacion (string), fechaBajaMatriculacion (string), estado (string), idCicloLectivo (int))
+    $stmt->bind_param("iiisssi",
+        $data['idAlumno'],
+        $idNivel,
+        $data['idMateria'],
+        $fechaMatriculacion,
+        $fechaBajaMatriculacion,
+        $estado,
+        $idCicloLectivo
+    );
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno) {
+    $sql = "SELECT mm.idMatriculacionMateria, mt.nombre AS nombreMateria, c.nombre AS nombreCurso, pe.nombre AS nombrePlan,
+                   mm.fechaMatriculacion, mm.estado, mm.fechaBajaMatriculacion, cl.anio AS anioCicloLectivo,
+                   mm.idMateria, mm.idNivel, mm.idCicloLectivo -- Añadimos IDs para facilitar edición/carga
+            FROM matriculacionmateria mm
+            INNER JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
+            INNER JOIN curso c ON mt.idCurso = c.idCurso
+            INNER JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
+            INNER JOIN ciclolectivo cl ON mm.idCicloLectivo = cl.idCiclolectivo
+            WHERE mm.idAlumno = ? ORDER BY mm.fechaMatriculacion DESC";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("i", $idAlumno);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $matriculaciones_materia = [];
+    while ($row = $result->fetch_assoc()) {
+        $matriculaciones_materia[] = $row;
+    }
+    $stmt->close();
+    return $matriculaciones_materia;
+}
+
+function actualizarMatriculacionMateria($conexion, $idMatriculacionMateria, $data) {
+    $sql = "UPDATE matriculacionmateria SET idAlumno=?, idNivel=?, idMateria=?, fechaMatriculacion=?, fechaBajaMatriculacion=?, estado=?, idCicloLectivo=?
+            WHERE idMatriculacionMateria=?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error en preparar actualizarMatriculacionMateria: " . $conexion->error);
+        return false;
+    }
+
+    $fechaMatriculacion = !empty($data['fechaMatriculacionMateria']) ? $data['fechaMatriculacionMateria'] : date('Y-m-d');
+    $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacionMateria']) ? $data['fechaBajaMatriculacionMateria'] : null;
+    $idNivel = 6;
+    $estado = empty($fechaBajaMatriculacion) ? 'Regular' : 'De Baja';
+    
+    $anio_matriculacion = date('Y', strtotime($fechaMatriculacion));
+    $idCicloLectivo = buscarIdCiclo($conexion, $anio_matriculacion);
+    if (is_null($idCicloLectivo)) {
+        error_log("No se encontró idCicloLectivo para el año: " . $anio_matriculacion);
+        return false;
+    }
+
+    // iiisssii (idAlumno, idNivel, idMateria, fechaMatriculacion (string), fechaBajaMatriculacion (string), estado (string), idCicloLectivo (int), idMatriculacionMateria (int))
+    $stmt->bind_param("iiisssii",
+        $data['idAlumno'],
+        $idNivel,
+        $data['idMateria'],
+        $fechaMatriculacion,
+        $fechaBajaMatriculacion,
+        $estado,
+        $idCicloLectivo,
+        $idMatriculacionMateria
+    );
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+function eliminarMatriculacionMateria($conexion, $idMatriculacionMateria) {
+    $sql = "DELETE FROM matriculacionmateria WHERE idMatriculacionMateria = ?";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("i", $idMatriculacionMateria);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+// Funciones auxiliares para dropdowns
+function obtenerPlanesDeEstudio($conexion) {
+  $sql = "SELECT idPlan, nombre FROM plandeestudio ORDER BY nombre ASC";
+  $stmt = $conexion->prepare($sql);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $planes = [];
+  while($row = $result->fetch_assoc()) {
+    $planes[] = $row;
+  }
+  $stmt->close();
+  return $planes;
+}

@@ -6,7 +6,7 @@ if (!isset($_SESSION['sec_nombreUsuario'])) {
     header('Location: loginAdmin.php');
     exit;
 }
-
+include '../funciones/verificarSesion.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
@@ -87,7 +87,6 @@ if (isset($_POST['is_ajax_materias']) && $_POST['is_ajax_materias'] == '1') {
             $output .= '<tr>
                 <td><a href="#" onclick="setMateria(' . htmlspecialchars($materia['idMateria']) . ', \'' . $materia_js . '\', \'' . $curso_js . '\', \'' . htmlspecialchars($materia['idCicloLectivo']) . '\', \'' . htmlspecialchars($materia['idPlan']) . '\', \'' . htmlspecialchars($url_target_page) . '\')">' . htmlspecialchars($materia['Materia']) . '</a></td>
                 <td>' . htmlspecialchars($materia['Curso']) . '</td>
-                <td></td> <!-- Columna de acciones, clic en el enlace de la materia -->
             </tr>';
         }
     }
@@ -193,13 +192,12 @@ if ($primerCicloLectivoId && $primerPlanId) {
            <thead>
                <tr class="table-primary">
                    <th scope="col">Materias</th>
-                   <th scope="col">Curso (de Materia)</th>
-                   <th scope="col" class="text-center">Acciones</th>
+                   <th scope="col">Curso</th>
                </tr>
            </thead>
            <tbody>
            <?php if (empty($materiasAsignadas)) { ?>
-               <tr><td colspan="3">Sin registros</td></tr>
+               <tr><td colspan="2">Sin registros</td></tr>
            <?php } else {
                foreach ($materiasAsignadas as $materia) {
                    // Asegurarse de que los nombres de las materias y cursos estén correctamente escapados para JS
@@ -210,7 +208,6 @@ if ($primerCicloLectivoId && $primerPlanId) {
                        <!-- CORRECCIÓN DE LA COMA: Ahora los parámetros están correctamente separados -->
                        <td><a href="#" onclick="setMateria(<?php echo htmlspecialchars($materia['idMateria']); ?>, '<?php echo $materia_js; ?>', '<?php echo $curso_js; ?>', '<?php echo htmlspecialchars($materia['idCicloLectivo']); ?>', '<?php echo htmlspecialchars($materia['idPlan']); ?>', '<?php echo htmlspecialchars($url_target_page); ?>')"><?php echo htmlspecialchars($materia['Materia']); ?></a></td>
                        <td><?php echo htmlspecialchars($materia['Curso']); ?></td>
-                       <td></td> <!-- Columna de acciones, clic en el enlace de la materia -->
                    </tr>
                <?php }
            } ?>

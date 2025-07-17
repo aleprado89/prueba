@@ -9,7 +9,7 @@ if (!isset($_SESSION['sec_nombreUsuario'])) {
     header('Location: loginAdmin.php');
     exit;
 }
-
+include '../funciones/verificarSesion.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/analisisestado.php';
