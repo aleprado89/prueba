@@ -1414,6 +1414,7 @@ function materiasAlumnoCurso($conn, $idAlumno, $idPlan, $idCursoPredeterminado)
            WHERE calificacionesterciario.idAlumno = ?
             AND materiaterciario.idPlan = ?
             AND cursospredeterminado.idcursopredeterminado = ?
+            AND  (calificacionesterciario.materiaAprobada is null or calificacionesterciario.materiaAprobada = 0)
             ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
 
   // Preparar el statement
