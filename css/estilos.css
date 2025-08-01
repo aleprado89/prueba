@@ -1,4 +1,5 @@
-/* Secciones preexistentes en tu estilos.css */
+/* --- ESTILOS GENERALES Y PREEXISTENTES --- */
+
 .celda-actualizada {
   background-color: lightgreen;
 }
@@ -6,7 +7,7 @@
   background-color: #ff0000;
 }
 footer {
-  /* position: relative; */ /* Esto podría generar problemas de layout en algunos casos, se sugiere 'position: fixed' para un footer pegado abajo */
+  /* position: relative; */ /* Considera 'fixed' si quieres un footer pegado abajo */
   margin-bottom: -10px;
   width: 100%;
   background-color: #ffffff;
@@ -14,6 +15,10 @@ footer {
   text-align: center;
 }
 .breadcrumb-item a {
+  color: #2e8b97;
+  text-decoration: none;
+}
+.primary-link {
   color: #2e8b97;
   text-decoration: none;
 }
@@ -130,14 +135,12 @@ body {
 .card-header-custom {
   background-color: #f8f9fa; /* Este es el color deseado para los card-header-custom */
   border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-  /* Asegurarse que el texto dentro de este header no sea blanco si el fondo es claro */
   color: inherit; /* O un color específico como #333 */
 }
 /* Asegura que los íconos dentro de los encabezados de card tengan el color de texto por defecto */
 .card-header-custom .bi {
   color: inherit; /* O un color específico como #333 */
 }
-
 
 /* Botones con el color de la navbar (consolidado) */
 .btn-navbar-color {
@@ -155,24 +158,23 @@ body {
 .status-card-header {
   font-weight: bold;
   cursor: pointer;
-  /* color: ya definido por las clases específicas de estado */
 }
 .status-abierta {
-  background-color: #739FA5 !important;
+  background-color: #739FA5 !important; /* Azul verdoso */
   color: white !important;
-} /* Azul verdoso */
+}
 .status-solo-lectura {
-  background-color: #C1D7DA !important;
+  background-color: #C1D7DA !important; /* Gris claro, texto oscuro para contraste */
   color: #333 !important;
-} /* Gris claro, texto oscuro para contraste */
+}
 .status-cerrada {
-  background-color: #333333 !important;
+  background-color: #333333 !important; /* Gris oscuro, texto blanco */
   color: white !important;
-} /* Gris oscuro, texto blanco */
+}
 .status-cerrada-btn-normal {
-  background-color: #E0E0E0 !important;
+  background-color: #E0E0E0 !important; /* Gris muy claro, texto oscuro */
   color: #333 !important;
-} /* Gris muy claro, texto oscuro */
+}
 
 /* Editable params (consolidado) */
 .editable-param {
@@ -262,6 +264,20 @@ body {
 }
 #info-del-dia-content::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* --- ESTILOS ESPECÍFICOS PARA LOS TOOLTIPS --- */
+/* Tooltip background matching Bootstrap's primary button color */
+.tooltip-inner {
+  background-color: #317172; /* Bootstrap's primary color */
+  color: #fff; /* White text for contrast */
+  /* Optional: Add padding and border-radius if needed for visual consistency */
+  /* padding: 0.5rem 0.75rem; */
+  /* border-radius: 0.375rem; */
+}
+/* Ensure tooltips appear above most other content */
+.tooltip {
+  z-index: 1070;
 }
 
 /* --- MEDIA QUERIES (consolidado) --- */

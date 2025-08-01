@@ -18,11 +18,10 @@ $apellido_busqueda = $_GET['apellido_busqueda'] ?? '';
 $nombre_busqueda = $_GET['nombre_busqueda'] ?? '';
 
 // Captura el parámetro 'origin' si viene en la URL. Por defecto, será 'legajo'.
-$redirect_origin = $_GET['origin'] ?? 'legajo'; 
+$redirect_origin = $_GET['origin'] ?? 'legajo';
 
 $alumnos = [];
 
-// MODIFICACIÓN 2: Buscar todos los alumnos si no hay filtros o si los filtros están vacíos
 // Si no se proporcionaron parámetros de búsqueda al cargar la página, o si se envió el formulario con campos vacíos.
 if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search_submitted'])) {
     $alumnos = buscarAlumnos($conn, '', ''); // Carga todos los alumnos al inicio
@@ -69,12 +68,17 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
                 </div>
             <?php endif; ?>
 
-            <!-- MODIFICACIÓN 4: Ajuste de márgenes y padding en el card principal -->
-            <div class="card p-4 mb-4"> <!-- Añadido p-4 para padding interno, mb-4 para margin-bottom -->
-                <h5>Buscar Alumno</h5>
-                <br>
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Buscar Alumno</h5>
+                    <!-- Botón Nuevo Alumno -->
+                    <a href="legajoAlu.php?mode=new" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Nuevo Alumno
+                    </a>
+                </div>
+
                 <form method="GET" action="buscarAlumno.php">
-                    <!-- MODIFICACIÓN 3: Preservar el parámetro 'origin' en el formulario -->
+                    <!-- Preservar el parámetro 'origin' en el formulario -->
                     <input type="hidden" name="origin" value="<?php echo htmlspecialchars($redirect_origin); ?>">
                     <input type="hidden" name="search_submitted" value="1"> <!-- Indica que el formulario fue enviado -->
 
@@ -110,13 +114,33 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
                                         <td><?php echo htmlspecialchars($alumno['nombre']); ?></td>
                                         <td><?php echo htmlspecialchars($alumno['dni']); ?></td>
                                         <td>
-                                            <?php if ($redirect_origin == 'legajo'): ?>
-                                                <a href="legajoAlu.php?idAlumno=<?php echo htmlspecialchars($alumno['idAlumno']); ?>" class="btn btn-primary btn-sm">Ver Legajo</a>
-                                            <?php elseif ($redirect_origin == 'matriculacion'): ?>
-                                                <a href="matriculacion.php?idAlumno=<?php echo htmlspecialchars($alumno['idAlumno']); ?>" class="btn btn-primary btn-sm">Matricular</a>
-                                            <?php else: // Comportamiento por defecto si 'origin' es desconocido o nulo ?>
-                                                <a href="legajoAlu.php?idAlumno=<?php echo htmlspecialchars($alumno['idAlumno']); ?>" class="btn btn-primary btn-sm">Ver Detalle</a>
-                                            <?php endif; ?>
+                                            <?php
+                                            // Determinar el enlace de la acción basado en el parámetro 'origin'
+                                            $action_link = '';
+                                            if ($redirect_origin == 'legajo') {
+                                                $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
+                                            } elseif ($redirect_origin == 'matriculacion') {
+                                                $action_link = 'matriculacion.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                                            } elseif ($redirect_origin == 'inscripcionMateria') {
+                                                $action_link = 'inscripcionMateria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                                            } else { // Comportamiento por defecto si 'origin' es desconocido o nulo
+                                                $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
+                                            }
+                                            ?>
+                                            <a href="<?php echo $action_link; ?>" class="btn btn-primary btn-sm">
+                                                <?php
+                                                // Cambiar el texto del botón según el origen
+                                                if ($redirect_origin == 'legajo') {
+                                                    echo 'Ver Legajo';
+                                                } elseif ($redirect_origin == 'matriculacion') {
+                                                    echo 'Matricular';
+                                                } elseif ($redirect_origin == 'inscripcionMateria') {
+                                                    echo 'Inscribir Materia';
+                                                } else {
+                                                    echo 'Ver Detalle';
+                                                }
+                                                ?>
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

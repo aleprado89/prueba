@@ -1518,15 +1518,26 @@ function buscarCursosPlanCiclo($conexion, $idPlan, $idCiclo) {
   }
   return $cursos;
 }
+function buscarCursosPlan($conexion, $idPlan) {
+  $consulta = "SELECT idCurso, nombre FROM curso WHERE idPlanEstudio = ?";
+  $stmt = $conexion->prepare($consulta);
+  $stmt->bind_param("i", $idPlan);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $cursos = array();
+  while ($data = $result->fetch_assoc()) {
+    $cursos[] = $data;
+  }
+  return $cursos;
+}
 
 function materiasPlanCurso($conexion, $idPlan, $idCurso) {
-  $consulta = "SELECT materiaterciario.nombre as nombreMateria, curso.nombre as nombreCurso
+  $consulta = "SELECT materiaterciario.nombre as nombreMateria,materiaterciario.idMateria ,curso.nombre as nombreCurso
   FROM materiaterciario
   INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso
-  INNER JOIN cursospredeterminado ON cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado
   WHERE materiaterciario.idPlan = ?
   AND curso.idCurso = ?
-  ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
+  ORDER BY materiaterciario.ubicacion DESC";
 
   $stmt = $conexion->prepare($consulta);
   $stmt->bind_param("ii", $idPlan, $idCurso);
@@ -1537,7 +1548,8 @@ function materiasPlanCurso($conexion, $idPlan, $idCurso) {
   while ($data = $result->fetch_assoc()) {
     $materias[] = array(
       'nombreMateria' => $data['nombreMateria'],
-      'nombreCurso' => $data['nombreCurso']
+      'nombreCurso' => $data['nombreCurso'],
+      'idMateria' => $data['idMateria']
     );
   }
   return $materias;
@@ -1890,7 +1902,7 @@ function obtenerMatriculacionesPlanAlumno($conexion, $idAlumno) {
     return $matriculaciones;
 }
 
-function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
+/*function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
     $sql = "UPDATE matriculacion SET idNivel=?, idCurso=?, idAlumno=?, fechaMatriculacion=?, anio=?, estado=?, tarde=?, idPlanDeEstudio=?, pagoMatricula=?, pagoMonto=?, certificadoSalud=?, fechaBajaMatriculacion=?, certificadoTrabajo=?
             WHERE idMatriculacion=?";
     $stmt = $conexion->prepare($sql);
@@ -1928,7 +1940,7 @@ function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
     $success = $stmt->execute();
     $stmt->close();
     return $success;
-}
+}*/
 
 function eliminarMatriculacionPlan($conexion, $idMatriculacion) {
     $sql = "DELETE FROM matriculacion WHERE idMatriculacion = ?"; // Se podria hacer un soft delete con un campo 'activo'
@@ -1979,18 +1991,50 @@ function insertarMatriculacionMateria($conexion, $data) {
     return $success;
 }
 
-function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno) {
+function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter = null, $idCursoFilter = null) {
     $sql = "SELECT mm.idMatriculacionMateria, mt.nombre AS nombreMateria, c.nombre AS nombreCurso, pe.nombre AS nombrePlan,
                    mm.fechaMatriculacion, mm.estado, mm.fechaBajaMatriculacion, cl.anio AS anioCicloLectivo,
-                   mm.idMateria, mm.idNivel, mm.idCicloLectivo -- Añadimos IDs para facilitar edición/carga
+                   mm.idMateria, mm.idNivel, mm.idCicloLectivo, pe.idPlan AS idPlanFK, c.idCurso AS idCursoFK
             FROM matriculacionmateria mm
             INNER JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
             INNER JOIN curso c ON mt.idCurso = c.idCurso
             INNER JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
             INNER JOIN ciclolectivo cl ON mm.idCicloLectivo = cl.idCiclolectivo
-            WHERE mm.idAlumno = ? ORDER BY mm.fechaMatriculacion DESC";
+            WHERE mm.idAlumno = ?";
+    
+    $params = [$idAlumno];
+    $types = "i";
+
+    if ($idPlanFilter !== null && $idPlanFilter !== '') {
+        $sql .= " AND pe.idPlan = ?";
+        $params[] = $idPlanFilter;
+        $types .= "i";
+    }
+    if ($idCursoFilter !== null && $idCursoFilter !== '') {
+        // Asumiendo que c.idCurso es la columna correcta para el filtro de curso en esta unión
+        $sql .= " AND c.idCurso = ?";
+        $params[] = $idCursoFilter;
+        $types .= "i";
+    }
+
+    $sql .= " ORDER BY cl.anio DESC, mm.fechaMatriculacion DESC"; // Ordenar por año y luego por fecha
+
     $stmt = $conexion->prepare($sql);
-    $stmt->bind_param("i", $idAlumno);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerMatriculacionesMateriaAlumno con filtros: " . $conexion->error);
+        return [];
+    }
+
+    // *** MODIFICACIÓN AQUÍ ***
+    // Preparamos las referencias para bind_param
+    $bind_params = [$types]; // El primer elemento es el string de tipos
+    foreach ($params as &$param) { // Usamos '&' para pasar por referencia
+        $bind_params[] = &$param;
+    }
+    // Usamos call_user_func_array con las referencias
+    call_user_func_array([$stmt, 'bind_param'], $bind_params);
+    // *** FIN DE LA MODIFICACIÓN ***
+
     $stmt->execute();
     $result = $stmt->get_result();
     $matriculaciones_materia = [];
@@ -2000,6 +2044,7 @@ function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno) {
     $stmt->close();
     return $matriculaciones_materia;
 }
+
 
 function actualizarMatriculacionMateria($conexion, $idMatriculacionMateria, $data) {
     $sql = "UPDATE matriculacionmateria SET idAlumno=?, idNivel=?, idMateria=?, fechaMatriculacion=?, fechaBajaMatriculacion=?, estado=?, idCicloLectivo=?
@@ -2059,4 +2104,234 @@ function obtenerPlanesDeEstudio($conexion) {
   }
   $stmt->close();
   return $planes;
+}
+// Nueva función para actualizar matriculación de plan/curso
+function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
+    $sql = "UPDATE matriculacion SET idNivel=?, idCurso=?, idAlumno=?, fechaMatriculacion=?, anio=?, estado=?, tarde=?, idPlanDeEstudio=?, pagoMatricula=?, pagoMonto=?, certificadoSalud=?, fechaBajaMatriculacion=?, certificadoTrabajo=?
+            WHERE idMatriculacion=?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error en preparar actualizarMatriculacionPlan: " . $conexion->error);
+        return false;
+    }
+
+    $fechaMatriculacion = !empty($data['fechaMatriculacion']) ? $data['fechaMatriculacion'] : null;
+    $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacion']) ? $data['fechaBajaMatriculacion'] : null;
+    $pagoMonto = ($data['pagoMatricula'] == 0 || empty($data['pagoMonto'])) ? null : $data['pagoMonto'];
+    $estado = empty($fechaBajaMatriculacion) ? 'Activo' : 'De Baja';
+
+    $idNivel = 6; // Asumiendo que es fijo
+    $anio = date('Y'); // Año actual
+
+    // Parámetros: (idNivel(i), idCurso(i), idAlumno(i), fechaMatriculacion(s), anio(i), estado(s), tarde(i), idPlanDeEstudio(i), pagoMatricula(i), pagoMonto(s), certificadoSalud(i), fechaBajaMatriculacion(s), certificadoTrabajo(i), idMatriculacion(i))
+    $stmt->bind_param("iiisisiiisisii",
+        $idNivel,
+        $data['idCurso'],
+        $data['idAlumno'],
+        $fechaMatriculacion,
+        $anio,
+        $estado,
+        $data['tarde'],
+        $data['idPlanDeEstudio'],
+        $data['pagoMatricula'],
+        $pagoMonto,
+        $data['certificadoSalud'],
+        $fechaBajaMatriculacion,
+        $data['certificadoTrabajo'],
+        $idMatriculacion // El ID para el WHERE
+    );
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+// --- NUEVAS FUNCIONES PARA MANEJAR INSCRIPCIÓN Y ELIMINACIÓN DE MATERIAS ---
+
+/**
+ * Inserta los registros iniciales en asistenciaterciario para una materia.
+ * Crea 12 registros, uno por cada mes.
+ */
+function inicializarAsistenciaMateria($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
+    $sql_asistencia = "INSERT INTO asistenciaterciario (idAlumno, idMateria, mes, idCicloLectivo) VALUES (?, ?, ?, ?)";
+    $stmt_asistencia = $conexion->prepare($sql_asistencia);
+    if (!$stmt_asistencia) {
+        error_log("Error al preparar inicializarAsistenciaMateria: " . $conexion->error);
+        return false;
+    }
+
+    // Habilitar transacciones para asegurar la atomicidad de las operaciones
+    $conexion->begin_transaction();
+
+    $success = true;
+    for ($mes = 1; $mes <= 12; $mes++) {
+        if (!$stmt_asistencia->bind_param("iiii", $idAlumno, $idMateria, $mes, $idCicloLectivo)) {
+            error_log("Error al bind_param en inicializarAsistenciaMateria para mes {$mes}: " . $stmt_asistencia->error);
+            $success = false;
+            break;
+        }
+        if (!$stmt_asistencia->execute()) {
+            error_log("Error al ejecutar inicializarAsistenciaMateria para mes {$mes}: " . $stmt_asistencia->error);
+            $success = false;
+            break;
+        }
+    }
+    $stmt_asistencia->close();
+
+    if ($success) {
+        $conexion->commit();
+        return true;
+    } else {
+        $conexion->rollback();
+        return false;
+    }
+}
+
+/**
+ * Crea el registro inicial en calificacionesterciario para una materia.
+ */
+function inicializarCalificacionMateria($conexion, $idAlumno, $idMateria) {
+    // Asumimos que sinAsistencia se pasa explícitamente como 0
+    $sql_calificacion = "INSERT INTO calificacionesterciario (idAlumno, idMateria, sinAsistencia) VALUES (?, ?, 0)";
+    $stmt_calificacion = $conexion->prepare($sql_calificacion);
+    if (!$stmt_calificacion) {
+        error_log("Error al preparar inicializarCalificacionMateria: " . $conexion->error);
+        return false;
+    }
+
+    if (!$stmt_calificacion->bind_param("ii", $idAlumno, $idMateria)) {
+        error_log("Error al bind_param en inicializarCalificacionMateria: " . $stmt_calificacion->error);
+        $stmt_calificacion->close();
+        return false;
+    }
+    if (!$stmt_calificacion->execute()) {
+        error_log("Error al ejecutar inicializarCalificacionMateria: " . $stmt_calificacion->error);
+        $stmt_calificacion->close();
+        return false;
+    }
+    $stmt_calificacion->close();
+    return true;
+}
+
+/**
+ * Elimina todos los registros de asistenciaterciario para un alumno, materia y ciclo lectivo.
+ */
+function eliminarAsistenciaMateria($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
+    $sql = "DELETE FROM asistenciaterciario WHERE idAlumno = ? AND idMateria = ? AND idCicloLectivo = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar eliminarAsistenciaMateria: " . $conexion->error);
+        return false;
+    }
+
+    if (!$stmt->bind_param("iii", $idAlumno, $idMateria, $idCicloLectivo)) {
+        error_log("Error al bind_param en eliminarAsistenciaMateria: " . $stmt->error);
+        $stmt->close();
+        return false;
+    }
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Elimina el registro de calificacionesterciario para un alumno y materia.
+ */
+function eliminarCalificacionMateria($conexion, $idAlumno, $idMateria) {
+    $sql = "DELETE FROM calificacionesterciario WHERE idAlumno = ? AND idMateria = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar eliminarCalificacionMateria: " . $conexion->error);
+        return false;
+    }
+
+    if (!$stmt->bind_param("ii", $idAlumno, $idMateria)) {
+        error_log("Error al bind_param en eliminarCalificacionMateria: " . $stmt->error);
+        $stmt->close();
+        return false;
+    }
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+/**
+ * Obtiene detalles de una inscripción de materia para su posterior eliminación.
+ */
+function obtenerDetallesMatriculacionMateria($conexion, $idMatriculacionMateria) {
+    $sql = "SELECT idAlumno, idMateria, idCicloLectivo
+            FROM matriculacionmateria
+            WHERE idMatriculacionMateria = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerDetallesMatriculacionMateria: " . $conexion->error);
+        return null;
+    }
+    $stmt->bind_param("i", $idMatriculacionMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $details = $result->fetch_assoc();
+    $stmt->close();
+    return $details;
+}
+/**
+ * Obtiene los planes de estudio en los que un alumno está matriculado para un año específico.
+ *
+ * @param mysqli $conexion La conexión a la base de datos.
+ * @param int $idAlumno El ID del alumno.
+ * @param int $anio El año para filtrar las matriculaciones.
+ * @return array Un array de planes matriculados.
+ */
+function obtenerPlanesMatriculadosPorAnio($conexion, $idAlumno, $anio) {
+    // Primero obtenemos el idCicloLectivo para el año dado
+    $idCicloLectivo = buscarIdCiclo($conexion, $anio);
+    if (is_null($idCicloLectivo)) {
+        return []; // No hay ciclo lectivo para este año, por lo tanto, no hay matriculaciones
+    }
+
+    // Ahora buscamos las matriculaciones de plan para ese alumno y ciclo lectivo
+    $sql = "SELECT DISTINCT pe.idPlan, pe.nombre
+            FROM matriculacion m
+            INNER JOIN plandeestudio pe ON m.idPlanDeEstudio = pe.idPlan
+            WHERE m.idAlumno = ? AND m.anio = ?
+            ORDER BY pe.nombre ASC";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerPlanesMatriculadosPorAnio: " . $conexion->error);
+        return [];
+    }
+    // Usamos el año directamente para el bind_param, no el idCicloLectivo aquí.
+    // Si la tabla `matriculacion` tiene un campo `anio` que se corresponde con `ciclolectivo.anio`, esto es correcto.
+    $stmt->bind_param("ii", $idAlumno, $anio);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $planes = [];
+    while ($row = $result->fetch_assoc()) {
+        $planes[] = $row;
+    }
+    $stmt->close();
+    return $planes;
+}
+function obtenerUltimoCicloLectivo($conexion) {
+    $sql = "SELECT idciclolectivo, anio
+            FROM ciclolectivo
+            ORDER BY anio DESC
+            LIMIT 1"; // Obtenemos solo el registro más reciente por año
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerUltimoCicloLectivo: " . $conexion->error);
+        return null;
+    }
+
+    if (!$stmt->execute()) {
+        error_log("Error al ejecutar obtenerUltimoCicloLectivo: " . $stmt->error);
+        $stmt->close();
+        return null;
+    }
+
+    $result = $stmt->get_result();
+    $ultimoCiclo = $result->fetch_assoc(); // Obtiene la primera (y única) fila
+    $stmt->close();
+
+    return $ultimoCiclo; // Retorna el array o null si no hay resultados
 }

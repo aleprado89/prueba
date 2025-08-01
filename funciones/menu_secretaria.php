@@ -28,7 +28,9 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownAlumnos">
                         <li><h6 class="dropdown-header">Gestión de Alumnos</h6></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=legajo">Legajo</a></li>
-                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=matriculacion">Matriculación</a></li>
+                        <li><h6 class="dropdown-header">Inscripciones</h6></li>
+                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=matriculacion">Matriculación (Plan/Curso)</a></li>
+                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=inscripcionMateria">Inscripción a Materia</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Calificaciones</h6></li>
                         <li><a class="dropdown-item" href="../secretaria/carga_calif_secre_xalu.php">Calificaciones por Alumno</a></li>
