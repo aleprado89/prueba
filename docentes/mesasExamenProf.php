@@ -52,9 +52,21 @@ if (empty($fechasExamen)) {
       $html .= '</h2>';
       $html .= '<div id="collapse-' . $examenes[0]['idFechaExamen'] . '" class="accordion-collapse collapse" aria-labelledby="heading-' . $examenes[0]['idFechaExamen'] . '" data-bs-parent="#accordionExample">';
       $html .= '<div class="accordion-body">';
-      foreach ($examenes as $examen) {
-          $html .= '<p>' . $examen['Fecha'] . ' - ' . $examen['Hora'] . ' - ' . $examen['Curso'] . '</p>';
-      }
+     foreach ($examenes as $examen) {
+    $p = array(
+        'idFechaExamen' => filter_var($examen['idFechaExamen'], FILTER_VALIDATE_INT),
+        'nombreMateria' => filter_var($nombreMateria, FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'Curso' => filter_var($examen['Curso'], FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'Fecha' => filter_var($examen['Fecha'], FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'Hora' => filter_var($examen['Hora'], FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'idMateria' => filter_var($examen['idMateria'], FILTER_VALIDATE_INT)
+    );
+
+    $html .= '<p><a href="cargaActa.php?' . http_build_query($p) . '">'
+           . htmlspecialchars($examen['Fecha'] . ' - ' . $examen['Hora'] . ' - ' . $examen['Curso'])
+           . '</a></p>';
+}
+
       $html .= '</div>';
       $html .= '</div>';
       $html .= '</div>';

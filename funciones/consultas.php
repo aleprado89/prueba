@@ -1415,6 +1415,7 @@ function materiasAlumnoCurso($conn, $idAlumno, $idPlan, $idCursoPredeterminado)
             AND materiaterciario.idPlan = ?
             AND cursospredeterminado.idcursopredeterminado = ?
             AND  (calificacionesterciario.materiaAprobada is null or calificacionesterciario.materiaAprobada = 0)
+            AND CURDATE() > materiaterciario.FechaFin
             ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
 
   // Preparar el statement
@@ -1518,18 +1519,7 @@ function buscarCursosPlanCiclo($conexion, $idPlan, $idCiclo) {
   }
   return $cursos;
 }
-function buscarCursosPlan($conexion, $idPlan) {
-  $consulta = "SELECT idCurso, nombre FROM curso WHERE idPlanEstudio = ?";
-  $stmt = $conexion->prepare($consulta);
-  $stmt->bind_param("i", $idPlan);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $cursos = array();
-  while ($data = $result->fetch_assoc()) {
-    $cursos[] = $data;
-  }
-  return $cursos;
-}
+
 
 function materiasPlanCurso($conexion, $idPlan, $idCurso) {
   $consulta = "SELECT materiaterciario.nombre as nombreMateria,materiaterciario.idMateria ,curso.nombre as nombreCurso
@@ -1992,16 +1982,18 @@ function insertarMatriculacionMateria($conexion, $data) {
 }
 
 function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter = null, $idCursoFilter = null) {
+    // La consulta original se usará para cargar la tabla completa al principio
+    // Esta nueva función será llamada por el AJAX cuando se apliquen los filtros.
     $sql = "SELECT mm.idMatriculacionMateria, mt.nombre AS nombreMateria, c.nombre AS nombreCurso, pe.nombre AS nombrePlan,
-                   mm.fechaMatriculacion, mm.estado, mm.fechaBajaMatriculacion, cl.anio AS anioCicloLectivo,
-                   mm.idMateria, mm.idNivel, mm.idCicloLectivo, pe.idPlan AS idPlanFK, c.idCurso AS idCursoFK
-            FROM matriculacionmateria mm
-            INNER JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
-            INNER JOIN curso c ON mt.idCurso = c.idCurso
-            INNER JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
-            INNER JOIN ciclolectivo cl ON mm.idCicloLectivo = cl.idCiclolectivo
-            WHERE mm.idAlumno = ?";
-    
+            mm.fechaMatriculacion, mm.estado, mm.fechaBajaMatriculacion, cl.anio AS anioCicloLectivo,
+            mm.idMateria, mm.idNivel, mm.idCicloLectivo, pe.idPlan AS idPlanFK, c.idCurso AS idCursoFK
+        FROM matriculacionmateria mm
+        INNER JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
+        INNER JOIN curso c ON mt.idCurso = c.idCurso
+        INNER JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
+        INNER JOIN ciclolectivo cl ON mm.idCicloLectivo = cl.idCiclolectivo
+        WHERE mm.idAlumno = ?";
+
     $params = [$idAlumno];
     $types = "i";
 
@@ -2011,7 +2003,6 @@ function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter
         $types .= "i";
     }
     if ($idCursoFilter !== null && $idCursoFilter !== '') {
-        // Asumiendo que c.idCurso es la columna correcta para el filtro de curso en esta unión
         $sql .= " AND c.idCurso = ?";
         $params[] = $idCursoFilter;
         $types .= "i";
@@ -2025,15 +2016,12 @@ function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter
         return [];
     }
 
-    // *** MODIFICACIÓN AQUÍ ***
-    // Preparamos las referencias para bind_param
+    // Usar call_user_func_array para bind_param con un array de parámetros dinámico
     $bind_params = [$types]; // El primer elemento es el string de tipos
     foreach ($params as &$param) { // Usamos '&' para pasar por referencia
         $bind_params[] = &$param;
     }
-    // Usamos call_user_func_array con las referencias
     call_user_func_array([$stmt, 'bind_param'], $bind_params);
-    // *** FIN DE LA MODIFICACIÓN ***
 
     $stmt->execute();
     $result = $stmt->get_result();

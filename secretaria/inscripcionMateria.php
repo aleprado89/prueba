@@ -44,18 +44,20 @@ if (isset($_GET['ajax_action'])) {
         echo json_encode($planes);
         exit;
     }
-    // --- NUEVO CASO PARA EL FILTRO DE CURSOS ---
-    elseif ($_GET['ajax_action'] == 'get_cursos_por_plan_filtro') {
+    // ENDPOINT PARA OBTENER LAS MATRICULACIONES FILTRADAS DE LA TABLA
+    elseif ($_GET['ajax_action'] == 'get_matriculaciones_filtradas') {
+        $idAlumno = $_GET['idAlumno'] ?? null;
         $idPlan = $_GET['idPlan'] ?? null;
-        $cursos = [];
-        if (!is_null($idPlan)) {
-            // Aquí usamos tu nueva función buscarCursosPlan
-            $cursos = buscarCursosPlan($conn, $idPlan);
+        $idCurso = $_GET['idCurso'] ?? null;
+        $matriculaciones_filtradas = [];
+
+        if ($idAlumno) {
+            $matriculaciones_filtradas = obtenerMatriculacionesMateriaAlumno($conn, $idAlumno, $idPlan ?: null, $idCurso ?: null);
         }
-        echo json_encode($cursos);
+        echo json_encode($matriculaciones_filtradas);
         exit;
     }
-    // --- FIN NUEVO CASO ---
+    // --- FIN DE CASOS AJAX ---
 }
 // --- Fin Lógica para manejar peticiones AJAX ---
 
@@ -79,9 +81,6 @@ $message_type = '';
 
 // Procesamiento de formulario de Inscripción a Materia (INSERT)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'save_matriculacion_materia') {
-    // Debugging: Imprimir el valor recibido para idMateriaMatriculacion
-    // echo "Valor de \$_POST['idMateriaMatriculacion']: " . ($_POST['idMateriaMatriculacion'] ?? 'undefined');
-
     $matriculacion_materia_data = [
         'idAlumno' => $idAlumno,
         'idMateria' => $_POST['idMateriaMatriculacion'] ?? null,
@@ -106,13 +105,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                 $message_type = 'danger';
                 $op_success = false;
             } else {
-                // Aquí se usan las variables $idAlumno, $idMateria, $idCicloLectivo
                 if (!inicializarAsistenciaMateria($conn, $idAlumno, $idMateria, $idCicloLectivo)) {
                     $message = "Error al inicializar registros de asistencia para la materia (ID Materia: {$idMateria}).";
                     $message_type = 'danger';
                     $op_success = false;
                 }
-
                 if ($op_success && !inicializarCalificacionMateria($conn, $idAlumno, $idMateria)) {
                     $message = "Error al inicializar registro de calificación para la materia (ID Materia: {$idMateria}).";
                     $message_type = 'danger';
@@ -142,30 +139,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action']) && $_GET['action'] == 'delete_matriculacion_materia') {
     $idMatriculacionMateria = $_GET['idMatriculacionMateria'] ?? null;
     if ($idMatriculacionMateria) {
-        // Obtener detalles necesarios antes de la confirmación
         $matriculacion_materia_data = obtenerDetallesMatriculacionMateria($conn, $idMatriculacionMateria);
 
         if ($matriculacion_materia_data) {
-            // Si se recibe el parámetro de confirmación, procedemos a eliminar
             if (isset($_GET['confirm']) && $_GET['confirm'] == 'yes') {
                 $conn->begin_transaction();
                 $delete_success = true;
 
-                // Eliminar de asistenciaterciario
                 if (!eliminarAsistenciaMateria($conn, $matriculacion_materia_data['idAlumno'], $matriculacion_materia_data['idMateria'], $matriculacion_materia_data['idCicloLectivo'])) {
                     $message = "Error al eliminar registros de asistencia para la materia.";
                     $message_type = 'danger';
                     $delete_success = false;
                 }
-
-                // Eliminar de calificacionesterciario
                 if ($delete_success && !eliminarCalificacionMateria($conn, $matriculacion_materia_data['idAlumno'], $matriculacion_materia_data['idMateria'])) {
                     $message = "Error al eliminar registro de calificación para la materia.";
                     $message_type = 'danger';
                     $delete_success = false;
                 }
-
-                // Eliminar de matriculacionmateria
                 if ($delete_success && eliminarMatriculacionMateria($conn, $idMatriculacionMateria)) {
                     $message = "Inscripción de materia y sus registros asociados eliminados correctamente.";
                     $message_type = 'success';
@@ -181,10 +171,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action']) && $_GET['acti
                     $conn->rollback();
                 }
             } else {
-                // Si no hay confirmación, redirigir al modal de confirmación
-                // Nota: Este redireccionamiento podría ser un problema si el modal se abre directamente en el JS.
-                // Un mejor enfoque es que el JS abra el modal y el modal tenga un enlace que haga la redirección confirmada.
-                // Por ahora, para simplificar, mantenemos la redirección.
                 header('Location: inscripcionMateria.php?idAlumno=' . $idAlumno . '&action=delete_matriculacion_materia&idMatriculacionMateria=' . $idMatriculacionMateria . '&confirm=yes');
                 exit;
             }
@@ -210,8 +196,11 @@ if (isset($_SESSION['message_inscripcionMateria'])) {
 }
 
 
-// Datos para los dropdowns
-$matriculaciones_materia = obtenerMatriculacionesMateriaAlumno($conn, $idAlumno);
+// --- MODIFICACIÓN: La tabla de inscripciones se carga dinámicamente por AJAX ---
+// $matriculaciones_materia = obtenerMatriculacionesMateriaAlumno($conn, $idAlumno); // No cargar al inicio
+$matriculaciones_materia = []; // Tabla vacía inicialmente
+// --- FIN DE LA MODIFICACIÓN ---
+
 
 // Obtener el último año de ciclo lectivo para el select de año principal
 $ultimoCiclo = obtenerUltimoCicloLectivo($conn);
@@ -344,10 +333,9 @@ $today = date('Y-m-d');
         <div class="row mb-3 mt-3">
             <div class="col-md-6">
                 <label for="filtroPlan" class="form-label">Filtrar por Plan:</label>
-                <select class="form-select" id="filtroPlan" onchange="handleFiltroPlanChange()"> <!-- Cambiado el onchange -->
+                <select class="form-select" id="filtroPlan" onchange="handleFiltroPlanChange()">
                     <option value="">Todos los Planes</option>
                     <?php
-                        // Usamos el array $planesParaFiltro que ya se ha preparado
                         foreach ($planesParaFiltro as $plan): ?>
                         <option value="<?php echo htmlspecialchars($plan['idPlan']); ?>"><?php echo htmlspecialchars($plan['nombre']); ?></option>
                     <?php endforeach; ?>
@@ -363,7 +351,7 @@ $today = date('Y-m-d');
         </div>
         <!-- FIN NUEVOS FILTROS -->
 
-        <?php if (!empty($matriculaciones_materia)): ?>
+        <!-- La tabla de inscripciones se llenará dinámicamente -->
         <div class="table-responsive">
           <table class="table table-striped table-hover mt-3" id="tablaInscripciones">
             <thead>
@@ -379,32 +367,11 @@ $today = date('Y-m-d');
               </tr>
             </thead>
             <tbody>
-              <?php foreach ($matriculaciones_materia as $mat_materia): ?>
-              <tr>
-                <td><?php echo htmlspecialchars($mat_materia['nombreMateria']); ?></td>
-                <td><?php echo htmlspecialchars($mat_materia['nombreCurso']); ?></td>
-                <td><?php echo htmlspecialchars($mat_materia['nombrePlan']); ?></td>
-                <td><?php echo htmlspecialchars($mat_materia['fechaMatriculacion']); ?></td>
-                <td><?php echo htmlspecialchars($mat_materia['estado']); ?></td>
-                <td><?php echo htmlspecialchars($mat_materia['fechaBajaMatriculacion'] ?? '-'); ?></td>
-                <td><?php echo htmlspecialchars($mat_materia['anioCicloLectivo']); ?></td>
-                <td>
-                  <div class="action-icon-container">
-                      <!-- Enlace para eliminar inscripción de materia con modal de confirmación -->
-                      <a href="#" onclick='showConfirmDeleteModal("inscripcionMateria.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>&action=delete_matriculacion_materia&idMatriculacionMateria=<?php echo htmlspecialchars($mat_materia['idMatriculacionMateria']); ?>&confirm=yes"); return false;'
-                         class="action-icon-link delete-icon" title="Eliminar">
-                          <i class="bi bi-trash text-danger" style="color: black !important;"></i>
-                      </a>
-                  </div>
-                </td>
-              </tr>
-              <?php endforeach; ?>
+              <!-- Las filas se cargarán aquí mediante AJAX con los filtros -->
             </tbody>
           </table>
         </div>
-        <?php else: ?>
-        <p>No hay inscripciones a materias registradas para este alumno.</p>
-        <?php endif; ?>
+
       </fieldset>
       <a href="matriculacion.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>" class="text-center primary-link">Volver a Matriculación de Plan</a>
     </div>
@@ -442,6 +409,9 @@ $today = date('Y-m-d');
 
 <!-- Scripts para lógica de la página -->
 <script>
+  var deleteUrl = ''; // Variable global para almacenar la URL de eliminación
+  var currentPlanValueForCoursePopulate = ''; // Variable para rastrear el plan que se usó para poblar los cursos
+
   // --- Funciones para la sección de Inscripción a Materias ---
 
   // Carga los planes de estudio matriculados para un año específico en la sección de inscripción de materias
@@ -455,7 +425,7 @@ $today = date('Y-m-d');
 
     if (idAlumno && anio) {
       $.ajax({
-        url: 'inscripcionMateria.php', // Asegúrate que la URL sea correcta
+        url: 'inscripcionMateria.php',
         type: 'GET',
         data: { ajax_action: 'get_planes_por_anio', idAlumno: idAlumno, anio: anio },
         dataType: 'json',
@@ -487,22 +457,20 @@ $today = date('Y-m-d');
     $('#idMateriaMatriculacion').empty().append('<option value="">Seleccione un curso primero</option>');
 
     if (idPlan) {
-      var anio = $('#anioInscripcionMateria').val();
+      var anio = $('#anioInscripcionMateria').val(); // Necesitamos el año para buscarCursosPlanCiclo
       $.ajax({
-        url: 'inscripcionMateria.php', // Asegúrate que la URL sea correcta
+        url: 'inscripcionMateria.php',
         type: 'GET',
-        data: { ajax_action: 'get_cursos', idPlan: idPlan, anio: anio },
+        data: { ajax_action: 'get_cursos', idPlan: idPlan, anio: anio }, // Usamos get_cursos que ya filtra por año
         dataType: 'json',
         success: function(cursos) {
           idCursoSelect.empty().append('<option value="">Seleccione un curso</option>');
           $.each(cursos, function(i, curso) {
             idCursoSelect.append('<option value="' + curso.idCurso + '">' + curso.nombre + '</option>');
           });
-          // Si se seleccionó un curso previamente para el filtrado, mantenerlo
-          if (selectedCursoId) {
+          if (selectedCursoId) { // Si se proporcionó un curso para seleccionar
             idCursoSelect.val(selectedCursoId);
-            // Una vez seleccionado el curso, cargamos las materias
-            loadMateriasMatriculacionMateria(null); // Pasamos null porque la materia se seleccionará después
+            // Aquí se podría llamar a loadMateriasMatriculacionMateria si fuera necesario pre-seleccionar materia
           }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -525,14 +493,13 @@ $today = date('Y-m-d');
 
     if (idCurso && idPlan) {
       $.ajax({
-        url: 'inscripcionMateria.php', // Asegúrate que la URL sea correcta
+        url: 'inscripcionMateria.php',
         type: 'GET',
         data: { ajax_action: 'get_materias', idCurso: idCurso, idPlan: idPlan }, // PASANDO AMBOS PARÁMETROS
         dataType: 'json',
         success: function(materias) {
           idMateriaMatriculacionSelect.empty().append('<option value="">Seleccione una materia</option>');
           $.each(materias, function(i, materia) {
-            // Asegúrate que la respuesta AJAX contenga 'idMateria'
             idMateriaMatriculacionSelect.append('<option value="' + materia.idMateria + '">' + materia.nombreMateria + '</option>');
           });
           if (selectedMateriaId) {
@@ -549,66 +516,138 @@ $today = date('Y-m-d');
     }
   }
 
+  // --- FUNCIÓN PARA POBLAR EL SELECTOR DE FILTRO DE CURSOS ---
+  // Esta función se llama cuando filterTableInscripciones obtiene resultados (matriculaciones).
+  // Se encarga de poblar el selector #filtroCurso con los cursos únicos de esas matriculaciones.
+  // 'keepCurrentValue' determina si se intenta mantener la selección actual del filtro de curso.
+  function populateFiltroCursos(matriculaciones, keepCurrentValue = true) {
+    var filtroCursoSelect = $('#filtroCurso');
+    // Guarda el valor actual del selector de cursos si keepCurrentValue es true
+    var currentValue = keepCurrentValue ? filtroCursoSelect.val() : '';
+
+    filtroCursoSelect.empty().append('<option value="">Todos los Cursos</option>'); // Reiniciar con la opción "Todos"
+
+    if (matriculaciones && matriculaciones.length > 0) {
+      var uniqueCourses = {}; // Objeto para almacenar cursos únicos {idCurso: nombreCurso}
+
+      $.each(matriculaciones, function(i, mat) {
+        if (!uniqueCourses[mat.idCursoFK]) { // Usamos idCursoFK
+          uniqueCourses[mat.idCursoFK] = mat.nombreCurso;
+        }
+      });
+
+      var sortedCourses = Object.entries(uniqueCourses).sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
+
+      $.each(sortedCourses, function(index, [idCurso, nombreCurso]) {
+        // Conservar el valor seleccionado si ya existía en la lista y keepCurrentValue es true
+        var selectedAttribute = (keepCurrentValue && idCurso == currentValue) ? 'selected' : '';
+        filtroCursoSelect.append('<option value="' + idCurso + '" ' + selectedAttribute + '>' + nombreCurso + '</option>');
+      });
+    }
+    // Si no hay cursos para el plan o no hay matriculaciones, el select queda solo con "Todos los Cursos".
+  }
+
   // --- FUNCIÓN PARA FILTRAR LA TABLA DE INSCRIPCIONES ---
   function filterTableInscripciones() {
     var selectedPlanValue = $('#filtroPlan').val(); // Valor del <select> (idPlan o vacío)
-    var selectedPlanText = $('#filtroPlan option:selected').text(); // Texto visible del <select> (NombrePlan o "Todos los Planes")
-    var selectedCurso = $('#filtroCurso').val(); // Valor del <select> (NombreCurso o vacío)
-    var $tablaRows = $('#tablaInscripciones tbody tr');
+    var selectedCursoValue = $('#filtroCurso').val(); // Valor del <select> (idCurso o vacío)
+    var idAlumno = "<?php echo $idAlumno; ?>";
 
-    $tablaRows.show().filter(function() {
-      var $fila = $(this);
-      var planFilaText = $fila.find('td:nth-child(3)').text(); // Texto del Plan en la fila
-      var cursoFilaText = $fila.find('td:nth-child(2)').text(); // Texto del Curso en la fila
+    // Si ambos filtros están vacíos ("Todos"), no mostramos nada en la tabla.
+    if (!selectedPlanValue && !selectedCursoValue) {
+        $('#tablaInscripciones tbody').empty();
+        // Si se limpian los filtros, también debemos resetear el selector de cursos.
+        $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
+        currentPlanValueForCoursePopulate = ''; // Reseteamos el plan de referencia al limpiar filtros
+        return;
+    }
 
-      // Comprueba si el plan de la fila coincide con el plan seleccionado en el filtro
-      // Si el filtro de plan está vacío ("Todos los Planes"), coincide siempre.
-      var coincidePlan = !selectedPlanValue || planFilaText === selectedPlanText;
-
-      // Comprueba si el curso de la fila coincide con el curso seleccionado en el filtro
-      // Si el filtro de curso está vacío ("Todos los Cursos"), coincide siempre.
-      var coincideCurso = !selectedCurso || cursoFilaText === selectedCurso;
-
-      // La fila se oculta si NO cumple CON AMBOS filtros (o si alguno de los filtros está en "Todos").
-      // Por lo tanto, retornamos true para ocultarla si alguna condición no se cumple.
-      return !(coincidePlan && coincideCurso);
-    }).hide();
-  }
-
-  // --- FUNCIÓN PARA CARGAR LOS CURSOS EN EL SELECTOR DE FILTRO ---
-  function loadCursosFiltroTabla(idPlan) { // Ya no necesita el año, solo el plan
-    var filtroCursoSelect = $('#filtroCurso');
-    filtroCursoSelect.empty().append('<option value="">Cargando cursos...</option>');
-
-    if (idPlan) {
-      $.ajax({
+    // Si hay algún filtro aplicado, hacemos la llamada AJAX
+    $.ajax({
         url: 'inscripcionMateria.php',
         type: 'GET',
-        // Solo pasamos idPlan, ya que buscarCursosPlan no necesita el año
-        data: { ajax_action: 'get_cursos_por_plan_filtro', idPlan: idPlan },
+        data: {
+            ajax_action: 'get_matriculaciones_filtradas',
+            idAlumno: idAlumno,
+            idPlan: selectedPlanValue || null, // Pasar null si está vacío
+            idCurso: selectedCursoValue || null // Pasar null si está vacío
+        },
         dataType: 'json',
-        success: function(cursos) {
-          filtroCursoSelect.empty().append('<option value="">Todos los Cursos</option>');
-          $.each(cursos, function(i, curso) {
-            // Importante: El value debe ser el nombre del curso para que coincida con el texto de la tabla.
-            filtroCursoSelect.append('<option value="' + curso.nombre + '">' + curso.nombre + '</option>');
-          });
+        success: function(matriculaciones) {
+            var $tbody = $('#tablaInscripciones tbody');
+            $tbody.empty(); // Limpiar la tabla antes de añadir nuevos datos
+
+            if (matriculaciones && matriculaciones.length > 0) {
+                // --- POBLAR EL SELECTOR DE CURSOS SI EL PLAN ESTÁ SELECCIONADO ---
+                // Solo poblar si hay un plan seleccionado Y si el plan actual es diferente al que se usó para poblar la última vez.
+                // Esto evita repoblar si solo cambiamos el curso dentro del mismo plan.
+                if (selectedPlanValue && selectedPlanValue !== currentPlanValueForCoursePopulate) {
+                    populateFiltroCursos(matriculaciones, true); // Intentar mantener la selección actual del curso
+                    currentPlanValueForCoursePopulate = selectedPlanValue; // Actualizar el plan que se usó para poblar
+                }
+
+                // --- Renderizar la tabla ---
+                $.each(matriculaciones, function(i, mat) {
+                    var fechaBaja = mat.fechaBajaMatriculacion ? mat.fechaBajaMatriculacion : '-';
+
+                    var row = `
+                        <tr>
+                            <td>${mat.nombreMateria}</td>
+                            <td>${mat.nombreCurso}</td>
+                            <td>${mat.nombrePlan}</td>
+                            <td>${mat.fechaMatriculacion}</td>
+                            <td>${mat.estado}</td>
+                            <td>${fechaBaja}</td>
+                            <td>${mat.anioCicloLectivo}</td>
+                            <td>
+                              <div class="action-icon-container">
+                                  <a href="#" onclick='showConfirmDeleteModal("inscripcionMateria.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>&action=delete_matriculacion_materia&idMatriculacionMateria=${mat.idMatriculacionMateria}&confirm=yes"); return false;'
+                                     class="action-icon-link delete-icon" title="Eliminar">
+                                      <i class="bi bi-trash text-danger" style="color: black !important;"></i>
+                                  </a>
+                              </div>
+                            </td>
+                        </tr>
+                    `;
+                    $tbody.append(row);
+                });
+            } else {
+                $tbody.append('<tr><td colspan="8">No se encontraron inscripciones con los filtros seleccionados.</td></tr>');
+                // Si no hay inscripciones, vaciar el filtro de cursos también
+                $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
+                // Si no hay inscripciones para el plan seleccionado, también reseteamos el plan de referencia.
+                currentPlanValueForCoursePopulate = '';
+            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.error("Error al cargar cursos para filtro: " + textStatus, errorThrown);
-            filtroCursoSelect.empty().append('<option value="">Error al cargar cursos</option>');
+            console.error("Error al filtrar tabla de inscripciones: " + textStatus, errorThrown);
+            $('#tablaInscripciones tbody').html('<tr><td colspan="8">Error al cargar datos de inscripciones.</td></tr>');
         }
-      });
-    } else {
-      filtroCursoSelect.empty().append('<option value="">Seleccione un Plan primero</option>');
-    }
+    });
   }
 
-  // --- NUEVO MANEJADOR PARA EL CAMBIO EN FILTRO PLAN ---
+  // --- MANEJADOR PARA EL CAMBIO EN FILTRO PLAN ---
   function handleFiltroPlanChange() {
-      var selectedPlanValue = $('#filtroPlan').val();
-      loadCursosFiltroTabla(selectedPlanValue); // Llamamos a la función para cargar los cursos
-      filterTableInscripciones(); // Y aplicamos el filtro (que al principio solo tendrá "Todos los Cursos")
+      var selectedPlanValue = $('#filtroPlan').val(); // Obtenemos el idPlan seleccionado
+
+      // Si se selecciona "Todos los Planes", reseteamos el filtro de cursos y vaciamos la tabla.
+      if (!selectedPlanValue) {
+          $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
+          $('#tablaInscripciones tbody').empty(); // Vaciar tabla si no hay plan
+          currentPlanValueForCoursePopulate = ''; // Reseteamos el plan de referencia para poblar cursos
+      } else {
+          // Si se selecciona un plan específico, llamamos a filterTableInscripciones.
+          // filterTableInscripciones se encargará de traer los datos y, si hay resultados,
+          // llamará a populateFiltroCursos() para poblar el selector de cursos,
+          // manteniendo la selección del curso actual si es válida.
+          filterTableInscripciones();
+      }
+  }
+
+  // --- Función para mostrar el modal de confirmación ---
+  function showConfirmDeleteModal(url) {
+      deleteUrl = url; // Guardar la URL para usarla después en el modal
+      $('#confirmDeleteModal').modal('show');
   }
 
 
@@ -620,10 +659,11 @@ $today = date('Y-m-d');
         loadPlanesPorAnioInscripcionMateria();
     }
 
-    // Al cambiar el plan en el filtro, actualizamos las opciones de curso y aplicamos el filtro
-    $('#filtroPlan').on('change', handleFiltroPlanChange); // Usamos la nueva función manejadora
+    // Al cambiar el plan en el filtro, actualizamos el selector de cursos y filtramos la tabla.
+    $('#filtroPlan').on('change', handleFiltroPlanChange);
 
-    // Al cambiar el curso en el filtro, aplicamos el filtro
+    // Al cambiar el curso en el filtro, aplicamos el filtro a la tabla.
+    // IMPORTANTE: Ya NO llamamos a populateFiltroCursos aquí. El selector de cursos mantiene su valor.
     $('#filtroCurso').on('change', function() {
         filterTableInscripciones();
     });
