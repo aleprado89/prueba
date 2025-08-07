@@ -2323,4 +2323,4 @@ function obtenerUltimoCicloLectivo($conexion) {
 
     return $ultimoCiclo; // Retorna el array o null si no hay resultados
 }
-//test branch
+//test branch2
