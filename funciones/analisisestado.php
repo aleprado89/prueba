@@ -536,6 +536,10 @@ function analisis_estado(
             $p1 = '2';
         }
         ;
+        if ($p1 == 'Ep' || $p1 == 'ep' || $p1 == 'EP') {
+            $p1 = '6';
+        }
+        ;
         if ($p1 == 'Ns' || $p1 == 'ns' || $p1 == 'NS') {
             $p1 = '2';
         }
@@ -571,6 +575,10 @@ function analisis_estado(
         ;
         if ($p2 == 'Na' || $p2 == 'na' || $p2 == 'NA') {
             $p2 = '2';
+        }
+        ;
+        if ($p2 == 'Ep' || $p2 == 'ep' || $p2 == 'EP') {
+            $p2 = '6';
         }
         ;
         if ($p2 == 'Ns' || $p2 == 'ns' || $p2 == 'NS') {
@@ -610,6 +618,10 @@ function analisis_estado(
             $p3 = '2';
         }
         ;
+        if ($p3 == 'Ep' || $p3 == 'ep' || $p3 == 'EP') {
+            $p3 = '6';
+        }
+        ;
         if ($p3 == 'Ns' || $p3 == 'ns' || $p3 == 'NS') {
             $p3 = '2';
         }
@@ -645,6 +657,10 @@ function analisis_estado(
         ;
         if ($p4 == 'Na' || $p4 == 'na' || $p4 == 'NA') {
             $p4 = '2';
+        }
+        ;
+        if ($p4 == 'Ep' || $p4 == 'ep' || $p4 == 'EP') {
+            $p4 = '6';
         }
         ;
         if ($p4 == 'Ns' || $p4 == 'ns' || $p4 == 'NS') {
@@ -684,6 +700,10 @@ function analisis_estado(
             $p5 = '2';
         }
         ;
+        if ($p5 == 'Ep' || $p5 == 'ep' || $p5 == 'EP') {
+            $p5 = '6';
+        }
+        ;
         if ($p5 == 'Ns' || $p5 == 'ns' || $p5 == 'NS') {
             $p5 = '2';
         }
@@ -719,6 +739,10 @@ function analisis_estado(
         ;
         if ($p6 == 'Na' || $p6 == 'na' || $p6 == 'NA') {
             $p6 = '2';
+        }
+        ;
+        if ($p6 == 'Ep' || $p6 == 'ep' || $p6 == 'EP') {
+            $p6 = '6';
         }
         ;
         if ($p6 == 'Ns' || $p6 == 'ns' || $p6 == 'NS') {
@@ -758,6 +782,10 @@ function analisis_estado(
             $p7 = '2';
         }
         ;
+        if ($p7 == 'Ep' || $p7 == 'ep' || $p7 == 'EP') {
+            $p7 = '6';
+        }
+        ;
         if ($p7 == 'Ns' || $p7 == 'ns' || $p7 == 'NS') {
             $p7 = '2';
         }
@@ -793,6 +821,10 @@ function analisis_estado(
         ;
         if ($p8 == 'Na' || $p8 == 'na' || $p8 == 'NA') {
             $p8 = '2';
+        }
+        ;
+        if ($p8 == 'Ep' || $p8 == 'ep' || $p8 == 'EP') {
+            $p8 = '6';
         }
         ;
         if ($p8 == 'Ns' || $p8 == 'ns' || $p8 == 'NS') {
@@ -836,6 +868,10 @@ function analisis_estado(
             $r1 = '2';
         }
         ;
+        if ($r1 == 'Ep' || $r1 == 'ep' || $r1 == 'EP') {
+            $r1 = '6';
+        }
+        ;
         if ($r1 == 'Ns' || $r1 == 'ns' || $r1 == 'NS') {
             $r1 = '2';
         }
@@ -871,6 +907,10 @@ function analisis_estado(
         ;
         if ($r2 == 'Na' || $r2 == 'na' || $r2 == 'NA') {
             $r2 = '2';
+        }
+        ;
+        if ($r2 == 'Ep' || $r2 == 'ep' || $r2 == 'EP') {
+            $r2 = '6';
         }
         ;
         if ($r2 == 'Ns' || $r2 == 'ns' || $r2 == 'NS') {
@@ -910,6 +950,10 @@ function analisis_estado(
             $r3 = '2';
         }
         ;
+        if ($r3 == 'Ep' || $r3 == 'ep' || $r3 == 'EP') {
+            $r3 = '6';
+        }
+        ;
         if ($r3 == 'Ns' || $r3 == 'ns' || $r3 == 'NS') {
             $r3 = '2';
         }
@@ -945,6 +989,10 @@ function analisis_estado(
         ;
         if ($r4 == 'Na' || $r4 == 'na' || $r4 == 'NA') {
             $r4 = '2';
+        }
+        ;
+        if ($r4 == 'Ep' || $r4 == 'ep' || $r4 == 'EP') {
+            $r4 = '6';
         }
         ;
         if ($r4 == 'Ns' || $r4 == 'ns' || $r4 == 'NS') {
@@ -984,6 +1032,10 @@ function analisis_estado(
             $r5 = '2';
         }
         ;
+        if ($r5 == 'Ep' || $r5 == 'ep' || $r5 == 'EP') {
+            $r5 = '6';
+        }
+        ;
         if ($r5 == 'Ns' || $r5 == 'ns' || $r5 == 'NS') {
             $r5 = '2';
         }
@@ -1019,6 +1071,10 @@ function analisis_estado(
         ;
         if ($r6 == 'Na' || $r6 == 'na' || $r6 == 'NA') {
             $r6 = '2';
+        }
+        ;
+        if ($r6 == 'Ep' || $r6 == 'ep' || $r6 == 'EP') {
+            $r6 = '6';
         }
         ;
         if ($r6 == 'Ns' || $r6 == 'ns' || $r6 == 'NS') {
@@ -1058,6 +1114,10 @@ function analisis_estado(
             $r7 = '2';
         }
         ;
+        if ($r7 == 'Ep' || $r7 == 'ep' || $r7 == 'EP') {
+            $r7 = '6';
+        }
+        ;
         if ($r7 == 'Ns' || $r7 == 'ns' || $r7 == 'NS') {
             $r7 = '2';
         }
@@ -1093,6 +1153,10 @@ function analisis_estado(
         ;
         if ($r8 == 'Na' || $r8 == 'na' || $r8 == 'NA') {
             $r8 = '2';
+        }
+        ;
+        if ($r8 == 'Ep' || $r8 == 'ep' || $r8 == 'EP') {
+            $r8 = '6';
         }
         ;
         if ($r8 == 'Ns' || $r8 == 'ns' || $r8 == 'NS') {
