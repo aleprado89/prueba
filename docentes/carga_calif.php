@@ -125,7 +125,7 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 <h5><?php echo "Curso: " . $curso; ?> </h5>
 <h5><?php echo "Materia: " . $materia; ?> </h5><br>
 <p><small>* Las calificaciones se guardan automaticamente en cada modificación. La celda se pinta de verde cuando la calificacion se ha guardado exitosamente. Si no se pinta de verde revise su conexion a internet.
-<br>Valores permitidos:1-10(notas), A(ausente), AP(aprobado), NA(no aprobado).
+<br>Valores permitidos:1-10(notas), A(ausente), AP(aprobado), NA(no aprobado), EP(en proceso).
 <br>* Las celdas de "Prom" están deshabilitadas por defecto. Marque el casillero encima de "Prom" para habilitar la edición.
 </small></p>
 
@@ -144,28 +144,51 @@ var materia = "<?php echo htmlspecialchars($materia); ?>";
 </script>
 <script>
 function actualizarCalif(celda, columna) {
-    var idCalificacion = celda.getAttribute('data-id');
-    var nuevoValor = celda.textContent.trim(); // Trim whitespace
+    // El evento oninput ahora solo se encargará de la apariencia y de permitir la escritura.
+    // La validación final se hará en onblur.
+    // También, vamos a quitar la validación estricta del oninput para permitir la escritura temporal.
 
+    var nuevoValor = celda.textContent.trim();
     var trElement = celda.closest('tr[data-idAlumno]');
     var idAlumno = trElement.getAttribute('data-idAlumno');
 
-    // Validation for allowed values
+    // Simplemente le damos un feedback visual temporal si está vacío o parece una entrada válida en progreso
+    if (nuevoValor === '' || nuevoValor.match(/^[1-9]$|^10$|^[Aa]$|^[Aa][Pp]$|^[Nn][Aa]$|^[Ee][Pp]$/)) {
+        celda.style.setProperty('background-color', '', 'important'); // Restaura el color si es válido o está en progreso
+    } else {
+        // Si el carácter introducido no es ni número, ni A, ni AP, NA, EP (parcialmente o completo)
+        // podriamos intentar prevenir la entrada, pero onblur es más robusto.
+        // Por ahora, permitimos que se escriba pero marcamos como que podría haber un error.
+        celda.style.setProperty('background-color', 'lightyellow', 'important'); // Indicador visual de posible problema temporal
+    }
+
+    // Adjuntamos un listener de 'blur' si no existe uno ya.
+    // Esto asegura que la validación final ocurra cuando la celda pierde el foco.
+    if (!celda.hasAttribute('data-blur-listener')) {
+        celda.setAttribute('data-blur-listener', 'true');
+        celda.addEventListener('blur', function() {
+            validarYEnviarCalif(this, columna, idAlumno);
+        });
+    }
+}
+
+function validarYEnviarCalif(celda, columna, idAlumno) {
+    var idCalificacion = celda.getAttribute('data-id');
+    var nuevoValor = celda.textContent.trim();
+
+    // --- Validación FINAL de valores permitidos ---
     var valoresNumericosPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    var valoresStringPermitidos = ['A', 'a','n']; // For Ausente
-    var valoresMultiplesPermitidos = ['AP', 'ap', 'NA', 'na']; // For Aprobado/No Aprobado
+    var valoresAceptados = ['A', 'a', 'AP', 'ap', 'NA', 'na', 'EP', 'ep']; // Incluimos los aceptados directamente
 
     var isValid = false;
 
-    if (nuevoValor === '') { // Empty value is allowed
+    if (nuevoValor === '') { // Valor vacío es permitido
         isValid = true;
-    } else if (valoresNumericosPermitidos.includes(nuevoValor)) { // Numeric values 1-10
+    } else if (valoresNumericosPermitidos.includes(nuevoValor)) { // Valores numéricos 1-10
         isValid = true;
-    } else if (valoresStringPermitidos.includes(nuevoValor)) { // 'A' or 'a'
-        isValid = true;
-    } else { // Check for 'AP', 'NA' etc. (case-insensitive)
-        for (let i = 0; i < valoresMultiplesPermitidos.length; i++) {
-            if (nuevoValor.toUpperCase() === valoresMultiplesPermitidos[i].toUpperCase()) {
+    } else { // Comprobar las cadenas permitidas (insensible a mayúsculas/minúsculas)
+        for (let i = 0; i < valoresAceptados.length; i++) {
+            if (nuevoValor.toUpperCase() === valoresAceptados[i].toUpperCase()) {
                 isValid = true;
                 break;
             }
@@ -173,14 +196,15 @@ function actualizarCalif(celda, columna) {
     }
 
     if (!isValid) {
-        alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A' (Ausente), 'AP' (Aprobado), 'NA' (No Aprobado) o dejar vacío.");
-        celda.textContent = ''; // Clear invalid content
-        // Do not proceed with AJAX call for invalid value
-        celda.style.setProperty('background-color', 'lightcoral', 'important'); // Visual feedback for error
+        alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A' (Ausente), 'AP' (Aprobado), 'NA' (No Aprobado), 'EP' (Equivalencia Pedagógica) o dejar la celda vacía.");
+        celda.textContent = ''; // Limpiar contenido inválido
+        celda.style.setProperty('background-color', 'lightcoral', 'important'); // Feedback visual de error
+        // Si hay un error de validación final, no enviamos el AJAX.
         return;
     }
 
-    console.log(`Sending AJAX for ${columna}, value: ${nuevoValor}`);
+    // Si la validación es correcta, procedemos con la llamada AJAX
+    console.log(`Enviando AJAX para ${columna}, valor: ${nuevoValor}`);
     $.ajax({
         type: "POST",
         url: "carga_calif.php",
@@ -189,7 +213,7 @@ function actualizarCalif(celda, columna) {
             columna: columna,
             nuevoValor: nuevoValor,
             idAlumno: idAlumno,
-            idMateria: idMateria,
+            idMateria: idMateria, // Asegúrate de que estas variables globales estén definidas
             ciclolectivo: ciclolectivo,
             plan: plan,
             materia: materia,
@@ -202,10 +226,10 @@ function actualizarCalif(celda, columna) {
 
             if (response.respuesta === 'actualizado') {
                 celda.style.setProperty('background-color', 'lightgreen', 'important');
-                // Auto-clear background color after a short delay
-               // setTimeout(function() {
-                //    celda.style.removeProperty('background-color');
-             //   }, 1500);
+                // Opcional: limpiar color de fondo después de un corto retraso
+                // setTimeout(function() {
+                //     celda.style.removeProperty('background-color');
+                // }, 1500);
 
                 var filaActual = celda.closest('tr');
                 var estadoParcialElement = filaActual.querySelector('#estadoCursado');
@@ -224,22 +248,6 @@ function actualizarCalif(celda, columna) {
         }
     });
 }
-
-// Remove the keydown event listener. The onblur validation is generally sufficient.
-// If you still want a keydown filter, it needs to be more complex to allow for multi-char inputs like 'AP'.
-// For now, removing it simplifies the logic and relies on the onblur/oninput validation.
-/*
-$('.table td[contenteditable="true"]').on('keydown', function(e) {
-    var charCode = e.which;
-    // This regex is problematic for keydown for multi-character inputs like AP/NA
-    // It's better to validate on blur or input.
-    // var regex = /^[0-9Aap] $/i; // Loosened to allow numbers, A, P
-    // if (!(charCode >= 48 && charCode <= 57) && charCode != 65 && charCode != 80 && charCode != 78 && charCode !=97 && charCode != 110 && charCode != 112 && charCode != 8 && charCode != 46 && charCode != 37 && charCode != 39) {
-    //     e.preventDefault();
-    // }
-    // No specific keydown filtering, rely on `actualizarCalif`'s validation after content is entered.
-});
-*/
 </script>
 <br>
 <div class="text-center">
