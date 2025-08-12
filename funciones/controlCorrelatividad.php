@@ -143,7 +143,7 @@ function correlatividadAprobado($idUnicoMateria, $idAlumno, $tipoInscripcion) {
     $habilitacion = false;
 
     // Obtener correlatividades en condición Aprobada
-    $materiasAprobada = getCorrelativasIndividual($idUnicoMateria, 0, $tipoInscripcion);
+    $materiasAprobada = getCorrelativasIndividual($idUnicoMateria, 1, $tipoInscripcion);
 
     foreach ($materiasAprobada as $rowMateriasAprobada) {
         $idUnicoMateriaAprobada = (int)$rowMateriasAprobada['idUnicoMatCorrelativa'];
