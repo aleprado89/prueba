@@ -53,7 +53,7 @@
                 </li>
                
                 <!-- Menú Funciones Web -->
-                <li class="nav-item dropdown">
+               <!-- <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownFuncWeb" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-globe"></i> Func. web
                     </a>
@@ -62,7 +62,7 @@
                         <li><a class="dropdown-item" href="../secretaria/solicitudExam.php">Examen</a></li>
                         <li><a class="dropdown-item" href="../secretaria/solicitudCurs.php">Cursado</a></li>
                     </ul>
-                </li>
+                </li> -->
                 
             </ul>
             <ul class="navbar-nav ms-auto">
