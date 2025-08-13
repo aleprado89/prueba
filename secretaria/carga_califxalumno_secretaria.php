@@ -110,6 +110,8 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         .modal-body strong.primary-link { color: var(--bs-link-color); }
         .icono-detalle { font-size: 1.2rem; color: black; text-decoration: none; transition: color 0.2s ease-in-out; }
         .icono-detalle:hover { color: var(--bs-link-color); }
+        .scroll-top {overflow-x: auto; overflow-y: hidden;}
+        .scroll-top-inner {height: 1px; /* invisible pero mantiene el scroll */}
     </style>
 </head>
 <body>
@@ -158,6 +160,10 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                         <label class="form-check-label" for="switchColumnasExtra">Mostrar columnas extra</label>
                     </div>
                 </div>
+                <!-- Barra de scroll superior -->
+<div class="scroll-top mb-1" id="scrollTop">
+  <div class="scroll-top-inner" ></div> 
+</div>
                 <div class="table-responsive" id="tabla-calificaciones-container">
                     <table class="table table-striped table-hover">
                         <thead>
@@ -494,6 +500,36 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         });
     });
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const topScroll = document.getElementById('scrollTop');
+  const bottomScroll = document.getElementById('tabla-calificaciones-container');
+  const table = bottomScroll.querySelector('table');
+  const inner = topScroll.querySelector('.scroll-top-inner');
+
+  function syncWidth() {
+    inner.style.width = table.scrollWidth + 'px';
+  }
+
+  // Sincronizar scroll
+  topScroll.addEventListener('scroll', () => {
+    bottomScroll.scrollLeft = topScroll.scrollLeft;
+  });
+  bottomScroll.addEventListener('scroll', () => {
+    topScroll.scrollLeft = bottomScroll.scrollLeft;
+  });
+
+  // Observa cambios en el tamaño de la tabla
+  const observer = new ResizeObserver(syncWidth);
+  observer.observe(table);
+
+  // Ajuste inicial
+  syncWidth();
+});
+</script>
+
+
+
 </body>
 </html>
 <?php ob_end_flush(); ?>
