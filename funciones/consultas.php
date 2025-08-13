@@ -1522,27 +1522,33 @@ function buscarCursosPlanCiclo($conexion, $idPlan, $idCiclo) {
 
 
 function materiasPlanCurso($conexion, $idPlan, $idCurso) {
-  $consulta = "SELECT materiaterciario.nombre as nombreMateria,materiaterciario.idMateria ,curso.nombre as nombreCurso
-  FROM materiaterciario
-  INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso
-  WHERE materiaterciario.idPlan = ?
-  AND curso.idCurso = ?
-  ORDER BY materiaterciario.ubicacion DESC";
+    // MODIFICAR LA CONSULTA PARA INCLUIR idUnicoMateria
+    $consulta = "SELECT 
+                    materiaterciario.nombre as nombreMateria,
+                    materiaterciario.idMateria,
+                    materiaterciario.idUnicoMateria,  -- <-- AÑADIR ESTA LÍNEA
+                    curso.nombre as nombreCurso
+                FROM materiaterciario
+                INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso
+                WHERE materiaterciario.idPlan = ?
+                AND curso.idCurso = ?
+                ORDER BY materiaterciario.ubicacion DESC";
 
-  $stmt = $conexion->prepare($consulta);
-  $stmt->bind_param("ii", $idPlan, $idCurso);
-  $stmt->execute();
-  $result = $stmt->get_result();
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("ii", $idPlan, $idCurso);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-  $materias = array();
-  while ($data = $result->fetch_assoc()) {
-    $materias[] = array(
-      'nombreMateria' => $data['nombreMateria'],
-      'nombreCurso' => $data['nombreCurso'],
-      'idMateria' => $data['idMateria']
-    );
-  }
-  return $materias;
+    $materias = array();
+    while ($data = $result->fetch_assoc()) {
+        $materias[] = array(
+            'nombreMateria' => $data['nombreMateria'],
+            'nombreCurso' => $data['nombreCurso'],
+            'idMateria' => $data['idMateria'],
+            'idUnicoMateria' => $data['idUnicoMateria'] // <-- AÑADIR ESTA LÍNEA
+        );
+    }
+    return $materias;
 }
 
 /**

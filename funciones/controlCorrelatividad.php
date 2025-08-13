@@ -242,42 +242,60 @@ function correlatividadAprobadoGrupal($idUnicoMateria, $idAlumno, $tipoInscripci
 
 
 
-
-
-
+include '../inicio/conexion.php';
 function selectNombreXIdUnico($idUnicoMateria) {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT nombre FROM materiaterciario WHERE idUnicoMateria = ?");
-    $stmt->execute([$idUnicoMateria]);
-    return $stmt->fetchColumn();
+    global $conn;
+    $stmt = $conn->prepare("SELECT nombre FROM materiaterciario WHERE idUnicoMateria = ?");
+    $stmt->bind_param("s", $idUnicoMateria);
+    $stmt->execute();
+    $stmt->bind_result($nombre);
+    $stmt->fetch();
+    $stmt->close();
+    return $nombre;
 }
 
 function getCorrelativasIndividual($idUnicoMateria, $condicion, $tipoInscripcion) {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT * FROM correlatividadesterciario WHERE idUnicoMateria = ? AND condicion = ? AND tipoInscripcion = ?");
-    $stmt->execute([$idUnicoMateria, $condicion, $tipoInscripcion]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM correlatividadesterciario WHERE idUnicoMateria = ? AND condicionCorrelatividad = ? AND tipoInscripcion = ?");
+    $stmt->bind_param("sss", $idUnicoMateria, $condicion, $tipoInscripcion);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    return $data;
 }
 
 function getCorrelativasGrupal($idUnicoMateria, $condicion, $tipoInscripcion) {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT * FROM correlatividadesterciario WHERE idUnicoMateria = ? AND condicion = ? AND tipoInscripcion = ? AND grupal <> '' order by grupal");
-    $stmt->execute([$idUnicoMateria, $condicion, $tipoInscripcion]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM correlatividadesterciario WHERE idUnicoMateria = ? AND condicionCorrelatividad = ? AND tipoInscripcion = ? AND grupal <> '' ORDER BY grupal");
+    $stmt->bind_param("sss", $idUnicoMateria, $condicion, $tipoInscripcion);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    return $data;
 }
 
 function getCorrelativasGrupalDetalle($idUnicoMateria, $condicion, $tipoInscripcion, $grupalString) {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT * FROM correlatividadesterciario WHERE idUnicoMateria = ? AND condicion = ? AND tipoInscripcion = ? AND grupal = ?");
-    $stmt->execute([$idUnicoMateria, $condicion, $tipoInscripcion, $grupalString]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM correlatividadesterciario WHERE idUnicoMateria = ? AND condicionCorrelatividad = ? AND tipoInscripcion = ? AND grupal = ?");
+    $stmt->bind_param("ssss", $idUnicoMateria, $condicion, $tipoInscripcion, $grupalString);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    return $data;
 }
 
 function getCalificacionesPorAlumnoMateria($idAlumno, $idUnicoMateria) {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT * FROM calificacionesterciario WHERE idAlumno = ? AND idUnicoMateria = ?");
-    $stmt->execute([$idAlumno, $idUnicoMateria]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM calificacionesterciario c inner join materiaterciario m
+    on c.idMateria = m.idMateria WHERE c.idAlumno = ? AND m.idUnicoMateria = ?");
+    $stmt->bind_param("ss", $idAlumno, $idUnicoMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    return $data;
 }
-
 ?>
