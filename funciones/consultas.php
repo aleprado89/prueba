@@ -1956,9 +1956,28 @@ function insertarMatriculacionMateria($conexion, $data) {
     $fechaMatriculacion = !empty($data['fechaMatriculacionMateria']) ? $data['fechaMatriculacionMateria'] : date('Y-m-d');
     $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacionMateria']) ? $data['fechaBajaMatriculacionMateria'] : null;
     $idNivel = 6; // Siempre 6
-    $estado = empty($fechaBajaMatriculacion) ? 'Regular' : 'De Baja'; // Estado por defecto 'Regular'
-    
-    // Obtener idCicloLectivo del año de la fecha de matriculación de la materia
+
+    // **MODIFICACIÓN AQUÍ:** Necesitamos el nombre de la condición, no el ID.
+    // Obtenemos el nombre de la condición usando el ID recibido.
+    $idEstado = $data['estadoMatriculacionMateria'] ?? null; // Este es el idCondicion
+    $estadoNombre = 'Regular'; // Valor por defecto si algo falla o está vacío
+
+    if ($idEstado !== null) {
+        $sql_get_condicion = "SELECT condicion FROM condicionescursado WHERE idCondicion = ?";
+        $stmt_condicion = $conexion->prepare($sql_get_condicion);
+        if ($stmt_condicion) {
+            $stmt_condicion->bind_param("i", $idEstado);
+            $stmt_condicion->execute();
+            $resultado_condicion = $stmt_condicion->get_result();
+            if ($fila_condicion = $resultado_condicion->fetch_assoc()) {
+                $estadoNombre = $fila_condicion['condicion'];
+            }
+            $stmt_condicion->close();
+        } else {
+            error_log("Error al preparar la consulta para obtener condición: " . $conexion->error);
+        }
+    }
+
     $anio_matriculacion = date('Y', strtotime($fechaMatriculacion));
     $idCicloLectivo = buscarIdCiclo($conexion, $anio_matriculacion);
     if (is_null($idCicloLectivo)) {
@@ -1966,20 +1985,22 @@ function insertarMatriculacionMateria($conexion, $data) {
         return false;
     }
 
-    // iiissis (idAlumno, idNivel, idMateria, fechaMatriculacion (string), fechaBajaMatriculacion (string), estado (string), idCicloLectivo (int))
+    // iiisssi (idAlumno, idNivel, idMateria, fechaMatriculacion (string), fechaBajaMatriculacion (string), estado (string), idCicloLectivo (int))
+    // Aquí, $estadoNombre es el que se guarda en la columna 'estado'.
     $stmt->bind_param("iiisssi",
         $data['idAlumno'],
         $idNivel,
         $data['idMateria'],
         $fechaMatriculacion,
         $fechaBajaMatriculacion,
-        $estado,
+        $estadoNombre, // Guardamos el nombre de la condición
         $idCicloLectivo
     );
     $success = $stmt->execute();
     $stmt->close();
     return $success;
 }
+
 
 function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter = null, $idCursoFilter = null) {
     // La consulta original se usará para cargar la tabla completa al principio
@@ -2323,4 +2344,166 @@ function obtenerUltimoCicloLectivo($conexion) {
 
     return $ultimoCiclo; // Retorna el array o null si no hay resultados
 }
-//test branch23
+function obtenerMateriasConCalificacionesPorAlumno($conexion, $idAlumno) {
+    $sql = "SELECT
+                c.idCalificacion,
+                c.idAlumno,
+                mt.nombre AS nombreMateria,
+                curso.nombre AS nombreCurso,
+                mt.idMateria,
+                mt.idPlan,
+                mt.idCicloLectivo AS idCicloLectivoMateria,
+                cl.anio AS anioCiclo,
+                c.n1, c.n2, c.n3, c.n4, c.n5, c.n6, c.n7, c.n8,
+                c.r1, c.r2, c.r3, c.r4, c.r5, c.r6, c.r7, c.r8,
+                c.asistencia,
+                c.estadoCursado,
+                c.examenIntegrador,
+                c.materiaAprobada,
+                mm.estado AS estadoInscripcion -- <<< AÑADIDO: El estado de matriculacionmateria
+            FROM
+                calificacionesterciario c
+            INNER JOIN
+                materiaterciario mt ON c.idMateria = mt.idMateria
+            INNER JOIN
+                ciclolectivo cl ON mt.idCicloLectivo = cl.idCiclolectivo
+            INNER JOIN 
+                curso ON mt.idCurso = curso.idCurso
+            -- Usamos LEFT JOIN por si por alguna razón no hubiera una matriculación correspondiente pero sí una calificación
+            LEFT JOIN
+                matriculacionmateria mm ON c.idAlumno = mm.idAlumno AND c.idMateria = mm.idMateria
+            WHERE
+                c.idAlumno = ?
+            ORDER BY
+                cl.anio DESC, mt.nombre ASC";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerMateriasConCalificacionesPorAlumno: " . $conexion->error);
+        return [];
+    }
+    $stmt->bind_param("i", $idAlumno);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $materias = [];
+    while ($row = $result->fetch_assoc()) {
+        $materias[] = $row;
+    }
+    $stmt->close();
+    return $materias;
+}
+
+// Agrega esta función para obtener el nombre de la materia
+function obtenerNombreMateria($conexion, $idMateria) {
+    $sql = "SELECT nombre FROM materiaterciario WHERE idMateria = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerNombreMateria: " . $conexion->error);
+        return "Materia Desconocida";
+    }
+    $stmt->bind_param("i", $idMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $stmt->close();
+        return $row['nombre'];
+    }
+    $stmt->close();
+    return "Materia Desconocida";
+}
+function obtenerDatosBasicosAlumno($conexion, $idAlumno) {
+    $sql = "SELECT p.apellido, p.nombre, p.dni
+            FROM persona p
+            INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
+            WHERE a.idAlumno = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar la consulta en obtenerDatosBasicosAlumno: " . $conexion->error);
+        return null;
+    }
+    $stmt->bind_param("i", $idAlumno);
+    if (!$stmt->execute()) {
+        error_log("Error al ejecutar la consulta en obtenerDatosBasicosAlumno: " . $stmt->error);
+        return null;
+    }
+    $result = $stmt->get_result();
+    if ($result->num_rows === 0) {
+        error_log("No se encontró alumno con idAlumno: " . $idAlumno);
+        return null;
+    }
+    return $result->fetch_assoc();
+}
+function actualizarCalifSecretaria($conexion, $idCalif, $columna, $valor) {
+    // Lista blanca de columnas permitidas
+    $columnasPermitidas = [
+        'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8',
+        'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8',
+        'examenIntegrador'
+    ];
+
+    if (!in_array($columna, $columnasPermitidas)) {
+        error_log("ACTUALIZAR_CALIF_ERROR: Intento de actualizar una columna no permitida: " . $columna);
+        return "error_columna"; // Devuelve un string de error
+    }
+
+    $consulta = "UPDATE calificacionesterciario SET registroModificacion=1, `$columna` = ? WHERE idCalificacion = ?";
+
+    $stmt = $conexion->prepare($consulta);
+    if (!$stmt) {
+        error_log("ACTUALIZAR_CALIF_ERROR: Fallo al preparar la consulta: " . $conexion->error);
+        return "error_preparacion"; // Devuelve un string de error
+    }
+
+    // bind_param: 's' para el valor (string), 'i' para el id (integer)
+    $stmt->bind_param("si", $valor, $idCalif);
+
+    if (!$stmt->execute()) {
+        error_log("ACTUALIZAR_CALIF_ERROR: Fallo al ejecutar la consulta: " . $stmt->error);
+        $stmt->close();
+        return "error_ejecucion"; // Devuelve un string de error
+    }
+
+    if ($stmt->affected_rows > 0) {
+        $stmt->close();
+        return "actualizado"; // ¡LA RESPUESTA DE ÉXITO!
+    } else {
+        // Si no se afectaron filas, puede ser que el valor fuera el mismo o el ID no existiera.
+        // Lo tratamos como un éxito funcional para que la celda se ponga verde.
+        $stmt->close();
+        return "actualizado"; // O "sin_cambios" si quieres manejarlo diferente en el JS
+    }
+}
+function obtenerPlanesDeAlumnoConCalificaciones($conexion, $idAlumno) {
+    $sql = "SELECT DISTINCT
+                pe.idPlan,
+                pe.nombre AS nombrePlan
+            FROM
+                calificacionesterciario c
+            INNER JOIN
+                materiaterciario mt ON c.idMateria = mt.idMateria
+            INNER JOIN
+                plandeestudio pe ON mt.idPlan = pe.idPlan
+            WHERE
+                c.idAlumno = ?
+            ORDER BY
+                pe.nombre ASC";
+    
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerPlanesDeAlumnoConCalificaciones: " . $conexion->error);
+        return [];
+    }
+    
+    $stmt->bind_param("i", $idAlumno);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $planes = [];
+    while ($row = $result->fetch_assoc()) {
+        $planes[] = $row;
+    }
+    
+    $stmt->close();
+    return $planes;
+}

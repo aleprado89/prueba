@@ -33,7 +33,8 @@
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=inscripcionMateria">Inscripción a Materia</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Calificaciones</h6></li>
-                        <li><a class="dropdown-item" href="../secretaria/carga_calif_secre_xalu.php">Calificaciones por Alumno</a></li>
+                        <!-- MODIFICADO: Enlace a la nueva página -->
+                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=califxalumno">Calificaciones por Alumno</a></li>
                         <li><a class="dropdown-item" href="../secretaria/carga_calif_secretaria.php">Calificaciones por Materia</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Asistencias</h6></li>

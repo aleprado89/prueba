@@ -42,14 +42,13 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscar Alumno - Secretaría</title>
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"></head>
 <body>
     <?php include '../funciones/menu_secretaria.php'; // Asegúrate de que esta ruta sea correcta ?>
 
@@ -117,29 +116,27 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
                                             <?php
                                             // Determinar el enlace de la acción basado en el parámetro 'origin'
                                             $action_link = '';
+                                            $button_text = ''; // Para el texto del botón
+
                                             if ($redirect_origin == 'legajo') {
                                                 $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
+                                                $button_text = 'Ver Legajo';
                                             } elseif ($redirect_origin == 'matriculacion') {
                                                 $action_link = 'matriculacion.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                                                $button_text = 'Matricular';
                                             } elseif ($redirect_origin == 'inscripcionMateria') {
                                                 $action_link = 'inscripcionMateria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
-                                            } else { // Comportamiento por defecto si 'origin' es desconocido o nulo
+                                                $button_text = 'Inscribir Materia';
+                                            } elseif ($redirect_origin == 'califxalumno') { // NUEVO ORIGEN
+                                                $action_link = 'carga_califxalumno_secretaria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                                                $button_text = 'Ver Calificaciones';
+                                            } else { // Comportamiento por defecto
                                                 $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
+                                                $button_text = 'Ver Detalle';
                                             }
                                             ?>
                                             <a href="<?php echo $action_link; ?>" class="btn btn-primary btn-sm">
-                                                <?php
-                                                // Cambiar el texto del botón según el origen
-                                                if ($redirect_origin == 'legajo') {
-                                                    echo 'Ver Legajo';
-                                                } elseif ($redirect_origin == 'matriculacion') {
-                                                    echo 'Matricular';
-                                                } elseif ($redirect_origin == 'inscripcionMateria') {
-                                                    echo 'Inscribir Materia';
-                                                } else {
-                                                    echo 'Ver Detalle';
-                                                }
-                                                ?>
+                                                <?php echo $button_text; ?>
                                             </a>
                                         </td>
                                     </tr>

@@ -39,7 +39,7 @@ if (isset($_GET['ajax_action'])) {
         $anio = $_GET['anio'] ?? null;
         $planes = [];
         if (!is_null($idAlumno) && !is_null($anio)) {
-            $planes = obtenerPlanesMatriculadosPorAnio($conn, $idAlumno, $anio);
+            $planes = obtenerPlanesDeEstudio($conn);
         }
         echo json_encode($planes);
         exit;
