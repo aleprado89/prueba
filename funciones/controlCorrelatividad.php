@@ -26,7 +26,7 @@ function controlCorrelatividades($idUnicoMateria, $idAlumno, $tipoInscripcion)
 
 function correlatividadRegular($idUnicoMateria, $idAlumno, $tipoInscripcion) {
     global $materiasAdeuda;
-    $habilitacion = false;
+    $habilitacion = true;
 
     // Obtener correlatividades en condición Regular
     $materiasRegular = getCorrelativasIndividual($idUnicoMateria, 0, $tipoInscripcion);
@@ -69,7 +69,7 @@ function correlatividadRegular($idUnicoMateria, $idAlumno, $tipoInscripcion) {
 
 function correlatividadRegularGrupal($idUnicoMateria, $idAlumno, $tipoInscripcion) {
     global $materiasAdeuda;
-    $habilitacion = false;
+    $habilitacion = true;
 
     // Obtener correlatividades en condición Regular Grupal
     $materiasRegular = getCorrelativasGrupal($idUnicoMateria, 0, $tipoInscripcion);
@@ -140,7 +140,7 @@ function correlatividadRegularGrupal($idUnicoMateria, $idAlumno, $tipoInscripcio
 
 function correlatividadAprobado($idUnicoMateria, $idAlumno, $tipoInscripcion) {
     global $materiasAdeuda;
-    $habilitacion = false;
+    $habilitacion = true;
 
     // Obtener correlatividades en condición Aprobada
     $materiasAprobada = getCorrelativasIndividual($idUnicoMateria, 1, $tipoInscripcion);
@@ -177,7 +177,7 @@ function correlatividadAprobado($idUnicoMateria, $idAlumno, $tipoInscripcion) {
 
 function correlatividadAprobadoGrupal($idUnicoMateria, $idAlumno, $tipoInscripcion) {
     global $materiasAdeuda;
-    $habilitacion = false;
+    $habilitacion = true;
 
     // Obtener correlatividades en condición Aprobada Grupal
     $materiasAprobada = getCorrelativasGrupal($idUnicoMateria, 1, $tipoInscripcion);
