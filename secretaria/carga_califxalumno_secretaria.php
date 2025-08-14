@@ -13,7 +13,6 @@ ini_set('display_errors', 1);
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ob_end_clean(); 
     header('Content-Type: application/json');
-
     $action = $_POST['action'] ?? '';
 
     switch ($action) {
@@ -79,6 +78,7 @@ if (!$idAlumno) {
 }
 
 $datosAlumno = obtenerDatosBasicosAlumno($conn, $idAlumno);
+$nombreCompletoAlumno = htmlspecialchars(($datosAlumno['apellido'] ?? '') . ', ' . ($datosAlumno['nombre'] ?? ''));
 $materiasDelAlumno = obtenerMateriasConCalificacionesPorAlumno($conn, $idAlumno);
 $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
 ?>
@@ -111,10 +111,15 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         .icono-detalle { font-size: 1.2rem; color: black; text-decoration: none; transition: color 0.2s ease-in-out; }
         .icono-detalle:hover { color: var(--bs-link-color); }
         .scroll-top {overflow-x: auto; overflow-y: hidden;}
-        .scroll-top-inner {height: 1px; /* invisible pero mantiene el scroll */}
+        .scroll-top-inner {height: 1px;}
     </style>
 </head>
 <body>
+    <div id="info-pagina" 
+         data-id-alumno="<?php echo htmlspecialchars($idAlumno); ?>"
+         data-nombre-alumno="<?php echo $nombreCompletoAlumno; ?>">
+    </div>
+
     <?php include '../funciones/menu_secretaria.php'; ?>
 
     <div class="container-fluid fondo">
@@ -128,7 +133,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
 
             <div class="card p-4 mb-4">
                 <h5><?php echo "Usuario: " . htmlspecialchars($_SESSION['sec_nombreUsuario'] ?? 'Secretaría'); ?> </h5>
-                <h5><?php echo "Alumno: " . htmlspecialchars($datosAlumno['apellido'] ?? '') . ", " . htmlspecialchars($datosAlumno['nombre'] ?? 'N/A'); ?> </h5>
+                <h5><?php echo "Alumno: " . $nombreCompletoAlumno; ?> </h5>
                 
                 <?php if (!empty($planesDelAlumno)): ?>
                     <div class="row mt-3">
@@ -154,16 +159,20 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             <?php if (empty($materiasDelAlumno)): ?>
                 <div class="alert alert-info">El alumno no tiene calificaciones registradas.</div>
             <?php else: ?>
+                <div class="mb-3 text-center">
+                    <a href="#" id="btnImprimirCalificaciones" class="btn btn-primary" target="_blank">
+                        <i class="bi bi-printer-fill"></i> Imprimir Calificaciones
+                    </a>
+                </div>
                 <div class="d-flex justify-content-end mb-2">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="switchColumnasExtra">
                         <label class="form-check-label" for="switchColumnasExtra">Mostrar columnas extra</label>
                     </div>
                 </div>
-                <!-- Barra de scroll superior -->
-<div class="scroll-top mb-1" id="scrollTop">
-  <div class="scroll-top-inner" ></div> 
-</div>
+                <div class="scroll-top mb-1" id="scrollTop">
+                    <div class="scroll-top-inner"></div> 
+                </div>
                 <div class="table-responsive" id="tabla-calificaciones-container">
                     <table class="table table-striped table-hover">
                         <thead>
@@ -229,7 +238,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         </div>
     </div>
 
-    <!-- Modal para detalles de la materia -->
+    <!-- Modales (código completo) -->
     <div class="modal fade" id="modalDetalleMateria" tabindex="-1" aria-labelledby="modalDetalleMateriaLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -238,13 +247,13 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p><strong >Materia:</strong> <span id="modalMateriaNombre"></span></p>
-                    <p><strong >Curso:</strong> <span id="modalMateriaCurso"></span></p>
-                    <p><strong >Estado de Inscripción:</strong> <span id="modalEstadoInscripcion"></span></p>
-                    <p><strong >Estado General:</strong> <span id="modalEstadoGeneral"></span></p>
-                    <p><strong >Asistencia:</strong> <span id="modalAsistencia"></span></p>
+                    <p><strong class="primary-link">Materia:</strong> <span id="modalMateriaNombre"></span></p>
+                    <p><strong class="primary-link">Curso:</strong> <span id="modalMateriaCurso"></span></p>
+                    <p><strong class="primary-link">Estado de Inscripción:</strong> <span id="modalEstadoInscripcion"></span></p>
+                    <p><strong class="primary-link">Estado General:</strong> <span id="modalEstadoGeneral"></span></p>
+                    <p><strong class="primary-link">Asistencia:</strong> <span id="modalAsistencia"></span></p>
                     <hr>
-                    <h6 >Calificaciones de Cursado</h6>
+                    <h6 class="primary-link">Calificaciones de Cursado</h6>
                     <table class="table table-bordered table-sm">
                         <tbody>
                             <tr><td>P1</td><td id="modalN1"></td><td>R1</td><td id="modalR1"></td></tr>
@@ -259,7 +268,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                         </tbody>
                     </table>
                     <hr>
-                    <h6 >Calificaciones de Exámenes</h6>
+                    <h6 class="primary-link">Calificaciones de Exámenes</h6>
                     <div id="examenes-container">
                         <table class="table table-sm table-striped">
                             <thead><tr><th>Fecha</th><th>Calificación</th></tr></thead>
@@ -273,8 +282,6 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             </div>
         </div>
     </div>
-
-    <!-- Modal para Confirmar Abandono -->
     <div class="modal fade" id="modalConfirmAbandono" tabindex="-1" aria-labelledby="modalConfirmAbandonoLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -290,8 +297,6 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             </div>
         </div>
     </div>
-
-    <!-- Modal para Revertir Abandono -->
     <div class="modal fade" id="modalRevertAbandono" tabindex="-1" aria-labelledby="modalRevertAbandonoLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -317,26 +322,43 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
 
     <script>
     $(document).ready(function() {
-        // --- LÓGICA DEL FILTRO POR PLAN DE ESTUDIOS ---
-        function filtrarTablaPorPlan() {
-            const idPlanSeleccionado = $('#filtroPlan').val();
-            const filas = $('#tabla-calificaciones-body tr');
-            if (idPlanSeleccionado) {
-                filas.hide();
-                filas.filter(`[data-idplan="${idPlanSeleccionado}"]`).show();
-            } else {
-                filas.show();
+        const infoPagina = $('#info-pagina');
+        const idAlumno = infoPagina.data('id-alumno');
+        const nombreAlumno = infoPagina.data('nombre-alumno');
+
+        // --- LÓGICA DEL FILTRO Y BOTÓN DE IMPRESIÓN ---
+        const btnImprimir = $('#btnImprimirCalificaciones');
+        const filtroPlanSelect = $('#filtroPlan');
+        
+        function actualizarEnlaceImpresion() {
+            const idPlanSeleccionado = filtroPlanSelect.val();
+            if (btnImprimir.length && idPlanSeleccionado) {
+                let url = `../reportes/PDFcalificacionesAlumno.php?idAlumno=${idAlumno}&idPlan=${idPlanSeleccionado}&nombreAlumno=${encodeURIComponent(nombreAlumno)}`;
+                btnImprimir.attr('href', url);
             }
         }
-        filtrarTablaPorPlan(); 
-        $('#filtroPlan').on('change', filtrarTablaPorPlan);
+        function filtrarTablaPorPlan() {
+            const idPlanSeleccionado = filtroPlanSelect.val();
+            $('#tabla-calificaciones-body tr').each(function() {
+                const fila = $(this);
+                if (idPlanSeleccionado && fila.data('idplan') == idPlanSeleccionado) {
+                    fila.show();
+                } else {
+                    fila.hide();
+                }
+            });
+        }
+        if (filtroPlanSelect.length > 0) {
+            filtrarTablaPorPlan(); 
+            actualizarEnlaceImpresion();
+            filtroPlanSelect.on('change', function() {
+                filtrarTablaPorPlan();
+                actualizarEnlaceImpresion();
+            });
+        }
+        
+        $('#switchColumnasExtra').on('change', function() { $('.col-extra').toggle(this.checked); });
 
-        // --- LÓGICA PARA MOSTRAR/OCULTAR COLUMNAS EXTRA ---
-        $('#switchColumnasExtra').on('change', function() {
-            $('.col-extra').toggle(this.checked);
-        });
-
-        // --- LÓGICA DE DRAG-TO-SCROLL ---
         const slider = document.querySelector('#tabla-calificaciones-container');
         if(slider) {
             let isDown = false, startX, scrollLeft;
@@ -346,7 +368,6 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; slider.scrollLeft = scrollLeft - walk; });
         }
         
-        // --- FUNCIÓN CENTRALIZADA PARA AJAX ---
         function enviarAjax(action, data, successCallback) {
             data.action = action;
             $.ajax({ type: "POST", url: "carga_califxalumno_secretaria.php", data: data, dataType: 'json', success: successCallback,
@@ -357,13 +378,11 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             });
         }
         
-        // --- LÓGICA PARA ACTUALIZAR CALIFICACIONES ---
         $(document).on('blur', '.calif-cell, .prom-cell', function() {
             const celda = $(this);
-            const fila = celda.closest('tr');
-            if (fila.hasClass('fila-abandonada')) return;
+            if (celda.closest('tr').hasClass('fila-abandonada')) return;
             const data = {
-                idCalificacion: fila.data('idcalificacion'),
+                idCalificacion: celda.closest('tr').data('idcalificacion'),
                 columna: celda.data('columna'),
                 nuevoValor: celda.text().trim()
             };
@@ -371,44 +390,39 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                 if (response && (response.respuesta === 'actualizado' || response.respuesta === 'sin_cambios')) {
                     celda.css('background-color', 'lightgreen');
                 } else {
-                    alert('Error al guardar: ' + (response.mensaje || 'Respuesta desconocida.'));
+                    alert('Error: ' + (response.mensaje || 'Respuesta desconocida.'));
                     celda.css('background-color', 'lightcoral');
                 }
             });
         });
         
-        // --- LÓGICA PARA CHECKBOX DE ABANDONO (CORREGIDA) ---
         let currentCheckbox;
-        const modalConfirmAbandono = new bootstrap.Modal(document.getElementById('modalConfirmAbandono'));
-        const modalRevertAbandono = new bootstrap.Modal(document.getElementById('modalRevertAbandono'));
+        const modalConfirmAbandono = new bootstrap.Modal('#modalConfirmAbandono');
+        const modalRevertAbandono = new bootstrap.Modal('#modalRevertAbandono');
 
         function actualizarInfoFila(fila, nuevoEstadoInscripcion, nuevoEstadoCursado) {
             try {
                 const info = JSON.parse(fila.attr('data-info'));
                 info.estadoInscripcion = nuevoEstadoInscripcion;
-                if (nuevoEstadoCursado !== undefined) {
-                    info.estadoCursado = nuevoEstadoCursado;
-                }
+                if (nuevoEstadoCursado !== undefined) info.estadoCursado = nuevoEstadoCursado;
                 fila.attr('data-info', JSON.stringify(info));
             } catch(e) { console.error("Error al actualizar data-info:", e); }
         }
 
-        $(document).on('change', '.check-abandono', function(e) {
+        $(document).on('change', '.check-abandono', function() {
             currentCheckbox = $(this);
             if (currentCheckbox.is(':checked')) {
-                // El usuario quiere MARCARLO como abandonado
                 modalConfirmAbandono.show();
             } else {
-                // El usuario quiere DESMARCARLO
                 enviarAjax('get_condiciones_cursado', {}, function(response) {
                     if (response.success && response.data) {
                         const select = $('#selectNewEstado');
                         select.empty().append('<option value="">Seleccione un estado</option>');
-                        response.data.forEach(cond => select.append($('<option></option>').val(cond.condicion).text(cond.condicion)));
+                        response.data.forEach(cond => select.append($('<option>').val(cond.condicion).text(cond.condicion)));
                         modalRevertAbandono.show();
                     } else {
                         alert('Error al cargar estados.');
-                        currentCheckbox.prop('checked', true); // Revertir si falla
+                        currentCheckbox.prop('checked', true);
                     }
                 });
             }
@@ -424,14 +438,14 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                     actualizarInfoFila(fila, 'Abandonó Cursado', 'Abandonó Cursado');
                 } else {
                     alert("Error al actualizar.");
-                    currentCheckbox.prop('checked', false); // Revertir si falla
+                    currentCheckbox.prop('checked', false);
                 }
                 modalConfirmAbandono.hide();
             });
         });
 
         $('#cancelarAbandonoBtn, #modalConfirmAbandono .btn-close').on('click', function() {
-            if(currentCheckbox) currentCheckbox.prop('checked', false); // Revertir al estado original
+            if(currentCheckbox) currentCheckbox.prop('checked', false);
             modalConfirmAbandono.hide();
         });
 
@@ -447,33 +461,29 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                     actualizarInfoFila(fila, nuevoEstado, nuevoEstado);
                 } else {
                     alert("Error al actualizar.");
-                    currentCheckbox.prop('checked', true); // Revertir si falla
+                    currentCheckbox.prop('checked', true);
                 }
                 modalRevertAbandono.hide();
             });
         });
 
         $('#cancelarRevertBtn, #modalRevertAbandono .btn-close').on('click', function() {
-            if(currentCheckbox) currentCheckbox.prop('checked', true); // Revertir al estado original
+            if(currentCheckbox) currentCheckbox.prop('checked', true);
             modalRevertAbandono.hide();
         });
 
-        // --- LÓGICA PARA EL MODAL DE DETALLES ---
         $(document).on('click', '.icono-detalle', function(e) {
             e.preventDefault();
             const fila = $(this).closest('tr');
             const info = fila.data('info');
             const modal = $('#modalDetalleMateria');
-
             modal.find('#modalMateriaNombre').text(info.nombreMateria || 'N/A');
             modal.find('#modalMateriaCurso').text(info.nombreCurso || 'N/A');
             modal.find('#modalEstadoInscripcion').text(info.estadoInscripcion || 'N/A');
             modal.find('#modalAsistencia').text(info.asistencia || 'N/A');
-            
             let estadoGeneral = `Cursando: ${info.estadoCursado || 'Sin definir'}`;
             if (info.materiaAprobada == 1) estadoGeneral = "Materia Aprobada";
             modal.find('#modalEstadoGeneral').text(estadoGeneral);
-
             modal.find('#modalN1').text(info.n1 || '-'); modal.find('#modalR1').text(info.r1 || '-');
             modal.find('#modalN2').text(info.n2 || '-'); modal.find('#modalR2').text(info.r2 || '-');
             modal.find('#modalN3').text(info.n3 || '-'); modal.find('#modalR3').text(info.r3 || '-');
@@ -483,10 +493,8 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             modal.find('#modalN7').text(info.n7 || '-'); modal.find('#modalR7').text(info.r7 || '-');
             modal.find('#modalN8').text(info.n8 || '-'); modal.find('#modalR8').text(info.r8 || '-');
             modal.find('#modalExamenIntegrador').text(info.examenIntegrador || '-');
-
             const examenesBody = modal.find('#modalExamenesBody');
             examenesBody.html('<tr><td colspan="2">Cargando...</td></tr>');
-            
             enviarAjax('get_examenes', {idAlumno: fila.data('idalumno'), idMateria: fila.data('idmateria')}, function(response) {
                 examenesBody.empty();
                 if (response && response.examenes && response.examenes.length > 0) {
@@ -498,38 +506,21 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                 }
             });
         });
+
+        const topScroll = document.getElementById('scrollTop');
+        const bottomScroll = document.getElementById('tabla-calificaciones-container');
+        const table = bottomScroll.querySelector('table');
+        const inner = topScroll.querySelector('.scroll-top-inner');
+
+        function syncWidth() { if(inner && table) inner.style.width = table.scrollWidth + 'px'; }
+        if(topScroll && bottomScroll && table && inner) {
+            topScroll.addEventListener('scroll', () => { bottomScroll.scrollLeft = topScroll.scrollLeft; });
+            bottomScroll.addEventListener('scroll', () => { topScroll.scrollLeft = bottomScroll.scrollLeft; });
+            new ResizeObserver(syncWidth).observe(table);
+            syncWidth();
+        }
     });
     </script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const topScroll = document.getElementById('scrollTop');
-  const bottomScroll = document.getElementById('tabla-calificaciones-container');
-  const table = bottomScroll.querySelector('table');
-  const inner = topScroll.querySelector('.scroll-top-inner');
-
-  function syncWidth() {
-    inner.style.width = table.scrollWidth + 'px';
-  }
-
-  // Sincronizar scroll
-  topScroll.addEventListener('scroll', () => {
-    bottomScroll.scrollLeft = topScroll.scrollLeft;
-  });
-  bottomScroll.addEventListener('scroll', () => {
-    topScroll.scrollLeft = bottomScroll.scrollLeft;
-  });
-
-  // Observa cambios en el tamaño de la tabla
-  const observer = new ResizeObserver(syncWidth);
-  observer.observe(table);
-
-  // Ajuste inicial
-  syncWidth();
-});
-</script>
-
-
-
 </body>
 </html>
 <?php ob_end_flush(); ?>

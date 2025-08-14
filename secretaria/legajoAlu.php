@@ -559,7 +559,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
             </div>
           </div>
 
-           <div class="mb-3">
+           <div class="mb-3 col-md-3">
               <label for="mailInstitucional" class="form-label">Mail Institucional</label>
               <input type="email" class="form-control" id="mailInstitucional" name="mailInstitucional" value="<?php echo htmlspecialchars($alumnoData['mailInstitucional'] ?? ''); ?>">
            </div>
@@ -602,7 +602,6 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
         </fieldset>
 
         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-        <button type="button" class="btn btn-secondary" onclick="window.history.back()">Volver</button>
       </form>
 
     </div>

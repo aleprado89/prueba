@@ -1665,20 +1665,32 @@ function obtenerAsistenciaMateriaSecretaria($conexion, $idMateria, $mes, $dia, $
 }
 
 function buscarAlumnos($conexion, $apellido = '', $nombre = '') {
+    // MODIFICACIÓN: Se ajusta el ORDER BY para una priorización más precisa.
     $sql = "SELECT p.idPersona, p.apellido, p.nombre, p.dni, a.idAlumno
             FROM persona p
             INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
             WHERE p.apellido LIKE ? AND p.nombre LIKE ?
-            ORDER BY p.apellido, p.nombre";
+            ORDER BY
+                CASE
+                    WHEN p.apellido LIKE ? THEN 1  -- Prioridad 1 si el apellido COMIENZA con el término
+                    ELSE 2                         -- Prioridad 2 para el resto de coincidencias
+                END,
+                p.apellido, p.nombre"; // Luego, ordenar alfabéticamente
+
     $stmt = $conexion->prepare($sql);
     if (!$stmt) {
         error_log("Error al preparar la consulta (buscarAlumnos): " . $conexion->error);
         return [];
     }
 
-    $paramApellido = '%' . $apellido . '%';
-    $paramNombre = '%' . $nombre . '%';
-    $stmt->bind_param("ss", $paramApellido, $paramNombre);
+    $paramApellidoLike = '%' . $apellido . '%';
+    $paramNombreLike = '%' . $nombre . '%';
+    // El parámetro para el 'CASE' debe ser el que busca al inicio
+    $paramApellidoStarts = $apellido . '%'; 
+
+    // Se vinculan los 3 parámetros en el orden correcto
+    $stmt->bind_param("sss", $paramApellidoLike, $paramNombreLike, $paramApellidoStarts);
+    
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -1689,6 +1701,7 @@ function buscarAlumnos($conexion, $apellido = '', $nombre = '') {
     $stmt->close();
     return $alumnos;
 }
+
 
 // NEW/MODIFIED: obtaining all student data
 function obtenerDatosAlumno($conexion, $idAlumno) {
@@ -1777,7 +1790,7 @@ function insertAlumnoTerciario($conexion, $idPersona, $data) {
     // 4 's' (observaciones, mailInstitucional, documentacion, materiasAdeuda)
     // 1 'i' (idFamilia).
     // Total 11 variables. String de tipos: "iiiiisssisi"
-    $stmt->bind_param("iiiiisssisi", // String de tipos correcta
+    $stmt->bind_param("iiiiiissssi", // String de tipos correcta
         $idPersona, $data['vivePadre'], $data['viveMadre'], $data['egresado'],
         $data['trabaja'], $data['retiroBiblioteca'], $data['observacionesAlumno'], $data['mailInstitucional'],
         $data['documentacion'], $data['materiasAdeuda'], $data['idFamilia']
@@ -1797,11 +1810,8 @@ function updateAlumnoTerciario($conexion, $idPersona, $data) {
         error_log("Error preparing updateAlumnoTerciario: " . $conexion->error);
         return false;
     }
-    // 5 'i' (vivePadre, viveMadre, egresado, trabaja, retiroBiblioteca)
-    // 4 's' (observaciones, mailInstitucional, documentacion, materiasAdeuda)
-    // 2 'i' (idFamilia, idPersona en WHERE).
-    // Total 11 variables. String de tipos: "iiiiisssii"
-    $stmt->bind_param("iiiiisssisi", // String de tipos correcta (5i, 4s, 1i, 1i -> 5+4+1+1 = 11)
+    
+    $stmt->bind_param("iiiiissssii", // String de tipos correcta (5i, 4s, 1i, 1i -> 5+4+1+1 = 11)
         $data['vivePadre'], $data['viveMadre'], $data['egresado'],
         $data['trabaja'], $data['retiroBiblioteca'], $data['observacionesAlumno'], $data['mailInstitucional'],
         $data['documentacion'], $data['materiasAdeuda'], $data['idFamilia'],

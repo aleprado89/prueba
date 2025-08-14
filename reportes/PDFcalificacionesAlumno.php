@@ -16,9 +16,35 @@ $options->set('defaultFont', 'Arial');
 $dompdf = new Dompdf($options);
 
 //PREPARO CONSULTAS PARA LOS DATOS DEL REPORTE HTML
-$idAlumno = $_SESSION['alu_idAlumno'];
-$nombreAlumno = $_SESSION['alu_apellido'].", ".$_SESSION['alu_nombre'];
-$idPlan=$_SESSION['idP'];
+// Obtener idAlumno
+if (isset($_GET['idAlumno'])) {
+    $idAlumno = $_GET['idAlumno'];
+} elseif (isset($_SESSION['alu_idAlumno'])) {
+    $idAlumno = $_SESSION['alu_idAlumno'];
+} else {
+    die("Error: No se ha especificado un alumno.");
+}
+
+// Obtener nombreAlumno
+if (isset($_GET['nombreAlumno'])) {
+    $nombreAlumno = $_GET['nombreAlumno'];
+} elseif (isset($_SESSION['alu_apellido'], $_SESSION['alu_nombre'])) {
+    $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
+} else {
+    // Si no tenemos el nombre, lo buscamos en la BD
+    $datosAlumnoTemp = obtenerDatosBasicosAlumno($conn, $idAlumno);
+    $nombreAlumno = $datosAlumnoTemp ? ($datosAlumnoTemp['apellido'] . ", " . $datosAlumnoTemp['nombre']) : "Alumno Desconocido";
+}
+
+// Obtener idPlan
+if (isset($_GET['idPlan'])) {
+    $idPlan = $_GET['idPlan'];
+} elseif (isset($_SESSION['idP'])) {
+    $idPlan = $_SESSION['idP'];
+} else {
+    die("Error: No se ha especificado un plan de estudios.");
+}
+
 $membrete=$_SESSION['membrete'];
 //preparo imagen para que dompdf la pueda leer
 $img = file_get_contents(__DIR__ . '/'.$membrete);
