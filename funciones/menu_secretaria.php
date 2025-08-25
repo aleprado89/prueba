@@ -41,7 +41,14 @@
                         <li><a class="dropdown-item" href="../secretaria/carga_asist_secretaria.php">Asistencias</a></li>
                     </ul>
                 </li>
-                
+                <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownListados" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Listados
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownListados">
+        <li><a class="dropdown-item" href="listadoPorCurso.php">Listado por Curso</a></li>
+        <li><a class="dropdown-item" href="listadoPorMateria.php">Listado por Materia</a></li> <!-- NUEVA LÍNEA -->    </ul>
+</li>
                 <!-- Menú Colegio -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownColegio" role="button" data-bs-toggle="dropdown" aria-expanded="false">

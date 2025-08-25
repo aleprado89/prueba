@@ -2523,3 +2523,57 @@ function obtenerPlanesDeAlumnoConCalificaciones($conexion, $idAlumno) {
     $stmt->close();
     return $planes;
 }
+function obtenerAlumnosPorCurso($conexion, $idCurso, $idCicloLectivo) {
+    // Esta consulta asume que la tabla 'matriculacion' es la que vincula a un alumno con un curso para un ciclo lectivo.
+    // Asegúrate de que 'm.anio' se corresponda con el ciclo lectivo.
+    $sql = "SELECT p.apellido, p.nombre, p.dni
+            FROM persona p
+            JOIN alumnosterciario a ON p.idPersona = a.idPersona
+            JOIN matriculacion m ON a.idAlumno = m.idAlumno
+            WHERE m.idCurso = ? 
+            AND m.anio = (SELECT anio FROM ciclolectivo WHERE idciclolectivo = ?)
+            ORDER BY p.apellido, p.nombre ASC";
+            
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerAlumnosPorCurso: " . $conexion->error);
+        return [];
+    }
+    
+    $stmt->bind_param("ii", $idCurso, $idCicloLectivo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $alumnos = [];
+    while ($row = $result->fetch_assoc()) {
+        $alumnos[] = $row;
+    }
+    $stmt->close();
+    return $alumnos;
+}
+function obtenerAlumnosPorMateria($conexion, $idMateria) {
+    // La consulta busca en matriculacionmateria los alumnos inscritos en la materia dada
+    $sql = "SELECT p.apellido, p.nombre, p.dni
+            FROM persona p
+            JOIN alumnosterciario a ON p.idPersona = a.idPersona
+            JOIN matriculacionmateria m ON a.idAlumno = m.idAlumno
+            WHERE m.idMateria = ? 
+            ORDER BY p.apellido, p.nombre ASC";
+            
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerAlumnosPorMateria: " . $conexion->error);
+        return [];
+    }
+    
+    $stmt->bind_param("i", $idMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $alumnos = [];
+    while ($row = $result->fetch_assoc()) {
+        $alumnos[] = $row;
+    }
+    $stmt->close();
+    return $alumnos;
+}
