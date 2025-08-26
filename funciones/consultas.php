@@ -35,13 +35,13 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
     materiaterciario.nombre as nombreMateria,
     curso.nombre as nombreCurso,
     curso.idDivision as idDivision,
-    materiaterciario.idCicloLectivo AS idCicloLectivoMateria, /* AGREGADO */
-    cl.anio AS anioCiclo /* AGREGADO */
+    materiaterciario.idCicloLectivo AS idCicloLectivoMateria,
+    cl.anio AS anioCiclo
   FROM calificacionesterciario
   INNER JOIN materiaterciario ON calificacionesterciario.idMateria = materiaterciario.idMateria
   INNER JOIN curso ON materiaterciario.idCurso = curso.idCurso
   INNER JOIN cursospredeterminado ON cursospredeterminado.idcursopredeterminado = curso.idcursopredeterminado
-  INNER JOIN ciclolectivo cl ON materiaterciario.idCicloLectivo = cl.idCiclolectivo /* AGREGADO */
+  INNER JOIN ciclolectivo cl ON materiaterciario.idCicloLectivo = cl.idCiclolectivo
   WHERE calificacionesterciario.idAlumno = ? AND materiaterciario.idPlan = ?
   ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
 
@@ -56,8 +56,6 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
   if (!empty($calif)) {
     while ($data = mysqli_fetch_array($calif)) {
       $idInscripcionExamen = $data['idInscripcionExamen'];
-
-      // Inicializar calificación final vacía
       $examen = " ";
 
       if ($idInscripcionExamen == null || $idInscripcionExamen == 0) {
@@ -68,7 +66,6 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
         ) {
           $examen = $data['examenIntegrador'];
         } else {
-          // Buscar calificaciones desde función auxiliar
           $examenes = buscarExamenes($conexion, $idAlumno, $data['idMateria']);
           $fechaMax = null;
           foreach ($examenes as $ex) {
@@ -86,7 +83,6 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
         $ex = $stmtExamen->get_result();
         $examen = $ex->fetch_assoc()["calificacion"] ?? "";
 
-        // Si aún está vacía, recurrir a función auxiliar
         if (empty($examen)) {
           $examenes = buscarExamenes($conexion, $idAlumno, $data['idMateria']);
           $fechaMax = null;
@@ -105,8 +101,8 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
         'idMateria'     => $data['idMateria'],
         'Materia'       => $data['nombreMateria'],
         'Curso'       => $data['nombreCurso'],
-        'idCicloLectivoMateria' => $data['idCicloLectivoMateria'], // AGREGADO
-        'anioCiclo'     => $data['anioCiclo'], // AGREGADO
+        'idCicloLectivoMateria' => $data['idCicloLectivoMateria'],
+        'anioCiclo'     => $data['anioCiclo'],
         'n1'          => $data['n1'],
         'n2'          => $data['n2'],
         'n3'          => $data['n3'],
@@ -127,6 +123,7 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
         'Estado'      => $data['estadoCursado'],
         'CalificacionFinal' => $examen,
         'idDivision'    => $data['idDivision'],
+        'materiaAprobada' => $data['materiaAprobada'] 
       ];
       $i++;
     }
@@ -134,6 +131,7 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
 
   return $listadoCalificaciones;
 }
+
 
 //Datos cursado de materia de un alumno
 function cursadoMateria($conexion, $idMateria, $idAlumno)
@@ -2391,7 +2389,7 @@ function obtenerMateriasConCalificacionesPorAlumno($conexion, $idAlumno) {
             WHERE
                 c.idAlumno = ?
             ORDER BY
-                cl.anio DESC, mt.nombre ASC";
+                curso.idcursopredeterminado DESC, mt.ubicacion ";
 
     $stmt = $conexion->prepare($sql);
     if (!$stmt) {

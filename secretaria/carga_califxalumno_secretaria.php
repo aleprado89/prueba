@@ -100,13 +100,20 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         th.text-center { text-align: center !important; }
         .calif-cell, .prom-cell { min-width: 50px; padding: 8px; text-align: center; border: 1px solid #dee2e6; }
         .prom-cell { min-width: 100px; }
+        
+        /* >>> NUEVOS ESTILOS PARA MATERIAS APROBADAS Y ABANDONADAS <<< */
         .fila-abandonada td { background-color: #e9ecef !important; color: #6c757d; }
         .fila-abandonada .calif-cell, .fila-abandonada .prom-cell { pointer-events: none; }
+
+        .fila-aprobada td { background-color: #8ddfbaff   }
+        .fila-aprobada .calif-cell, .fila-aprobada .prom-cell, .fila-aprobada .check-abandono { pointer-events: none; } /* Deshabilita todo menos detalles */
+
         .estado-cursado-aprobado { color: green; font-weight: bold; }
         .estado-cursado-desaprobado { color: red; font-weight: bold; }
         .estado-cursado-en-curso { color: blue; }
         .estado-cursado-abandonado { color: orange; font-weight: bold; }
         .estado-cursado-libre { color: purple; font-weight: bold; }
+        
         .modal-body strong.primary-link { color: var(--bs-link-color); }
         .icono-detalle { font-size: 1.2rem; color: black; text-decoration: none; transition: color 0.2s ease-in-out; }
         .icono-detalle:hover { color: var(--bs-link-color); }
@@ -174,7 +181,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                     <div class="scroll-top-inner"></div> 
                 </div>
                 <div class="table-responsive" id="tabla-calificaciones-container">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-hover">
                         <thead>
                             <tr class="table-primary">
                                 <th>Materia</th>
@@ -191,9 +198,16 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                         </thead>
                         <tbody id="tabla-calificaciones-body">
                             <?php foreach ($materiasDelAlumno as $materia): 
+                                $esAprobada = ($materia['materiaAprobada'] == 1);
                                 $esAbandono = ($materia['estadoInscripcion'] === 'Abandonó Cursado');
+                                $classFila = '';
+                                if ($esAprobada) {
+                                    $classFila = 'fila-aprobada';
+                                } elseif ($esAbandono) {
+                                    $classFila = 'fila-abandonada';
+                                }
                             ?>
-                                <tr class="<?php echo $esAbandono ? 'fila-abandonada' : ''; ?>"
+                                <tr class="<?php echo $classFila; ?>"
                                     data-idplan="<?php echo htmlspecialchars($materia['idPlan']); ?>"
                                     data-idcalificacion="<?php echo htmlspecialchars($materia['idCalificacion']); ?>" 
                                     data-idmateria="<?php echo htmlspecialchars($materia['idMateria']); ?>" 
@@ -220,9 +234,21 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                                     <td class="calif-cell" contenteditable="true" data-columna="r8"><?php echo htmlspecialchars($materia['r8'] ?? ''); ?></td>
                                     <td class="prom-cell col-extra" contenteditable="true" data-columna="examenIntegrador"><?php echo htmlspecialchars($materia['examenIntegrador'] ?? ''); ?></td>
                                     <td class="col-extra"><?php echo htmlspecialchars($materia['asistencia'] ?? ''); ?></td>
-                                    <td><span class="estado-cursado-display"><?php echo htmlspecialchars($materia['estadoCursado'] ?: 'Sin definir'); ?></span></td>
+                                    <td>
+                                        <span class="estado-cursado-display">
+                                            <?php
+                                            if ($esAprobada) {
+                                                echo 'Materia Aprobada';
+                                            } else {
+                                                echo htmlspecialchars($materia['estadoCursado'] ?: 'Sin definir');
+                                            }
+                                            ?>
+                                        </span>
+                                    </td>
                                     <td class="col-extra text-center">
-                                        <input class="form-check-input check-abandono" type="checkbox" <?php echo $esAbandono ? 'checked' : ''; ?>>
+                                        <input class="form-check-input check-abandono" type="checkbox" 
+                                               <?php echo $esAbandono ? 'checked' : ''; ?>
+                                               <?php echo $esAprobada ? 'disabled' : ''; ?>>
                                     </td>
                                     <td class="text-center">
                                         <a href="#" class="icono-detalle" data-bs-toggle="modal" data-bs-target="#modalDetalleMateria">
@@ -238,7 +264,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         </div>
     </div>
 
-    <!-- Modales (código completo) -->
+    <!-- Todos los modales completos -->
     <div class="modal fade" id="modalDetalleMateria" tabindex="-1" aria-labelledby="modalDetalleMateriaLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -380,7 +406,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         
         $(document).on('blur', '.calif-cell, .prom-cell', function() {
             const celda = $(this);
-            if (celda.closest('tr').hasClass('fila-abandonada')) return;
+            if (celda.closest('tr').is('.fila-abandonada, .fila-aprobada')) return;
             const data = {
                 idCalificacion: celda.closest('tr').data('idcalificacion'),
                 columna: celda.data('columna'),
@@ -509,15 +535,16 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
 
         const topScroll = document.getElementById('scrollTop');
         const bottomScroll = document.getElementById('tabla-calificaciones-container');
-        const table = bottomScroll.querySelector('table');
-        const inner = topScroll.querySelector('.scroll-top-inner');
-
-        function syncWidth() { if(inner && table) inner.style.width = table.scrollWidth + 'px'; }
-        if(topScroll && bottomScroll && table && inner) {
-            topScroll.addEventListener('scroll', () => { bottomScroll.scrollLeft = topScroll.scrollLeft; });
-            bottomScroll.addEventListener('scroll', () => { topScroll.scrollLeft = bottomScroll.scrollLeft; });
-            new ResizeObserver(syncWidth).observe(table);
-            syncWidth();
+        if (bottomScroll) {
+            const table = bottomScroll.querySelector('table');
+            const inner = topScroll.querySelector('.scroll-top-inner');
+            function syncWidth() { if(inner && table) inner.style.width = table.scrollWidth + 'px'; }
+            if(topScroll && table && inner) {
+                topScroll.addEventListener('scroll', () => { bottomScroll.scrollLeft = topScroll.scrollLeft; });
+                bottomScroll.addEventListener('scroll', () => { topScroll.scrollLeft = bottomScroll.scrollLeft; });
+                new ResizeObserver(syncWidth).observe(table);
+                syncWidth();
+            }
         }
     });
     </script>

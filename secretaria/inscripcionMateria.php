@@ -316,7 +316,7 @@ $today = date('Y-m-d');
 
           <div class="row mb-3">
             <div class="col-md-4">
-              <label for="anioInscripcionMateria" class="form-label">Año de Inscripción <span class="text-danger">*</span></label>
+              <label for="anioInscripcionMateria" class="form-label">Ciclo lectivo <span class="text-danger">*</span></label>
               <select class="form-select" id="anioInscripcionMateria" name="anioInscripcionMateria" required onchange="loadPlanesPorAnioInscripcionMateria()">
                 <option value="">Seleccione el año</option>
                 <?php
@@ -327,15 +327,15 @@ $today = date('Y-m-d');
               </select>
             </div>
             <div class="col-md-4">
-              <label for="planMatriculado" class="form-label">Plan de Estudio Matriculado <span class="text-danger">*</span></label>
+              <label for="planMatriculado" class="form-label">Plan de Estudio<span class="text-danger">*</span></label>
               <select class="form-select" id="planMatriculado" name="idPlanDeEstudio" required onchange="loadCursosMatriculacionMateria()">
-                <option value="">Seleccione un plan (según año)</option>
+                <option value="">Seleccione un plan</option>
               </select>
             </div>
             <div class="col-md-4">
-              <label for="cursoMatriculacion" class="form-label">Curso del Plan <span class="text-danger">*</span></label>
+              <label for="cursoMatriculacion" class="form-label">Curso <span class="text-danger">*</span></label>
               <select class="form-select" id="cursoMatriculacion" name="idCurso" required onchange="loadMateriasMatriculacionMateria()">
-                <option value="">Seleccione un curso (según plan)</option>
+                <option value="">Seleccione un curso</option>
               </select>
             </div>
           </div>
@@ -343,18 +343,18 @@ $today = date('Y-m-d');
             <div class="col-md-5">
               <label for="idMateriaMatriculacion" class="form-label">Materia <span class="text-danger">*</span></label>
               <select class="form-select" id="idMateriaMatriculacion" name="idMateriaMatriculacion" required>
-                <option value="">Seleccione una materia (según curso)</option>
+                <option value="">Seleccione una materia</option>
               </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label for="estadoMatriculacionMateria" class="form-label">Estado de Inscripción <span class="text-danger">*</span></label>
               <select class="form-select" id="estadoMatriculacionMateria" name="estadoMatriculacionMateria" required>
                 <option value="">Seleccione un estado</option>
               </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label for="fechaMatriculacionMateria" class="form-label">Fecha de Inscripción <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" id="fechaMatriculacionMateria" name="fechaMatriculacionMateria" value="<?php echo $today; ?>" required>
+              <input type="date" class="form-control form-select" id="fechaMatriculacionMateria" name="fechaMatriculacionMateria" value="<?php echo $today; ?>" required>
             </div>
           </div>
           <div class="mb-3">
@@ -466,7 +466,7 @@ $today = date('Y-m-d');
         data: { ajax_action: 'get_planes_por_anio', idAlumno: idAlumno, anio: anio },
         dataType: 'json',
         success: function(planes) {
-          planSelect.empty().append('<option value="">Seleccione un plan (según año)</option>');
+          planSelect.empty().append('<option value="">Seleccione un plan</option>');
           if (planes && planes.length > 0) {
             $.each(planes, function(i, plan) {
               planSelect.append('<option value="' + plan.idPlan + '">' + plan.nombre + '</option>');
