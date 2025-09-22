@@ -8,6 +8,13 @@ ob_end_clean();require_once '../vendor/autoload.php';
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+$hoy = new DateTime();
+$anio = $hoy->format("Y");
+$fechaLimite = new DateTime("$anio-11-15");
+
+// Verificamos si mostrar columna
+$mostrarEstadoParcial = ($hoy >= $fechaLimite);
+
 // Crear una instancia de Dompdf
 $options = new Options();
 $options->set('isHtml5ParserEnabled', true);
@@ -118,7 +125,8 @@ $html = '
           $Curso = $listadoCalificaciones[$a]['Curso'];
           $Estado = $listadoCalificaciones[$a]['Estado'];
           $CalificacionFinal = $listadoCalificaciones[$a]['CalificacionFinal'];
-                        
+                        if (!$mostrarEstadoParcial)
+                            $listadoCalificaciones[$a]['Estado'] = '';
           $html2=$html2.' <tr>
                 <td>'.$listadoCalificaciones[$a]['Curso'].'  </td>
                 <td>'.$listadoCalificaciones[$a]['Materia'].'</td>
