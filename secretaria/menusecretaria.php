@@ -211,9 +211,8 @@ $groupedExamDetailsJson = json_encode($groupedExamDetails);
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
       <div class="row align-items-center">
-        <div class="col-md-12">
+        <div class="col-12">
           <h3 class="mb-1 text-dark"><?php echo htmlspecialchars($nombreColegio); ?></h3>
-          <!-- <p class="mb-0 text-muted">Ciclo lectivo: 2024 Nivel: Terciario</p> -->
         </div>
       </div>
     </div>

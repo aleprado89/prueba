@@ -153,7 +153,7 @@ function actualizarCalif(celda, columna) {
     var idAlumno = trElement.getAttribute('data-idAlumno');
 
     // Simplemente le damos un feedback visual temporal si está vacío o parece una entrada válida en progreso
-    if (nuevoValor === '' || nuevoValor.match(/^[1-9]$|^10$|^[Aa]$|^[Aa][Pp]$|^[Nn][Aa]$|^[Ee][Pp]$/)) {
+    if (nuevoValor === '' || nuevoValor.match(/^[1-9]$|^10$|^[A]$|^[A][P]$|^[N][A]$|^[E][P]$/)) {
         celda.style.setProperty('background-color', '', 'important'); // Restaura el color si es válido o está en progreso
     } else {
         // Si el carácter introducido no es ni número, ni A, ni AP, NA, EP (parcialmente o completo)
@@ -178,7 +178,7 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
 
     // --- Validación FINAL de valores permitidos ---
     var valoresNumericosPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    var valoresAceptados = ['A', 'a', 'AP', 'ap', 'NA', 'na', 'EP', 'ep']; // Incluimos los aceptados directamente
+    var valoresAceptados = ['A', 'AP', 'NA', 'EP',]; // Incluimos los aceptados directamente
 
     var isValid = false;
 
@@ -188,7 +188,7 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
         isValid = true;
     } else { // Comprobar las cadenas permitidas (insensible a mayúsculas/minúsculas)
         for (let i = 0; i < valoresAceptados.length; i++) {
-            if (nuevoValor.toUpperCase() === valoresAceptados[i].toUpperCase()) {
+            if (nuevoValor === valoresAceptados[i]) {
                 isValid = true;
                 break;
             }
@@ -196,7 +196,7 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
     }
 
     if (!isValid) {
-        alert("Valor no permitido. Solo se permiten números del 1 al 10, 'A' (Ausente), 'AP' (Aprobado), 'NA' (No Aprobado), 'EP' (Equivalencia Pedagógica) o dejar la celda vacía.");
+        alert("Valor no permitido. Solo se permiten números del 1 al 10, y letras mayúsculas: 'A' (Ausente), 'AP' (Aprobado), 'NA' (No Aprobado), 'EP' (Equivalencia Pedagógica) o dejar la celda vacía.");
         celda.textContent = ''; // Limpiar contenido inválido
         celda.style.setProperty('background-color', 'lightcoral', 'important'); // Feedback visual de error
         // Si hay un error de validación final, no enviamos el AJAX.
