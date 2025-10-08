@@ -296,36 +296,49 @@ function verificarAccesoAlumno($dni, $passwordInput, $conn) {
  * ... (Esta función permanece igual, ya la modificamos para `per.nivel = 6`) ...
  */
 function verificarAccesoAlumnoYDocente($dni, $passwordInput, $conn, $CLAVE_DOCENTE_POR_DEFECTO) {
-    // 1. Obtener idPersona
+    // 1. Obtener todas las personas con ese DNI
     $stmt = $conn->prepare("SELECT idPersona FROM persona WHERE dni = ?");
     if (!$stmt) { error_log("Error preparando stmt persona: " . $conn->error); return false; }
     $stmt->bind_param("s", $dni);
     $stmt->execute();
     $res = $stmt->get_result();
-    if (!$res || $res->num_rows !== 1) return false;
-    $idPersona = $res->fetch_assoc()['idPersona'];
+    if (!$res || $res->num_rows < 1) return false;
+
+    $personas = [];
+    while ($row = $res->fetch_assoc()) {
+        $personas[] = $row['idPersona'];
+    }
     $stmt->close();
 
-    // 2. Verificar si es alumno
-    $stmt = $conn->prepare("SELECT p.nombre, p.apellido, p.dni, p.idPersona, a.idAlumno
-                            FROM persona p INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
-                            WHERE p.idPersona = ?");
-    $stmt->bind_param("i", $idPersona);
+    $alumnoData = null;
+    $docenteData = null;
+
+    // 2. Buscar si alguna persona es alumno
+    $in = str_repeat('?,', count($personas) - 1) . '?';
+    $types = str_repeat('i', count($personas));
+    $sqlAlumno = "SELECT p.nombre, p.apellido, p.dni, p.idPersona, a.idAlumno
+                  FROM persona p 
+                  INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona
+                  WHERE p.idPersona IN ($in)";
+    $stmt = $conn->prepare($sqlAlumno);
+    $stmt->bind_param($types, ...$personas);
     $stmt->execute();
     $resAlumno = $stmt->get_result();
-    $esAlumno = ($resAlumno && $resAlumno->num_rows === 1);
-    $alumnoData = $esAlumno ? $resAlumno->fetch_assoc() : null;
+    $esAlumno = ($resAlumno && $resAlumno->num_rows >= 1);
+    if ($esAlumno) $alumnoData = $resAlumno->fetch_assoc();
     $stmt->close();
 
-    // 3. Verificar si es docente
-    $stmt = $conn->prepare("SELECT p.nombre, p.apellido, p.dni, p.idPersona, per.legajo
-                            FROM persona p INNER JOIN personal per ON p.idPersona = per.idPersona
-                            WHERE p.idPersona = ? AND per.nivel = 6");
-    $stmt->bind_param("i", $idPersona);
+    // 3. Buscar si alguna persona es docente (nivel 6)
+    $sqlDocente = "SELECT p.nombre, p.apellido, p.dni, p.idPersona, per.legajo
+                   FROM persona p 
+                   INNER JOIN personal per ON p.idPersona = per.idPersona
+                   WHERE p.idPersona IN ($in) AND per.nivel = 6";
+    $stmt = $conn->prepare($sqlDocente);
+    $stmt->bind_param($types, ...$personas);
     $stmt->execute();
     $resDocente = $stmt->get_result();
-    $esDocente = ($resDocente && $resDocente->num_rows === 1);
-    $docenteData = $esDocente ? $resDocente->fetch_assoc() : null;
+    $esDocente = ($resDocente && $resDocente->num_rows >= 1);
+    if ($esDocente) $docenteData = $resDocente->fetch_assoc();
     $stmt->close();
 
     // Necesita ser ambos para aplicar esta función
@@ -416,6 +429,7 @@ function verificarAccesoAlumnoYDocente($dni, $passwordInput, $conn, $CLAVE_DOCEN
         'force_clave_change_doc' => $forceClaveChangeDoc
     ];
 }
+
 
 
 function existeAlumno($conn, $idPersona) {
