@@ -41,6 +41,7 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,7 +50,7 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+
     <!-- Estilo para el spinner y para ocultar el contenido -->
     <style>
         #loader {
@@ -59,12 +60,14 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
             transform: translate(-50%, -50%);
             z-index: 1050;
         }
+
         /* Oculta el contenido principal por defecto */
         .content-wrapper {
             display: none;
         }
     </style>
 </head>
+
 <body>
     <!-- El spinner ahora es visible por defecto al cargar el HTML -->
     <div id="loader">
@@ -130,39 +133,57 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($alumnos as $alumno): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($alumno['apellido']); ?></td>
-                                            <td><?php echo htmlspecialchars($alumno['nombre']); ?></td>
-                                            <td><?php echo htmlspecialchars($alumno['dni']); ?></td>
-                                            <td>
-                                                <?php
-                                                $action_link = '';
-                                                $button_text = '';
+                                   <?php foreach ($alumnos as $alumno): ?>
+    <tr>
+        <td><?php echo htmlspecialchars($alumno['apellido']); ?></td>
+        <td><?php echo htmlspecialchars($alumno['nombre']); ?></td>
+        <td><?php echo htmlspecialchars($alumno['dni']); ?></td>
+        <td>
+            <?php
+            $action_link = '';
+            $button_text = '';
+            $target_blank = false; // 🔹 valor por defecto
 
-                                                if ($redirect_origin == 'legajo') {
-                                                    $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
-                                                    $button_text = 'Ver Legajo';
-                                                } elseif ($redirect_origin == 'matriculacion') {
-                                                    $action_link = 'matriculacion.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
-                                                    $button_text = 'Matricular';
-                                                } elseif ($redirect_origin == 'inscripcionMateria') {
-                                                    $action_link = 'inscripcionMateria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
-                                                    $button_text = 'Inscribir Materia';
-                                                } elseif ($redirect_origin == 'califxalumno') {
-                                                    $action_link = 'carga_califxalumno_secretaria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
-                                                    $button_text = 'Ver Calificaciones';
-                                                } else {
-                                                    $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
-                                                    $button_text = 'Ver Detalle';
-                                                }
-                                                ?>
-                                                <a href="<?php echo $action_link; ?>" class="btn btn-primary btn-sm">
-                                                    <?php echo $button_text; ?>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
+            if ($redirect_origin == 'legajo') {
+                $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
+                $button_text = 'Ver Legajo';
+            } elseif ($redirect_origin == 'matriculacion') {
+                $action_link = 'matriculacion.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                $button_text = 'Matricular';
+            } elseif ($redirect_origin == 'inscripcionMateria') {
+                $action_link = 'inscripcionMateria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                $button_text = 'Inscribir Materia';
+            } elseif ($redirect_origin == 'califxalumno') {
+                $action_link = 'carga_califxalumno_secretaria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                $button_text = 'Ver Calificaciones';
+            } elseif ($redirect_origin == 'certificadoRegular') {
+                // Sanitizar valores
+                $nombre   = rawurlencode(trim(htmlspecialchars($alumno['nombre'] ?? '', ENT_QUOTES, 'UTF-8')));
+                $apellido = rawurlencode(trim(htmlspecialchars($alumno['apellido'] ?? '', ENT_QUOTES, 'UTF-8')));
+                $dni      = rawurlencode(trim(htmlspecialchars($alumno['dni'] ?? '', ENT_QUOTES, 'UTF-8')));
+                $idAlumno = intval($alumno['idAlumno'] ?? 0);
+
+                // Armar enlace seguro
+                $action_link = "../reportes/aluRegularPDF.php?nombre={$nombre}&apellido={$apellido}&dni={$dni}&idAlumno={$idAlumno}";
+                $button_text = "Certificado Regular";
+                $target_blank = true; // 🔹 abrir solo este en nueva pestaña
+            } else {
+                $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
+                $button_text = 'Ver Detalle';
+            }
+            ?>
+
+            <!-- 🔹 Solo abre en pestaña nueva si $target_blank es true -->
+            <a href="<?php echo $action_link; ?>"
+               class="btn btn-primary btn-sm"
+               <?php echo $target_blank ? 'target="_blank"' : ''; ?>>
+                <?php echo $button_text; ?>
+            </a>
+
+        </td>
+    </tr>
+<?php endforeach; ?>
+
                                 </tbody>
                             </table>
                         </div>
@@ -200,4 +221,5 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
         });
     </script>
 </body>
+
 </html>

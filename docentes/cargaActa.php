@@ -127,8 +127,8 @@
     function actualizarCelda(idAlumno, columna, valor) {
       
       if (['escrito', 'oral', 'calificacion'].includes(columna)) {
-  const valoresValidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'a','ap','apto','na','apt',''].map(x => x.toUpperCase()); 
-  if (!valoresValidos.includes(valor.toUpperCase())) {
+  const valoresValidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A','AP','APTO','NA','APT','']; 
+  if (!valoresValidos.includes(valor)) {
     alert("Dato inválido");
     $(`tr[data-id-alumno="${idAlumno}"] td[data-columna="${columna}"]`).text('');
     valor = "";

@@ -47,7 +47,10 @@
     </a>
     <ul class="dropdown-menu" aria-labelledby="navbarDropdownListados">
         <li><a class="dropdown-item" href="listadoPorCurso.php">Listado por Curso</a></li>
-        <li><a class="dropdown-item" href="listadoPorMateria.php">Listado por Materia</a></li> <!-- NUEVA LÍNEA -->    </ul>
+        <li><a class="dropdown-item" href="listadoPorMateria.php">Listado por Materia</a></li> 
+                <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="buscarAlumno.php?origin=certificadoRegular">Certificado Alumno Regular</a></li>
+        </ul>
 </li>
                 <!-- Menú Colegio -->
                 <li class="nav-item dropdown">

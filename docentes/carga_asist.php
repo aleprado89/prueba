@@ -147,7 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
       <br>
       <p><small>* Las asistencias se guardan automáticamente en cada modificación. La celda se pinta de verde cuando se guarda correctamente.<br>
-        Valores permitidos: P/p (presente), A/a (ausente), J/j (justificado), M/m (media falta).
+        Valores permitidos: P (presente), A (ausente), J (justificado), M (media falta).
       </small></p>
     </div>
 
@@ -248,8 +248,8 @@ $(document).ready(function () {
       $this.text(asistencia);
     }
 
-    if (!/^[AaPpJjMm]*$/.test(asistencia)) { // Validar solo letras permitidas
-      alert('Solo se permiten letras A, a, P, p, J, j, M, m');
+    if (!/^[APJM]*$/.test(asistencia)) { // Validar solo letras permitidas
+      alert('Solo se permiten letras mayúsculas: A, P, J, M');
       $this.text(''); // Limpiar si no es válido
       asistencia = ""; // Asegurarse de que el valor enviado sea vacío para el backend si es inválido
       // Se debe ejecutar el POST incluso si es inválido para borrar el dato

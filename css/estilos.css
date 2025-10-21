@@ -413,9 +413,7 @@ body {
   .card-link {
     min-height: 250px;
   }
-  .card {
-    min-height: 250px;
-  }
+
 }
 @media (min-width: 800px) {
   .carddoc-link {
