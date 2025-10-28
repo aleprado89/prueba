@@ -32,14 +32,6 @@ $img = file_get_contents(__DIR__ . '/'.$membrete);
 $img_base64 = base64_encode($img);
 
 
-$hoy = new DateTime();
-$anio = $hoy->format("Y");
-$fechaLimite = new DateTime("$anio-11-15");
-
-// Verificamos si mostrar columna
-$mostrarEstadoParcial = ($hoy >= $fechaLimite);
-
-
 // Cargar el contenido HTML
 $html = '
 
@@ -140,8 +132,6 @@ $html = '
             </thead>
             <tbody>';
 foreach ($alumnosCalif as $alumno) {
-    //if (!$mostrarEstadoParcial)
-      //  $alumno['estadoCursado']='';
     $html .= '
                 <tr>
                     <td>' . $alumno['apellido'] . ', ' . $alumno['nombre'] . '</td>
