@@ -41,9 +41,9 @@ $req15 = "Completo";      // Checkbox (contexto: Superior)
 $req16 = "Incompleto";    // Checkbox (contexto: Superior)
 
 // Posiciones 17-20: Libres (vacíos)
-$req17 = " "; // Vacio
-$req18 = " "; // Vacio
-$req19 = " "; // Vacio
+$req17 = "Cert. Int. Sexual"; // Vacio
+$req18 = "Pase Sanitario"; // Vacio
+$req19 = "Apto Psicofísico"; // Vacio
 $req20 = " "; // Vacio
 
 
