@@ -1,6 +1,8 @@
 <?php
 // Incluir el script de verificación de sesión
 include '../funciones/verificarSesion.php';
+// *** NUEVO: Incluir variables de requisitos ***
+include '../inicio/variablesParticulares.php'; 
 
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
@@ -11,8 +13,8 @@ error_reporting(E_ALL);
 include '../inicio/conexion.php';
 include '../funciones/consultas.php'; // Asegúrate de que aquí estén las nuevas funciones
 
-// Función auxiliar para calcular CUIL en PHP (para la carga inicial si hay DNI y Sexo)
-// Mantenida aquí ya que es lógica de CUIL, no consulta de DB
+// Función auxiliar para calcular CUIL en PHP...
+// ... (El resto de las funciones auxiliares como calculateCuilPHP, check_dni_unique, etc., permanecen igual) ...
 function calculateCuilPHP($dni, $sexo) {
     if (empty($dni) || empty($sexo)) {
         return ['pre' => '', 'post' => ''];
@@ -74,15 +76,49 @@ $alumnoData = []; // Datos de la persona y alumno a cargar/editar
 $message = ''; // Mensaje de éxito/error después de guardar
 $message_type = '';
 
-// Array de etiquetas para los checkboxes de documentación (orden fijo)
-$documentacion_labels = [
-    "Fotocopia DNI",
-    "Título habilitante",
-    "Ficha médica",
-    "Título en trámite",
-    "Fotos 4x4",
-    "Partida de nacimiento",
-    "Libreta"
+// *** NUEVO: Construcción dinámica del array de etiquetas (0-indexed, 20 elementos) ***
+// $req1 a $req20 se cargan desde ../inicio/variablesParticulares.php
+$documentacion_labels_final = [
+    // pos 0 (req1)
+    (!empty(trim($req1))) ? trim($req1) : null,
+    // pos 1 (req2)
+    (!empty(trim($req2))) ? trim($req2) : null,
+    // pos 2 (req3)
+    (!empty(trim($req3))) ? trim($req3) : null,
+    // pos 3 (req4)
+    (!empty(trim($req4))) ? trim($req4) : null,
+    // pos 4 (req5)
+    (!empty(trim($req5))) ? trim($req5) : null,
+    // pos 5 (req6)
+    (!empty(trim($req6))) ? trim($req6) : null,
+    // pos 6 (req7 - no checkbox)
+    null,
+    // pos 7 (req8 - no checkbox)
+    null,
+    // pos 8 (req9 - "Primario Completo")
+    (!empty(trim($req9)) && !empty(trim($req7))) ? trim($req7) . " " . trim($req9) : ((!empty(trim($req9))) ? $req9 : null),
+    // pos 9 (req10 - "Primario Incompleto")
+    (!empty(trim($req10)) && !empty(trim($req7))) ? trim($req7) . " " . trim($req10) : ((!empty(trim($req10))) ? $req10 : null),
+    // pos 10 (req11)
+    (!empty(trim($req11))) ? trim($req11) : null,
+    // pos 11 (req12 - "Secundario Completo")
+    (!empty(trim($req12)) && !empty(trim($req8))) ? trim($req8) . " " . trim($req12) : ((!empty(trim($req12))) ? $req12 : null),
+    // pos 12 (req13 - "Secundario Incompleto")
+    (!empty(trim($req13)) && !empty(trim($req8))) ? trim($req8) . " " . trim($req13) : ((!empty(trim($req13))) ? $req13 : null),
+    // pos 13 (req14 - no checkbox)
+    null,
+    // pos 14 (req15 - "Nivel sup completo")
+    (!empty(trim($req15))) ? "Nivel sup completo" : null,
+    // pos 15 (req16 - "Nivel sup Incompleto")
+    (!empty(trim($req16))) ? "Nivel sup Incompleto" : null,
+    // pos 16 (req17 - vacio)
+    (!empty(trim($req17))) ? trim($req17) : null,
+    // pos 17 (req18 - vacio)
+    (!empty(trim($req18))) ? trim($req18) : null,
+    // pos 18 (req19 - vacio)
+    (!empty(trim($req19))) ? trim($req19) : null,
+    // pos 19 (req20 - vacio)
+    (!empty(trim($req20))) ? trim($req20) : null,
 ];
 
 
@@ -105,7 +141,8 @@ if ($mode == 'edit') {
         'cuilPre' => '', 'cuilPost' => '', 'telefonoEmergencia' => '',
         'idAlumno' => null, 'vivePadre' => 0, 'viveMadre' => 0, 'egresado' => 0,
         'retiroBiblioteca' => 0, 'observacionesAlumno' => '', 'fotoURL' => '', 'mailInstitucional' => '',
-        'documentacion' => '0000000', // Valor inicial para los 7 checkboxes
+        // *** MODIFICADO: 20 ceros por defecto ***
+        'documentacion' => '00000000000000000000', // Valor inicial para los 20 checkboxes
         'materiasAdeuda' => '',
         'idFamilia' => 0 // Valor inicial para idFamilia
     ];
@@ -126,6 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (!isset($_POST['action']) || $_POST[
     $idPersona = $formData['idPersona'] ?? null; // Si existe, es una operación de edición
 
     // 2. Validar DNI único (solo para nuevas inserciones o si el DNI cambia en modo edición)
+    // ... (Lógica de validación de DNI y campos requeridos permanece igual) ...
     $dni = $formData['dni'] ?? '';
     // Obtener el DNI original para comparar en modo edición
     $originalDni = '';
@@ -151,6 +189,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (!isset($_POST['action']) || $_POST[
         goto end_post_processing;
     }
 
+
     // 3. Calcular CUIL (cuilPre y cuilPost)
     $calculatedCuilParts = calculateCuilPHP($dni, $formData['sexo']);
     $formData['cuilPre'] = $calculatedCuilParts['pre'];
@@ -162,8 +201,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (!isset($_POST['action']) || $_POST[
     }
 
 
-    // 4. Procesar la subida de la foto (campo FotoCarnet de la tabla `persona`)
-    // Si es una edición, mantener la URL de la foto existente a menos que se suba una nueva
+    // 4. Procesar la subida de la foto...
+    // ... (Lógica de subida de foto permanece igual) ...
     $fotoURL_db = $alumnoData['fotoURL'] ?? ''; // El alias fotoURL es para p.FotoCarnet
     if (isset($_FILES['fotoCarnet']) && $_FILES['fotoCarnet']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = 'fotosPersonas/'; // DIRECTORIO DE actuaDatosAlu.php
@@ -217,21 +256,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (!isset($_POST['action']) || $_POST[
     }
     $formData['fotoURL'] = $fotoURL_db; // Actualizar con la nueva URL o conservar la existente
 
-    // 5. Coleccionar los datos de documentación (checkboxes)
+
+    // *** 5. MODIFICADO: Coleccionar los datos de documentación (20 posiciones) ***
     $documentacion_flags_string = '';
-    // Iterar sobre las etiquetas para construir la cadena en el orden correcto
-    for ($i = 0; $i < count($documentacion_labels); $i++) {
-        // En el HTML, los checkboxes tienen name="documentacion_flag_X".
-        // Si el checkbox está marcado, $_POST['documentacion_flag_X'] será "1".
-        // Si no está marcado, nuestro JS añade un input hidden con el mismo nombre y valor "0".
-        // Así nos aseguramos de que el valor exista en $_POST y sea "0" o "1".
-        $documentacion_flags_string .= ($formData['documentacion_flag_' . $i] ?? '0');
+    // Iterar 20 veces (índices 0 a 19)
+    for ($i = 0; $i < 20; $i++) {
+        // Verificar si se debió renderizar un checkbox para este índice
+        if ($documentacion_labels_final[$i] === null || empty(trim($documentacion_labels_final[$i]))) {
+            // No se renderizó checkbox (ej. pos 6, 7, 13, 16-19), guardar '0'
+            $documentacion_flags_string .= '0';
+        } else {
+            // Se renderizó un checkbox. Usar el valor del POST (JS asegura '0' o '1')
+            $documentacion_flags_string .= ($formData['documentacion_flag_' . $i] ?? '0');
+        }
     }
-    $formData['documentacion'] = $documentacion_flags_string;
+    $formData['documentacion'] = $documentacion_flags_string; // Cadena de 20 caracteres
     $formData['idFamilia'] = $formData['idFamilia'] ?? 0; // Asegura que idFamilia siempre es 0 si no viene del form
 
 
     // 6. Insertar/Actualizar en tablas 'persona' y 'alumnosterciario' usando funciones
+    // ... (Lógica de transacción de base de datos permanece igual) ...
     $conn->begin_transaction();
     try {
         if ($mode == 'new') {
@@ -346,7 +390,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (!isset($_POST['action']) || $_POST[
 }
 
 end_post_processing: // Etiqueta para saltar aquí en caso de validación fallida sin error de base de datos
-// Recuperar mensaje de sesión si existe
+// ... (Lógica de recuperación de mensajes y $fotoDisplayPath permanece igual) ...
 if (isset($_SESSION['message_legajo'])) {
     $message = $_SESSION['message_legajo']['text'];
     $message_type = $_SESSION['message_legajo']['type'];
@@ -376,7 +420,6 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
 </head>
 <body>
 
-<!-- CRÍTICO: Inyecta window.usuarioActual aquí, justo después de abrir <body> -->
 <script>
     window.usuarioActual = "<?php echo htmlspecialchars($_SESSION['active_user_identifier'] ?? 'null'); ?>";
     console.log("INJECTED window.usuarioActual (en legajoAlu):", window.usuarioActual);
@@ -405,12 +448,10 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
       <br>
 
       <form method="POST" action="legajoAlu.php<?php echo ($mode == 'edit' ? '?idAlumno=' . htmlspecialchars($idAlumno) : ''); ?>" enctype="multipart/form-data">
-        <!-- Campos Ocultos para control -->
         <input type="hidden" name="idAlumno" value="<?php echo htmlspecialchars($idAlumno ?? ''); ?>">
         <input type="hidden" name="idPersona" value="<?php echo htmlspecialchars($alumnoData['idPersona'] ?? ''); ?>">
         <input type="hidden" name="mode" value="<?php echo htmlspecialchars($mode); ?>">
 
-        <!-- Datos de Persona -->
         <fieldset class="mb-4 p-3 border rounded">
           <legend class="float-none w-auto px-2">Datos Personales</legend>
 
@@ -523,7 +564,6 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
             </div>
           </div>
 
-          <!-- Sección de Foto Carnet -->
           <div class="row mb-3">
             <div class="col-md-6">
               <label for="fotoCarnet" class="form-label">Foto Carnet:</label>
@@ -540,10 +580,8 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
         
         </fieldset>
 
-        <!-- Student Data -->
         <fieldset class="mb-4 p-3 border rounded">
           <legend class="float-none w-auto px-2">Datos de Alumno</legend>
-
           <div class="row mb-3">
             <div class="col-md-6">
               <div class="form-check">
@@ -559,22 +597,30 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
             </div>
           </div>
 
-           <div class="mb-3">
+           <div class="mb-3 col-md-3">
               <label for="mailInstitucional" class="form-label">Mail Institucional</label>
               <input type="email" class="form-control" id="mailInstitucional" name="mailInstitucional" value="<?php echo htmlspecialchars($alumnoData['mailInstitucional'] ?? ''); ?>">
            </div>
+
            
            <div class="row mb-3">
             <h6>Documentación presentada:</h6>
             <?php
-            // Obtener la cadena de flags de documentación, o un string de 7 ceros si no existe
-            $doc_flags_db = $alumnoData['documentacion'] ?? '0000000';
-            // Asegurarse de que la cadena tenga al menos 7 caracteres
-            $doc_flags = str_pad($doc_flags_db, 7, '0', STR_PAD_RIGHT); 
+            // Obtener la cadena de flags de documentación, o un string de 20 ceros si no existe
+            $doc_flags_db = $alumnoData['documentacion'] ?? '00000000000000000000';
+            // Asegurarse de que la cadena tenga al menos 20 caracteres
+            $doc_flags = str_pad($doc_flags_db, 20, '0', STR_PAD_RIGHT); 
 
-            foreach ($documentacion_labels as $index => $label) {
-                // Verificar si el bit correspondiente es '1'
+            // Iterar sobre el array de etiquetas dinámico
+            foreach ($documentacion_labels_final as $index => $label) {
+                // Si la etiqueta es nula o vacía, no renderizar el checkbox
+                if ($label === null || empty(trim($label))) {
+                    continue; // Saltar esta posición
+                }
+                
+                // Verificar si el bit correspondiente (basado en $index) es '1'
                 $checked = (isset($doc_flags[$index]) && $doc_flags[$index] == '1') ? 'checked' : '';
+                
                 echo '<div class="col-md-6 col-lg-4">'; // Usar columnas para organizar en la grilla
                 echo '<div class="form-check">';
                 echo '<input class="form-check-input" type="checkbox" id="documentacion_flag_' . $index . '" name="documentacion_flag_' . $index . '" value="1" ' . $checked . '>';
@@ -584,7 +630,6 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
             }
             ?>
            </div>
-
            <div class="mb-3">
               <label for="materiasAdeuda" class="form-label">Materias Adeudadas (Opcional)</label>
               <textarea class="form-control" id="materiasAdeuda" name="materiasAdeuda" rows="3"><?php echo htmlspecialchars($alumnoData['materiasAdeuda'] ?? ''); ?></textarea>
@@ -602,7 +647,6 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
         </fieldset>
 
         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-        <button type="button" class="btn btn-secondary" onclick="window.history.back()">Volver</button>
       </form>
 
     </div>

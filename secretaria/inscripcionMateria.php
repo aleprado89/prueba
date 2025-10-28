@@ -1,6 +1,8 @@
 <?php
 // Incluir el script de verificación de sesión
 include '../funciones/verificarSesion.php';
+// --- NUEVO INCLUDE PARA CONTROL DE CORRELATIVIDAD ---
+include '../funciones/controlCorrelatividad.php';
 
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
@@ -27,10 +29,10 @@ if (isset($_GET['ajax_action'])) {
         exit;
     } elseif ($_GET['ajax_action'] == 'get_materias') {
         $idCurso = $_GET['idCurso'] ?? null;
-        $idPlan = $_GET['idPlan'] ?? null; // <-- AHORA SE RECIBE EL IDPLAN
+        $idPlan = $_GET['idPlan'] ?? null;
         $materias = [];
         if (!is_null($idCurso) && !is_null($idPlan)) {
-            $materias = materiasPlanCurso($conn, $idPlan, $idCurso); // <-- SE LLAMA CON IDPLAN
+            $materias = materiasPlanCurso($conn, $idPlan, $idCurso);
         }
         echo json_encode($materias);
         exit;
@@ -57,6 +59,12 @@ if (isset($_GET['ajax_action'])) {
         echo json_encode($matriculaciones_filtradas);
         exit;
     }
+    // ENDPOINT PARA OBTENER LAS CONDICIONES DE CURSADO (ESTADOS)
+    elseif ($_GET['ajax_action'] == 'get_condiciones_cursado') {
+        $condiciones = obtenerCondicionesCursado($conn);
+        echo json_encode($condiciones);
+        exit;
+    }
     // --- FIN DE CASOS AJAX ---
 }
 // --- Fin Lógica para manejar peticiones AJAX ---
@@ -81,55 +89,87 @@ $message_type = '';
 
 // Procesamiento de formulario de Inscripción a Materia (INSERT)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'save_matriculacion_materia') {
-    $matriculacion_materia_data = [
-        'idAlumno' => $idAlumno,
-        'idMateria' => $_POST['idMateriaMatriculacion'] ?? null,
-        'fechaMatriculacionMateria' => $_POST['fechaMatriculacionMateria'] ?? null,
-        'fechaBajaMatriculacionMateria' => $_POST['fechaBajaMatriculacionMateriaMatriculacion'] ?? null,
-    ];
+    $idMateriaSeleccionada = $_POST['idMateriaMatriculacion'] ?? null;
+    $idCurso = $_POST['hiddenCursoId'] ?? null;
+    $idPlan = $_POST['hiddenPlanId'] ?? null;
+    
+    $fechaMatriculacionMateria = $_POST['fechaMatriculacionMateria'] ?? null;
+    $estadoMatriculacionMateria = $_POST['estadoMatriculacionMateria'] ?? null;
 
-    if (empty($matriculacion_materia_data['idMateria']) || empty($matriculacion_materia_data['fechaMatriculacionMateria'])) {
-        $message = "Error: Materia y Fecha de Inscripción son campos requeridos.";
+    $materiasAInscribir = [];
+    $mensajesExito = [];
+    $mensajesError = [];
+
+    // Determinar qué materias se van a inscribir
+    if ($idMateriaSeleccionada == 'all') {
+        if ($idPlan && $idCurso) {
+            $materiasAInscribir = materiasPlanCurso($conn, $idPlan, $idCurso);
+        }
+    } elseif ($idMateriaSeleccionada) {
+        $stmt_unico = $conn->prepare("SELECT idUnicoMateria, nombre FROM materiaterciario WHERE idMateria = ?");
+        $stmt_unico->bind_param("i", $idMateriaSeleccionada);
+        $stmt_unico->execute();
+        $result_unico = $stmt_unico->get_result();
+        $materiaData = $result_unico->fetch_assoc();
+        if($materiaData){
+            $materiasAInscribir[] = [
+                'idMateria' => $idMateriaSeleccionada,
+                'idUnicoMateria' => $materiaData['idUnicoMateria'],
+                'nombreMateria' => $materiaData['nombre']
+            ];
+        }
+    }
+
+    if (empty($materiasAInscribir) || empty($fechaMatriculacionMateria) || empty($estadoMatriculacionMateria)) {
+        $message = "Error: No se seleccionaron materias o faltan datos requeridos (Fecha, Estado).";
         $message_type = 'danger';
     } else {
         $conn->begin_transaction();
-        $op_success = true;
+        
+        foreach ($materiasAInscribir as $materia) {
+            if (controlCorrelatividades($materia['idUnicoMateria'], $idAlumno, 0)) {
+                $matriculacion_materia_data = [
+                    'idAlumno' => $idAlumno,
+                    'idMateria' => $materia['idMateria'],
+                    'fechaMatriculacionMateria' => $fechaMatriculacionMateria,
+                    'fechaBajaMatriculacionMateria' => $_POST['fechaBajaMatriculacionMateriaMatriculacion'] ?? null,
+                    'estadoMatriculacionMateria' => $estadoMatriculacionMateria
+                ];
+                
+                if (insertarMatriculacionMateria($conn, $matriculacion_materia_data)) {
+                    $anio_inscripcion = date('Y', strtotime($fechaMatriculacionMateria));
+                    $idCicloLectivo = buscarIdCiclo($conn, $anio_inscripcion);
 
-        if (insertarMatriculacionMateria($conn, $matriculacion_materia_data)) {
-            $idMateria = $matriculacion_materia_data['idMateria'];
-            $anio_inscripcion = date('Y', strtotime($matriculacion_materia_data['fechaMatriculacionMateria']));
-            $idCicloLectivo = buscarIdCiclo($conn, $anio_inscripcion);
-
-            if ($idCicloLectivo === null) {
-                $message = "Error: No se pudo determinar el Ciclo Lectivo para la fecha de inscripción ({$anio_inscripcion}).";
-                $message_type = 'danger';
-                $op_success = false;
+                    if ($idCicloLectivo) {
+                        inicializarAsistenciaMateria($conn, $idAlumno, $materia['idMateria'], $idCicloLectivo);
+                        inicializarCalificacionMateria($conn, $idAlumno, $materia['idMateria']);
+                        $mensajesExito[] = "Inscripción exitosa en: " . htmlspecialchars($materia['nombreMateria']);
+                    } else {
+                        $mensajesError[] = "Error al inscribir en '" . htmlspecialchars($materia['nombreMateria']) . "': No se pudo determinar el Ciclo Lectivo.";
+                    }
+                } else {
+                    $mensajesError[] = "Error al guardar la inscripción para: " . htmlspecialchars($materia['nombreMateria']);
+                }
             } else {
-                if (!inicializarAsistenciaMateria($conn, $idAlumno, $idMateria, $idCicloLectivo)) {
-                    $message = "Error al inicializar registros de asistencia para la materia (ID Materia: {$idMateria}).";
-                    $message_type = 'danger';
-                    $op_success = false;
-                }
-                if ($op_success && !inicializarCalificacionMateria($conn, $idAlumno, $idMateria)) {
-                    $message = "Error al inicializar registro de calificación para la materia (ID Materia: {$idMateria}).";
-                    $message_type = 'danger';
-                    $op_success = false;
-                }
+                global $materiasAdeuda;
+                $mensajesError[] = "No se puede inscribir en <strong>" . htmlspecialchars($materia['nombreMateria']) . "</strong>. El alumno debe: " . htmlspecialchars($materiasAdeuda);
             }
-        } else {
-            $message = "Error al guardar la inscripción en matriculacionmateria.";
-            $message_type = 'danger';
-            $op_success = false;
         }
 
-        if ($op_success) {
+        if (empty($mensajesError)) {
             $conn->commit();
-            $message = "Inscripción de materia guardada correctamente.";
             $message_type = 'success';
+            $message = implode("<br>", $mensajesExito);
         } else {
             $conn->rollback();
+            $message_type = 'danger';
+            $message = implode("<br>", $mensajesError);
+            if(!empty($mensajesExito)){
+                 $message .= "<br><br><strong>Inscripciones exitosas (revertidas debido a errores):</strong><br>" . implode("<br>", $mensajesExito);
+            }
         }
     }
+
     $_SESSION['message_inscripcionMateria'] = ['text' => $message, 'type' => $message_type];
     header('Location: inscripcionMateria.php?idAlumno=' . $idAlumno);
     exit;
@@ -196,22 +236,18 @@ if (isset($_SESSION['message_inscripcionMateria'])) {
 }
 
 
-// --- MODIFICACIÓN: La tabla de inscripciones se carga dinámicamente por AJAX ---
-// $matriculaciones_materia = obtenerMatriculacionesMateriaAlumno($conn, $idAlumno); // No cargar al inicio
-$matriculaciones_materia = []; // Tabla vacía inicialmente
-// --- FIN DE LA MODIFICACIÓN ---
+// Tabla de inscripciones se carga dinámicamente por AJAX
+$matriculaciones_materia = [];
 
 
 // Obtener el último año de ciclo lectivo para el select de año principal
 $ultimoCiclo = obtenerUltimoCicloLectivo($conn);
 $ultimoAnio = $ultimoCiclo ? $ultimoCiclo['anio'] : date('Y');
 
-// --- MODIFICACIÓN AQUÍ ---
 // Obtener los planes en los que el alumno está matriculado para el filtro de planes
 $planesMatriculadosAlumno = obtenerMatriculacionesPlanAlumno($conn, $idAlumno);
-// Creamos un array solo con los planes únicos para el selector de filtro
 $planesParaFiltro = [];
-$planesYaAgregados = []; // Para evitar duplicados si está matriculado en el mismo plan en diferentes cursos/años
+$planesYaAgregados = []; 
 
 foreach ($planesMatriculadosAlumno as $matriculacion) {
     $idPlan = $matriculacion['idPlanDeEstudio'];
@@ -221,12 +257,11 @@ foreach ($planesMatriculadosAlumno as $matriculacion) {
         $planesYaAgregados[] = $idPlan;
     }
 }
-// Ordenar los planes por nombre
 usort($planesParaFiltro, function($a, $b) {
     return strcmp($a['nombre'], $b['nombre']);
 });
-// --- FIN DE LA MODIFICACIÓN ---
-
+// Guardar el primer plan para la preselección
+$primerPlanId = !empty($planesParaFiltro) ? $planesParaFiltro[0]['idPlan'] : null;
 
 // Fecha actual para campos de fecha por defecto
 $today = date('Y-m-d');
@@ -238,20 +273,15 @@ $today = date('Y-m-d');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inscripción de Materias - Secretaría</title>
-  <!-- Incluir Bootstrap CSS -->
   <link rel="stylesheet" href="../css/bootstrap.min.css">
-  <!-- Incluir tema Material Design -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
-  <!-- Incluir tu archivo CSS general -->
   <link rel="stylesheet" href="../css/estilos.css">
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
 <script>
     window.usuarioActual = "<?php echo htmlspecialchars($_SESSION['active_user_identifier'] ?? 'null'); ?>";
-    console.log("INJECTED window.usuarioActual (en inscripcionMateria):", window.usuarioActual);
 </script>
 
 <?php include '../funciones/menu_secretaria.php'; ?>
@@ -267,7 +297,7 @@ $today = date('Y-m-d');
 
     <?php if ($message): ?>
       <div class="alert alert-<?php echo htmlspecialchars($message_type); ?> alert-dismissible fade show" role="alert">
-        <?php echo htmlspecialchars($message); ?>
+        <?php echo $message; // No escapar HTML para que <br> funcione ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     <?php endif; ?>
@@ -281,10 +311,12 @@ $today = date('Y-m-d');
         <legend class="float-none w-auto px-2">Inscripción a Materias</legend>
         <form id="matriculacionMateriaForm" method="POST" action="inscripcionMateria.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>">
           <input type="hidden" name="action" value="save_matriculacion_materia">
+          <input type="hidden" id="hiddenPlanId" name="hiddenPlanId">
+          <input type="hidden" id="hiddenCursoId" name="hiddenCursoId">
 
           <div class="row mb-3">
             <div class="col-md-4">
-              <label for="anioInscripcionMateria" class="form-label">Año de Inscripción <span class="text-danger">*</span></label>
+              <label for="anioInscripcionMateria" class="form-label">Ciclo lectivo <span class="text-danger">*</span></label>
               <select class="form-select" id="anioInscripcionMateria" name="anioInscripcionMateria" required onchange="loadPlanesPorAnioInscripcionMateria()">
                 <option value="">Seleccione el año</option>
                 <?php
@@ -295,28 +327,34 @@ $today = date('Y-m-d');
               </select>
             </div>
             <div class="col-md-4">
-              <label for="planMatriculado" class="form-label">Plan de Estudio Matriculado <span class="text-danger">*</span></label>
+              <label for="planMatriculado" class="form-label">Plan de Estudio<span class="text-danger">*</span></label>
               <select class="form-select" id="planMatriculado" name="idPlanDeEstudio" required onchange="loadCursosMatriculacionMateria()">
-                <option value="">Seleccione un plan (según año)</option>
+                <option value="">Seleccione un plan</option>
               </select>
             </div>
             <div class="col-md-4">
-              <label for="cursoMatriculacion" class="form-label">Curso del Plan <span class="text-danger">*</span></label>
+              <label for="cursoMatriculacion" class="form-label">Curso <span class="text-danger">*</span></label>
               <select class="form-select" id="cursoMatriculacion" name="idCurso" required onchange="loadMateriasMatriculacionMateria()">
-                <option value="">Seleccione un curso (según plan)</option>
+                <option value="">Seleccione un curso</option>
               </select>
             </div>
           </div>
           <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col-md-5">
               <label for="idMateriaMatriculacion" class="form-label">Materia <span class="text-danger">*</span></label>
               <select class="form-select" id="idMateriaMatriculacion" name="idMateriaMatriculacion" required>
-                <option value="">Seleccione una materia (según curso)</option>
+                <option value="">Seleccione una materia</option>
               </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <label for="estadoMatriculacionMateria" class="form-label">Estado de Inscripción <span class="text-danger">*</span></label>
+              <select class="form-select" id="estadoMatriculacionMateria" name="estadoMatriculacionMateria" required>
+                <option value="">Seleccione un estado</option>
+              </select>
+            </div>
+            <div class="col-md-3">
               <label for="fechaMatriculacionMateria" class="form-label">Fecha de Inscripción <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" id="fechaMatriculacionMateria" name="fechaMatriculacionMateria" value="<?php echo $today; ?>" required>
+              <input type="date" class="form-control form-select" id="fechaMatriculacionMateria" name="fechaMatriculacionMateria" value="<?php echo $today; ?>" required>
             </div>
           </div>
           <div class="mb-3">
@@ -329,29 +367,29 @@ $today = date('Y-m-d');
 
         <h6 class="mt-4">Inscripciones a Materias Existentes:</h6>
 
-        <!-- NUEVOS FILTROS -->
         <div class="row mb-3 mt-3">
             <div class="col-md-6">
                 <label for="filtroPlan" class="form-label">Filtrar por Plan:</label>
                 <select class="form-select" id="filtroPlan" onchange="handleFiltroPlanChange()">
-                    <option value="">Todos los Planes</option>
-                    <?php
-                        foreach ($planesParaFiltro as $plan): ?>
-                        <option value="<?php echo htmlspecialchars($plan['idPlan']); ?>"><?php echo htmlspecialchars($plan['nombre']); ?></option>
-                    <?php endforeach; ?>
+                    <?php if (empty($planesParaFiltro)): ?>
+                        <option value="">No hay planes matriculados</option>
+                    <?php else: ?>
+                        <?php foreach ($planesParaFiltro as $plan): ?>
+                            <option value="<?php echo htmlspecialchars($plan['idPlan']); ?>" <?php echo ($plan['idPlan'] == $primerPlanId) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($plan['nombre']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
             </div>
             <div class="col-md-6">
                 <label for="filtroCurso" class="form-label">Filtrar por Curso:</label>
                 <select class="form-select" id="filtroCurso" onchange="filterTableInscripciones()">
                     <option value="">Todos los Cursos</option>
-                    <!-- Las opciones de curso se cargarán dinámicamente -->
                 </select>
             </div>
         </div>
-        <!-- FIN NUEVOS FILTROS -->
-
-        <!-- La tabla de inscripciones se llenará dinámicamente -->
+        
         <div class="table-responsive">
           <table class="table table-striped table-hover mt-3" id="tablaInscripciones">
             <thead>
@@ -409,12 +447,10 @@ $today = date('Y-m-d');
 
 <!-- Scripts para lógica de la página -->
 <script>
-  var deleteUrl = ''; // Variable global para almacenar la URL de eliminación
-  var currentPlanValueForCoursePopulate = ''; // Variable para rastrear el plan que se usó para poblar los cursos
+  var deleteUrl = '';
+  var currentPlanValueForCoursePopulate = '';
 
-  // --- Funciones para la sección de Inscripción a Materias ---
-
-  // Carga los planes de estudio matriculados para un año específico en la sección de inscripción de materias
+  // Carga los planes para el formulario de inscripción
   function loadPlanesPorAnioInscripcionMateria() {
     var idAlumno = "<?php echo $idAlumno; ?>";
     var anio = $('#anioInscripcionMateria').val();
@@ -430,7 +466,7 @@ $today = date('Y-m-d');
         data: { ajax_action: 'get_planes_por_anio', idAlumno: idAlumno, anio: anio },
         dataType: 'json',
         success: function(planes) {
-          planSelect.empty().append('<option value="">Seleccione un plan (según año)</option>');
+          planSelect.empty().append('<option value="">Seleccione un plan</option>');
           if (planes && planes.length > 0) {
             $.each(planes, function(i, plan) {
               planSelect.append('<option value="' + plan.idPlan + '">' + plan.nombre + '</option>');
@@ -449,7 +485,7 @@ $today = date('Y-m-d');
     }
   }
 
-  // Carga los cursos según el plan seleccionado para la inscripción a materias
+  // Carga los cursos para el formulario de inscripción
   function loadCursosMatriculacionMateria(selectedCursoId = null) {
     var idPlan = $('#planMatriculado').val();
     var idCursoSelect = $('#cursoMatriculacion');
@@ -457,20 +493,19 @@ $today = date('Y-m-d');
     $('#idMateriaMatriculacion').empty().append('<option value="">Seleccione un curso primero</option>');
 
     if (idPlan) {
-      var anio = $('#anioInscripcionMateria').val(); // Necesitamos el año para buscarCursosPlanCiclo
+      var anio = $('#anioInscripcionMateria').val();
       $.ajax({
         url: 'inscripcionMateria.php',
         type: 'GET',
-        data: { ajax_action: 'get_cursos', idPlan: idPlan, anio: anio }, // Usamos get_cursos que ya filtra por año
+        data: { ajax_action: 'get_cursos', idPlan: idPlan, anio: anio },
         dataType: 'json',
         success: function(cursos) {
           idCursoSelect.empty().append('<option value="">Seleccione un curso</option>');
           $.each(cursos, function(i, curso) {
             idCursoSelect.append('<option value="' + curso.idCurso + '">' + curso.nombre + '</option>');
           });
-          if (selectedCursoId) { // Si se proporcionó un curso para seleccionar
+          if (selectedCursoId) {
             idCursoSelect.val(selectedCursoId);
-            // Aquí se podría llamar a loadMateriasMatriculacionMateria si fuera necesario pre-seleccionar materia
           }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -483,10 +518,13 @@ $today = date('Y-m-d');
     }
   }
 
-  // Carga las materias según el curso y plan seleccionados para la inscripción a materias
+  // Carga las materias para el formulario de inscripción
   function loadMateriasMatriculacionMateria(selectedMateriaId = null) {
     var idCurso = $('#cursoMatriculacion').val();
-    var idPlan = $('#planMatriculado').val(); // Necesitamos el ID del plan
+    var idPlan = $('#planMatriculado').val();
+    
+    $('#hiddenPlanId').val(idPlan);
+    $('#hiddenCursoId').val(idCurso);
 
     var idMateriaMatriculacionSelect = $('#idMateriaMatriculacion');
     idMateriaMatriculacionSelect.empty().append('<option value="">Cargando materias...</option>');
@@ -495,10 +533,13 @@ $today = date('Y-m-d');
       $.ajax({
         url: 'inscripcionMateria.php',
         type: 'GET',
-        data: { ajax_action: 'get_materias', idCurso: idCurso, idPlan: idPlan }, // PASANDO AMBOS PARÁMETROS
+        data: { ajax_action: 'get_materias', idCurso: idCurso, idPlan: idPlan },
         dataType: 'json',
         success: function(materias) {
           idMateriaMatriculacionSelect.empty().append('<option value="">Seleccione una materia</option>');
+          if (materias.length > 0) {
+              idMateriaMatriculacionSelect.append('<option value="all" style="font-weight: bold; background-color: #e9ecef;">-- Inscribir a Todas --</option>');
+          }
           $.each(materias, function(i, materia) {
             idMateriaMatriculacionSelect.append('<option value="' + materia.idMateria + '">' + materia.nombreMateria + '</option>');
           });
@@ -516,107 +557,79 @@ $today = date('Y-m-d');
     }
   }
 
-  // --- FUNCIÓN PARA POBLAR EL SELECTOR DE FILTRO DE CURSOS ---
-  // Esta función se llama cuando filterTableInscripciones obtiene resultados (matriculaciones).
-  // Se encarga de poblar el selector #filtroCurso con los cursos únicos de esas matriculaciones.
-  // 'keepCurrentValue' determina si se intenta mantener la selección actual del filtro de curso.
+  // --- Funciones para el Filtro de la Tabla de Inscripciones ---
   function populateFiltroCursos(matriculaciones, keepCurrentValue = true) {
     var filtroCursoSelect = $('#filtroCurso');
-    // Guarda el valor actual del selector de cursos si keepCurrentValue es true
     var currentValue = keepCurrentValue ? filtroCursoSelect.val() : '';
 
-    filtroCursoSelect.empty().append('<option value="">Todos los Cursos</option>'); // Reiniciar con la opción "Todos"
+    filtroCursoSelect.empty().append('<option value="">Todos los Cursos</option>');
 
     if (matriculaciones && matriculaciones.length > 0) {
-      var uniqueCourses = {}; // Objeto para almacenar cursos únicos {idCurso: nombreCurso}
-
+      var uniqueCourses = {};
       $.each(matriculaciones, function(i, mat) {
-        if (!uniqueCourses[mat.idCursoFK]) { // Usamos idCursoFK
-          uniqueCourses[mat.idCursoFK] = mat.nombreCurso;
+        if (!uniqueCourses[mat.idCursoFK]) {
+          uniqueCourses[mat.idCursoFK] = { nombre: mat.nombreCurso, anio: mat.anioCicloLectivo };
         }
       });
 
-      var sortedCourses = Object.entries(uniqueCourses).sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
+      var sortedCourses = Object.entries(uniqueCourses).sort(([, dataA], [, dataB]) => {
+          if (dataA.anio !== dataB.anio) return dataA.anio - dataB.anio;
+          return dataA.nombre.localeCompare(dataB.nombre);
+      });
 
-      $.each(sortedCourses, function(index, [idCurso, nombreCurso]) {
-        // Conservar el valor seleccionado si ya existía en la lista y keepCurrentValue es true
+      $.each(sortedCourses, function(index, [idCurso, data]) {
         var selectedAttribute = (keepCurrentValue && idCurso == currentValue) ? 'selected' : '';
-        filtroCursoSelect.append('<option value="' + idCurso + '" ' + selectedAttribute + '>' + nombreCurso + '</option>');
+        filtroCursoSelect.append('<option value="' + idCurso + '" ' + selectedAttribute + '>' + data.nombre + ' (' + data.anio + ')</option>');
       });
     }
-    // Si no hay cursos para el plan o no hay matriculaciones, el select queda solo con "Todos los Cursos".
   }
 
-  // --- FUNCIÓN PARA FILTRAR LA TABLA DE INSCRIPCIONES ---
   function filterTableInscripciones() {
-    var selectedPlanValue = $('#filtroPlan').val(); // Valor del <select> (idPlan o vacío)
-    var selectedCursoValue = $('#filtroCurso').val(); // Valor del <select> (idCurso o vacío)
+    var selectedPlanValue = $('#filtroPlan').val();
+    var selectedCursoValue = $('#filtroCurso').val();
     var idAlumno = "<?php echo $idAlumno; ?>";
 
-    // Si ambos filtros están vacíos ("Todos"), no mostramos nada en la tabla.
-    if (!selectedPlanValue && !selectedCursoValue) {
+    if (!selectedPlanValue) {
         $('#tablaInscripciones tbody').empty();
-        // Si se limpian los filtros, también debemos resetear el selector de cursos.
         $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
-        currentPlanValueForCoursePopulate = ''; // Reseteamos el plan de referencia al limpiar filtros
+        currentPlanValueForCoursePopulate = '';
         return;
     }
 
-    // Si hay algún filtro aplicado, hacemos la llamada AJAX
     $.ajax({
         url: 'inscripcionMateria.php',
         type: 'GET',
         data: {
             ajax_action: 'get_matriculaciones_filtradas',
             idAlumno: idAlumno,
-            idPlan: selectedPlanValue || null, // Pasar null si está vacío
-            idCurso: selectedCursoValue || null // Pasar null si está vacío
+            idPlan: selectedPlanValue || null,
+            idCurso: selectedCursoValue || null
         },
         dataType: 'json',
         success: function(matriculaciones) {
             var $tbody = $('#tablaInscripciones tbody');
-            $tbody.empty(); // Limpiar la tabla antes de añadir nuevos datos
+            $tbody.empty();
 
             if (matriculaciones && matriculaciones.length > 0) {
-                // --- POBLAR EL SELECTOR DE CURSOS SI EL PLAN ESTÁ SELECCIONADO ---
-                // Solo poblar si hay un plan seleccionado Y si el plan actual es diferente al que se usó para poblar la última vez.
-                // Esto evita repoblar si solo cambiamos el curso dentro del mismo plan.
                 if (selectedPlanValue && selectedPlanValue !== currentPlanValueForCoursePopulate) {
-                    populateFiltroCursos(matriculaciones, true); // Intentar mantener la selección actual del curso
-                    currentPlanValueForCoursePopulate = selectedPlanValue; // Actualizar el plan que se usó para poblar
+                    populateFiltroCursos(matriculaciones, true);
+                    currentPlanValueForCoursePopulate = selectedPlanValue;
+                } else if (!selectedPlanValue) {
+                    populateFiltroCursos(matriculaciones, true);
+                    currentPlanValueForCoursePopulate = '';
                 }
 
-                // --- Renderizar la tabla ---
                 $.each(matriculaciones, function(i, mat) {
                     var fechaBaja = mat.fechaBajaMatriculacion ? mat.fechaBajaMatriculacion : '-';
-
-                    var row = `
-                        <tr>
-                            <td>${mat.nombreMateria}</td>
-                            <td>${mat.nombreCurso}</td>
-                            <td>${mat.nombrePlan}</td>
-                            <td>${mat.fechaMatriculacion}</td>
-                            <td>${mat.estado}</td>
-                            <td>${fechaBaja}</td>
-                            <td>${mat.anioCicloLectivo}</td>
-                            <td>
-                              <div class="action-icon-container">
-                                  <a href="#" onclick='showConfirmDeleteModal("inscripcionMateria.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>&action=delete_matriculacion_materia&idMatriculacionMateria=${mat.idMatriculacionMateria}&confirm=yes"); return false;'
-                                     class="action-icon-link delete-icon" title="Eliminar">
-                                      <i class="bi bi-trash text-danger" style="color: black !important;"></i>
-                                  </a>
-                              </div>
-                            </td>
-                        </tr>
-                    `;
+                    var row = `<tr><td>${mat.nombreMateria}</td><td>${mat.nombreCurso}</td><td>${mat.nombrePlan}</td><td>${mat.fechaMatriculacion}</td><td>${mat.estado}</td><td>${fechaBaja}</td><td>${mat.anioCicloLectivo}</td><td><div class="action-icon-container"><a href="#" onclick='showConfirmDeleteModal("inscripcionMateria.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>&action=delete_matriculacion_materia&idMatriculacionMateria=${mat.idMatriculacionMateria}&confirm=yes"); return false;' class="action-icon-link delete-icon" title="Eliminar"><i class="bi bi-trash text-danger" style="color: black !important;"></i></a></div></td></tr>`;
                     $tbody.append(row);
                 });
             } else {
                 $tbody.append('<tr><td colspan="8">No se encontraron inscripciones con los filtros seleccionados.</td></tr>');
-                // Si no hay inscripciones, vaciar el filtro de cursos también
-                $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
-                // Si no hay inscripciones para el plan seleccionado, también reseteamos el plan de referencia.
-                currentPlanValueForCoursePopulate = '';
+                if (selectedPlanValue && selectedPlanValue !== currentPlanValueForCoursePopulate) {
+                   $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
+                }
+                currentPlanValueForCoursePopulate = selectedPlanValue;
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -626,56 +639,64 @@ $today = date('Y-m-d');
     });
   }
 
-  // --- MANEJADOR PARA EL CAMBIO EN FILTRO PLAN ---
   function handleFiltroPlanChange() {
-      var selectedPlanValue = $('#filtroPlan').val(); // Obtenemos el idPlan seleccionado
-
-      // Si se selecciona "Todos los Planes", reseteamos el filtro de cursos y vaciamos la tabla.
+      var selectedPlanValue = $('#filtroPlan').val();
       if (!selectedPlanValue) {
           $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
-          $('#tablaInscripciones tbody').empty(); // Vaciar tabla si no hay plan
-          currentPlanValueForCoursePopulate = ''; // Reseteamos el plan de referencia para poblar cursos
+          $('#tablaInscripciones tbody').empty();
+          currentPlanValueForCoursePopulate = '';
       } else {
-          // Si se selecciona un plan específico, llamamos a filterTableInscripciones.
-          // filterTableInscripciones se encargará de traer los datos y, si hay resultados,
-          // llamará a populateFiltroCursos() para poblar el selector de cursos,
-          // manteniendo la selección del curso actual si es válida.
+          $('#filtroCurso').val(''); 
           filterTableInscripciones();
       }
   }
 
-  // --- Función para mostrar el modal de confirmación ---
   function showConfirmDeleteModal(url) {
-      deleteUrl = url; // Guardar la URL para usarla después en el modal
+      deleteUrl = url;
       $('#confirmDeleteModal').modal('show');
   }
 
-
   // --- Inicialización al cargar el documento ---
   $(document).ready(function() {
-    // Inicialización para la carga en cascada de planes/cursos/materias para INSCRIPCIÓN A MATERIAS
+    // Cargar los planes para el formulario de inscripción al iniciar la página
     var initialAnioInscripcion = $('#anioInscripcionMateria').val();
     if (initialAnioInscripcion) {
         loadPlanesPorAnioInscripcionMateria();
     }
+    
+    // Filtro inicial al cargar la página con el plan preseleccionado
+    handleFiltroPlanChange();
 
-    // Al cambiar el plan en el filtro, actualizamos el selector de cursos y filtramos la tabla.
     $('#filtroPlan').on('change', handleFiltroPlanChange);
-
-    // Al cambiar el curso en el filtro, aplicamos el filtro a la tabla.
-    // IMPORTANTE: Ya NO llamamos a populateFiltroCursos aquí. El selector de cursos mantiene su valor.
     $('#filtroCurso').on('change', function() {
         filterTableInscripciones();
     });
 
-    // Configurar el botón de confirmación del modal para que redirija a la URL correcta
+    // Cargar los estados disponibles para el select de estado de inscripción
+    $.ajax({
+        url: 'inscripcionMateria.php',
+        type: 'GET',
+        data: { ajax_action: 'get_condiciones_cursado' },
+        dataType: 'json',
+        success: function(condiciones) {
+            var estadoSelect = $('#estadoMatriculacionMateria');
+            estadoSelect.empty().append('<option value="">Seleccione un estado</option>');
+            $.each(condiciones, function(i, condicion) {
+                estadoSelect.append('<option value="' + condicion.idCondicion + '">' + condicion.condicion + '</option>');
+            });
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Error al cargar estados de inscripción: " + textStatus, errorThrown);
+            $('#estadoMatriculacionMateria').empty().append('<option value="">Error al cargar estados</option>');
+        }
+    });
+
     $('#confirmDeleteModal .btn-danger').on('click', function() {
       if (deleteUrl) {
         window.location.href = deleteUrl;
       }
     });
 
-    // Inicializar tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);

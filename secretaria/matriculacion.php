@@ -39,7 +39,7 @@ if (isset($_GET['ajax_action'])) {
         $anio = $_GET['anio'] ?? null;
         $planes = [];
         if (!is_null($idAlumno) && !is_null($anio)) {
-            $planes = obtenerPlanesMatriculadosPorAnio($conn, $idAlumno, $anio);
+            $planes = obtenerPlanesDeEstudio($conn);
         }
         echo json_encode($planes);
         exit;
@@ -223,7 +223,7 @@ $today = date('Y-m-d');
             <div class="col-md-6">
               <label for="idPlanDeEstudio" class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
               <select class="form-select" id="idPlanDeEstudio" name="idPlanDeEstudio" required onchange="loadCursos()">
-                <option value="">Seleccione un plan (según año)</option>
+                <option value="">Seleccione un plan de estudio </option>
               </select>
             </div>
           </div>
@@ -231,12 +231,12 @@ $today = date('Y-m-d');
             <div class="col-md-6">
               <label for="idCurso" class="form-label">Curso <span class="text-danger">*</span></label>
               <select class="form-select" id="idCurso" name="idCurso" required>
-                <option value="">Seleccione un curso (según plan)</option>
+                <option value="">Seleccione un curso</option>
               </select>
             </div>
             <div class="col-md-6">
               <label for="fechaMatriculacion" class="form-label">Fecha de Matriculación <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" id="fechaMatriculacion" name="fechaMatriculacion" value="<?php echo $today; ?>" required>
+              <input type="date" class="form-control form-select" id="fechaMatriculacion" name="fechaMatriculacion" value="<?php echo $today; ?>" required>
             </div>
           </div>
 

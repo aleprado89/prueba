@@ -55,11 +55,13 @@ function porcentaje($tabla) {
                     $asis = substr($asistencia, $aumenta, 1);
                     $x = strtoupper($asis);
 
-                    if ($x == 'A' || $x == 'J') {
+                    if ($x == 'A' || $x == 'J' || 
+                    $x == 'a' || $x == 'j') {
                         $ausente++;
-                    } elseif ($x == 'P' || $x == 'S' || $x == 'T') {
+                    } elseif ($x == 'P' || $x == 'S' || $x == 'T' ||
+                    $x == 'p' || $x == 's' || $x == 't') {
                         $presente++;
-                    } elseif ($x == 'M') {
+                    } elseif ($x == 'M' || $x == 'm') {
                         $ausente += 0.5;
                         $presente += 0.5;
                     }

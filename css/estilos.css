@@ -1,4 +1,45 @@
 /* --- ESTILOS GENERALES Y PREEXISTENTES --- */
+.table-wrapper {
+    overflow-x: auto; /* Habilita el scroll horizontal */
+    margin-bottom: 1.5rem; /* Espacio debajo si se pone uno abajo */
+    /* Puedes añadir un espacio arriba si quieres un scrollbar en ambos lados */
+    margin-top: 1.5rem;
+}
+
+/* Si quieres que el scrollbar esté explícitamente en ambos lados */
+.table-wrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Ajuste para la cabecera */
+.table-responsive { /* Bootstrap table-responsive */
+    overflow-x: auto; /* Asegura que herede del wrapper si lo envuelve */
+}
+
+/* Asegurarse de que el scroll aparezca siempre, incluso si no es necesario */
+.table-responsive, .table-wrapper {
+    min-height: 100px; /* O alguna altura mínima para que el scroll pueda aparecer */
+}
+
+/* Un pequeño ajuste para la tabla para que no se desborde internamente */
+.table-responsive table, .table-wrapper table {
+    width: 100%; /* Asegura que la tabla intente usar el ancho del contenedor */
+    margin-bottom: 0; /* Evita espacio extra debajo si el div wrapper es el que controla scroll */
+}
 
 .celda-actualizada {
   background-color: lightgreen;
@@ -372,9 +413,7 @@ body {
   .card-link {
     min-height: 250px;
   }
-  .card {
-    min-height: 250px;
-  }
+
 }
 @media (min-width: 800px) {
   .carddoc-link {

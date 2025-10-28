@@ -33,14 +33,25 @@
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=inscripcionMateria">Inscripción a Materia</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Calificaciones</h6></li>
-                        <li><a class="dropdown-item" href="../secretaria/carga_calif_secre_xalu.php">Calificaciones por Alumno</a></li>
+                        <!-- MODIFICADO: Enlace a la nueva página -->
+                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=califxalumno">Calificaciones por Alumno</a></li>
                         <li><a class="dropdown-item" href="../secretaria/carga_calif_secretaria.php">Calificaciones por Materia</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Asistencias</h6></li>
                         <li><a class="dropdown-item" href="../secretaria/carga_asist_secretaria.php">Asistencias</a></li>
                     </ul>
                 </li>
-                
+                <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownListados" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Listados
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownListados">
+        <li><a class="dropdown-item" href="listadoPorCurso.php">Listado por Curso</a></li>
+        <li><a class="dropdown-item" href="listadoPorMateria.php">Listado por Materia</a></li> 
+                <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="buscarAlumno.php?origin=certificadoRegular">Certificado Alumno Regular</a></li>
+        </ul>
+</li>
                 <!-- Menú Colegio -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownColegio" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -52,7 +63,7 @@
                 </li>
                
                 <!-- Menú Funciones Web -->
-                <li class="nav-item dropdown">
+               <!-- <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownFuncWeb" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-globe"></i> Func. web
                     </a>
@@ -61,7 +72,7 @@
                         <li><a class="dropdown-item" href="../secretaria/solicitudExam.php">Examen</a></li>
                         <li><a class="dropdown-item" href="../secretaria/solicitudCurs.php">Cursado</a></li>
                     </ul>
-                </li>
+                </li> -->
                 
             </ul>
             <ul class="navbar-nav ms-auto">
