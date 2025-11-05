@@ -1,4 +1,3 @@
-<!-- Barra de Navegación Superior -->
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">
@@ -13,14 +12,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <!-- Nuevo Menú Inicio -->
                 <li class="nav-item">
                     <a class="nav-link" href="../secretaria/menusecretaria.php">
-                        <i class="bi bi-house-door-fill"></i> Inicio <!-- Icono de casita para Inicio -->
-                    </a>
+                        <i class="bi bi-house-door-fill"></i> Inicio </a>
                 </li>
 
-                <!-- Menú Alumnos -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAlumnos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person-fill"></i> Alumnos
@@ -28,12 +24,12 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownAlumnos">
                         <li><h6 class="dropdown-header">Gestión de Alumnos</h6></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=legajo">Legajo</a></li>
+                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=presistema">Registros Presistema</a></li>
                         <li><h6 class="dropdown-header">Inscripciones</h6></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=matriculacion">Matriculación (Plan/Curso)</a></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=inscripcionMateria">Inscripción a Materia</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Calificaciones</h6></li>
-                        <!-- MODIFICADO: Enlace a la nueva página -->
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=califxalumno">Calificaciones por Alumno</a></li>
                         <li><a class="dropdown-item" href="../secretaria/carga_calif_secretaria.php">Calificaciones por Materia</a></li>
                         <li><hr class="dropdown-divider"></li>
@@ -41,18 +37,31 @@
                         <li><a class="dropdown-item" href="../secretaria/carga_asist_secretaria.php">Asistencias</a></li>
                     </ul>
                 </li>
+                
                 <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownListados" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Listados
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdownListados">
-        <li><a class="dropdown-item" href="listadoPorCurso.php">Listado por Curso</a></li>
-        <li><a class="dropdown-item" href="listadoPorMateria.php">Listado por Materia</a></li> 
-                <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="buscarAlumno.php?origin=certificadoRegular">Certificado Alumno Regular</a></li>
-        </ul>
-</li>
-                <!-- Menú Colegio -->
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownExamen" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-calendar-check"></i> Examen
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownExamen">
+                        <li><a class="dropdown-item" href="mesasExamen.php">Mesas de Examen</a></li>
+                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=inscribirExamen">Inscripción a Examen (individual)</a></li>
+                        <li><a class="dropdown-item" href="inscripcionExamenMasivo.php">Inscripción a Examen (Masivo)</a></li>
+                        <li><a class="dropdown-item" href="buscarActas.php">Actas</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownListados" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Listados
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownListados">
+                        <li><a class="dropdown-item" href="listadoPorCurso.php">Listado por Curso</a></li>
+                        <li><a class="dropdown-item" href="listadoPorMateria.php">Listado por Materia</a></li> 
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="buscarAlumno.php?origin=certificadoRegular">Certificado Alumno Regular</a></li>
+                    </ul>
+                </li>
+
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownColegio" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-building"></i> Colegio
@@ -62,33 +71,15 @@
                     </ul>
                 </li>
                
-                <!-- Menú Funciones Web -->
-               <!-- <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownFuncWeb" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-globe"></i> Func. web
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownFuncWeb">
-                        <li><h6 class="dropdown-header">Solicitudes de Inscripción</h6></li>
-                        <li><a class="dropdown-item" href="../secretaria/solicitudExam.php">Examen</a></li>
-                        <li><a class="dropdown-item" href="../secretaria/solicitudCurs.php">Cursado</a></li>
-                    </ul>
-                </li> -->
-                
-            </ul>
+                </ul>
             <ul class="navbar-nav ms-auto">
-                <!-- Nuevo item de menú para el usuario -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person"></i> <!-- Ícono de usuario -->
-                        <?php echo htmlspecialchars($_SESSION['sec_nombreUsuario'] ?? 'Usuario'); ?> <!-- Muestra el nombre de usuario -->
-                    </a>
+                        <i class="bi bi-person"></i> <?php echo htmlspecialchars($_SESSION['sec_nombreUsuario'] ?? 'Usuario'); ?> </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
-                        <li><a class="dropdown-item" href="#">Cambiar contraseña</a></li> <!-- Opción de cambiar contraseña -->
-                        <!-- Otros ítems relacionados con el usuario pueden ir aquí -->
-                    </ul>
+                        <li><a class="dropdown-item" href="#">Cambiar contraseña</a></li> </ul>
                 </li>
-                <!-- Fin del nuevo item de menú para el usuario -->
-
+                
                 <li class="nav-item">
                     <a class="nav-link" href="../funciones/cerrarsesion.php"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
                 </li>

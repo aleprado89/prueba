@@ -51,7 +51,6 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Estilo para el spinner y para ocultar el contenido -->
     <style>
         #loader {
             position: fixed;
@@ -69,14 +68,12 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
 </head>
 
 <body>
-    <!-- El spinner ahora es visible por defecto al cargar el HTML -->
     <div id="loader">
         <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
             <span class="visually-hidden">Cargando...</span>
         </div>
     </div>
 
-    <!-- Envolvemos todo el contenido visible en un div -->
     <div class="content-wrapper">
         <?php include '../funciones/menu_secretaria.php'; ?>
 
@@ -153,6 +150,13 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
             } elseif ($redirect_origin == 'inscripcionMateria') {
                 $action_link = 'inscripcionMateria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
                 $button_text = 'Inscribir Materia';
+            
+            // 🔽 --- NUEVO BLOQUE --- 🔽
+            } elseif ($redirect_origin == 'inscribirExamen') {
+                $action_link = 'inscripcionExamenAlumno.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                $button_text = 'Inscribir a Examen';
+            // 🔼 --- FIN NUEVO BLOQUE --- 🔼
+
             } elseif ($redirect_origin == 'califxalumno') {
                 $action_link = 'carga_califxalumno_secretaria.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
                 $button_text = 'Ver Calificaciones';
@@ -167,13 +171,19 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
                 $action_link = "../reportes/aluRegularPDF.php?nombre={$nombre}&apellido={$apellido}&dni={$dni}&idAlumno={$idAlumno}";
                 $button_text = "Certificado Regular";
                 $target_blank = true; // 🔹 abrir solo este en nueva pestaña
-            } else {
+            } 
+            elseif ($redirect_origin == 'presistema') {
+                $action_link = 'registrosPresistema.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                $button_text = 'Registros Presistema';
+            // --- FIN DE NUEVO BLOQUE ---
+            
+            }
+            else {
                 $action_link = 'legajoAlu.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']) . '&mode=edit';
                 $button_text = 'Ver Detalle';
             }
             ?>
 
-            <!-- 🔹 Solo abre en pestaña nueva si $target_blank es true -->
             <a href="<?php echo $action_link; ?>"
                class="btn btn-primary btn-sm"
                <?php echo $target_blank ? 'target="_blank"' : ''; ?>>
@@ -192,14 +202,11 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
             </div>
         </div>
         <?php include '../funciones/footer.html'; ?>
-    </div> <!-- Fin de content-wrapper -->
-
-    <script src="../js/jquery-3.7.1.min.js"></script>
+    </div> <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/popper.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="../funciones/sessionControl.js"></script>
 
-    <!-- Script para manejar el spinner y la visibilidad del contenido -->
     <script>
         // Ocultar el spinner y mostrar el contenido una vez que toda la página esté cargada.
         $(window).on('load', function() {
