@@ -577,6 +577,8 @@ function inscripcionExamenControl($conexion, $idAlumno, $idUnicoMateria, $inscri
         $habilitacionInscripcion = false; 
         $salida = "El alumno no tiene registro de Cursado.";
     }
+    if ($habilitacionInscripcion){ return $habilitacionInscripcion; }
+    else { return $salida; }
 }
 
 
