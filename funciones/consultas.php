@@ -3165,4 +3165,333 @@ function convertirPresistemaRegularAAprobado($conn, $idMatriculacionMateria, $id
     if (!$stmt_ct->execute()) throw new Exception("Error al actualizar calificacionesterciario (Conversión).");
     $stmt_ct->close();
 }
+/**
+ * ==========================================================
+ * FUNCIONES PARA GESTIÓN DE EQUIVALENCIAS (equivalencias.php)
+ * ==========================================================
+ */
+
+/**
+ * Verifica si ya existe una matriculación para un alumno en una materia específica.
+ *
+ * @param mysqli $conexion
+ * @param int $idAlumno
+ * @param int $idMateria
+ * @return bool True si ya existe, false si no.
+ */
+function checkMatriculacionMateriaExiste($conexion, $idAlumno, $idMateria) {
+    $sql = "SELECT COUNT(*) AS count FROM matriculacionmateria WHERE idAlumno = ? AND idMateria = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar checkMatriculacionMateriaExiste: " . $conexion->error);
+        return true; // Asumir que existe para prevenir duplicados
+    }
+    $stmt->bind_param("ii", $idAlumno, $idMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    return $row['count'] > 0;
+}
+
+/**
+ * Inserta un registro de Equivalencia o Pase (3 tablas).
+ * (Debe ser llamado dentro de una transacción)
+ *
+ * @param mysqli $conn
+ * @param array $data Array asociativo con los datos del formulario.
+ * @return bool True si éxito, false si falla.
+ * @throws Exception Si algo sale mal.
+ */
+function insertarEquivalencia($conn, $data) {
+    // Extraer datos
+    $idAlumno = $data['idAlumno'];
+    $idMateria = $data['idMateria'];
+    $fecha = $data['fecha'];
+    $tipo = $data['tipo']; // "Aprobación por Equivalencia" o "Aprobación por Pase"
+    $resolucion = $data['resolucion'];
+    $calificacion = $data['calificacion'];
+    $procedencia = $data['procedencia'];
+
+    // 1. Insertar en matriculacionmateria
+    $sql_mm = "INSERT INTO matriculacionmateria 
+               (idAlumno, idNivel, idMateria, fechaMatriculacion, estado, idCicloLectivo) 
+               VALUES (?, 6, ?, ?, ?, 0)";
+    $stmt_mm = $conn->prepare($sql_mm);
+    if (!$stmt_mm) throw new Exception("Error al preparar (matriculacionmateria): " . $conn->error);
+    $stmt_mm->bind_param("iiss", $idAlumno, $idMateria, $fecha, $tipo);
+    if (!$stmt_mm->execute()) throw new Exception("Error al insertar (matriculacionmateria): " . $stmt_mm->error);
+    
+    $idMatriculacionMateria = $conn->insert_id;
+    $stmt_mm->close();
+
+    // 2. Insertar en calificacionesterciario
+    $sql_ct = "INSERT INTO calificacionesterciario 
+               (idAlumno, idMateria, asistencia, sinAsistencia, estadoCursadoNumero, estadoCursado, materiaAprobada, examenIntegrador) 
+               VALUES (?, ?, '100%', 0, 11, ?, 1, ?)";
+    $stmt_ct = $conn->prepare($sql_ct);
+    if (!$stmt_ct) throw new Exception("Error al preparar (calificacionesterciario): " . $conn->error);
+    $stmt_ct->bind_param("iiss", $idAlumno, $idMateria, $tipo, $calificacion);
+    if (!$stmt_ct->execute()) throw new Exception("Error al insertar (calificacionesterciario): " . $stmt_ct->error);
+    $stmt_ct->close();
+
+    // 3. Insertar en resoluciones
+    $nombreResolucion = $resolucion . " " . $calificacion;
+    $sql_r = "INSERT INTO resoluciones 
+              (tipoResolucion, nombre, procedencia, idReferencia) 
+              VALUES ('Matriculación Materia', ?, ?, ?)";
+    $stmt_r = $conn->prepare($sql_r);
+    if (!$stmt_r) throw new Exception("Error al preparar (resoluciones): " . $conn->error);
+    $stmt_r->bind_param("ssi", $nombreResolucion, $procedencia, $idMatriculacionMateria);
+    if (!$stmt_r->execute()) throw new Exception("Error al insertar (resoluciones): " . $stmt_r->error);
+    $stmt_r->close();
+
+    return true;
+}
+
+/**
+ * Obtiene todos los registros de equivalencia/pase de un alumno.
+ *
+ * @param mysqli $conexion
+ * @param int $idAlumno
+ * @return array
+ */
+function obtenerEquivalenciasAlumno($conexion, $idAlumno) {
+    $sql = "SELECT 
+                mm.idMatriculacionMateria, mm.fechaMatriculacion, mm.estado, 
+                mt.nombre AS nombreMateria, 
+                c.nombre AS nombreCurso, 
+                pe.nombre AS nombrePlan, 
+                r.nombre AS nombreResolucion, r.procedencia, r.idResolucion, 
+                ct.examenIntegrador AS calificacion, ct.idCalificacion,
+                mt.idMateria, c.idCurso, pe.idPlan
+            FROM matriculacionmateria mm
+            JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
+            JOIN curso c ON mt.idCurso = c.idCurso
+            JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
+            LEFT JOIN resoluciones r ON mm.idMatriculacionMateria = r.idReferencia AND r.tipoResolucion = 'Matriculación Materia'
+            LEFT JOIN calificacionesterciario ct ON mm.idAlumno = ct.idAlumno AND mm.idMateria = ct.idMateria AND (ct.estadoCursado = 'Aprobación por Equivalencia' OR ct.estadoCursado = 'Aprobación por Pase')
+            WHERE mm.idAlumno = ? 
+            AND (mm.estado = 'Aprobación por Equivalencia' OR mm.estado = 'Aprobación por Pase')
+            ORDER BY mm.fechaMatriculacion DESC";
+    
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerEquivalenciasAlumno: " . $conexion->error);
+        return [];
+    }
+    $stmt->bind_param("i", $idAlumno);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $registros = [];
+    while ($row = $result->fetch_assoc()) {
+        $registros[] = $row;
+    }
+    $stmt->close();
+    return $registros;
+}
+
+/**
+ * Obtiene los detalles de una matriculación para su eliminación.
+ */
+function obtenerDetallesEquivalencia($conn, $idMatriculacionMateria) {
+    $sql = "SELECT idAlumno, idMateria FROM matriculacionmateria WHERE idMatriculacionMateria = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerDetallesEquivalencia: " . $conn->error);
+        return null;
+    }
+    $stmt->bind_param("i", $idMatriculacionMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $details = $result->fetch_assoc();
+    $stmt->close();
+    return $details;
+}
+
+/**
+ * Elimina un registro de Equivalencia/Pase (3 tablas).
+ * (Debe ser llamado dentro de una transacción)
+ *
+ * @param mysqli $conn
+ * @param int $idMatriculacionMateria
+ * @return bool
+ * @throws Exception
+ */
+function eliminarEquivalencia($conn, $idMatriculacionMateria) {
+    $details = obtenerDetallesEquivalencia($conn, $idMatriculacionMateria);
+    if (!$details) {
+        throw new Exception("Registro no encontrado.");
+    }
+    $idAlumno = $details['idAlumno'];
+    $idMateria = $details['idMateria'];
+
+    // 1. Eliminar de resoluciones
+    $stmt_r = $conn->prepare("DELETE FROM resoluciones WHERE idReferencia = ? AND tipoResolucion = 'Matriculación Materia'");
+    $stmt_r->bind_param("i", $idMatriculacionMateria);
+    if (!$stmt_r->execute()) throw new Exception("Error al eliminar de resoluciones.");
+    $stmt_r->close();
+
+    // 2. Eliminar de calificacionesterciario
+    $stmt_ct = $conn->prepare("DELETE FROM calificacionesterciario WHERE idAlumno = ? AND idMateria = ? AND (estadoCursado = 'Aprobación por Equivalencia' OR estadoCursado = 'Aprobación por Pase')");
+    $stmt_ct->bind_param("ii", $idAlumno, $idMateria);
+    if (!$stmt_ct->execute()) throw new Exception("Error al eliminar de calificacionesterciario.");
+    $stmt_ct->close();
+
+    // 3. Eliminar de matriculacionmateria
+    $stmt_mm = $conn->prepare("DELETE FROM matriculacionmateria WHERE idMatriculacionMateria = ?");
+    $stmt_mm->bind_param("i", $idMatriculacionMateria);
+    if (!$stmt_mm->execute()) throw new Exception("Error al eliminar de matriculacionmateria.");
+    $stmt_mm->close();
+
+    return true;
+}
+
+/**
+ * Actualiza un registro de Equivalencia/Pase (3 tablas).
+ * (Debe ser llamado dentro de una transacción)
+ *
+ * @param mysqli $conn
+ * @param array $data
+ * @return bool
+ * @throws Exception
+ */
+function actualizarEquivalencia($conn, $data) {
+    // Extraer datos
+    $idMatriculacionMateria = $data['idMatriculacionMateria'];
+    $idResolucion = $data['idResolucion'];
+    $idCalificacion = $data['idCalificacion'];
+    $idMateria = $data['idMateria'];
+    $fecha = $data['fecha'];
+    $tipo = $data['tipo'];
+    $resolucion = $data['resolucion'];
+    $calificacion = $data['calificacion'];
+    $procedencia = $data['procedencia'];
+
+    // 1. Actualizar matriculacionmateria
+    $sql_mm = "UPDATE matriculacionmateria SET idMateria = ?, fechaMatriculacion = ?, estado = ? 
+               WHERE idMatriculacionMateria = ?";
+    $stmt_mm = $conn->prepare($sql_mm);
+    $stmt_mm->bind_param("issi", $idMateria, $fecha, $tipo, $idMatriculacionMateria);
+    if (!$stmt_mm->execute()) throw new Exception("Error al actualizar matriculacionmateria.");
+    $stmt_mm->close();
+
+    // 2. Actualizar calificacionesterciario
+    $sql_ct = "UPDATE calificacionesterciario SET idMateria = ?, estadoCursado = ?, examenIntegrador = ? 
+               WHERE idCalificacion = ?";
+    $stmt_ct = $conn->prepare($sql_ct);
+    $stmt_ct->bind_param("issi", $idMateria, $tipo, $calificacion, $idCalificacion);
+    if (!$stmt_ct->execute()) throw new Exception("Error al actualizar calificacionesterciario.");
+    $stmt_ct->close();
+
+    // 3. Actualizar resoluciones
+    $nombreResolucion = $resolucion . " " . $calificacion;
+    $sql_r = "UPDATE resoluciones SET nombre = ?, procedencia = ? WHERE idResolucion = ?";
+    $stmt_r = $conn->prepare($sql_r);
+    $stmt_r->bind_param("ssi", $nombreResolucion, $procedencia, $idResolucion);
+    if (!$stmt_r->execute()) throw new Exception("Error al actualizar resoluciones.");
+    $stmt_r->close();
+
+    return true;
+}
+
+/**
+ * Obtiene Cursos (no predeterminados) por idPlan.
+ */
+function getCursosPorPlan($conn, $idPlan) {
+    $cursos = [];
+    $sql = "SELECT idCurso, nombre FROM curso WHERE idPlanEstudio = ? ORDER BY nombre";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar getCursosPorPlan: " . $conn->error);
+        return [];
+    }
+    $stmt->bind_param("i", $idPlan);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $cursos[] = $row;
+    }
+    $stmt->close();
+    return $cursos;
+}
+
+/**
+ * Obtiene Materias por idCurso.
+ */
+function getMateriasPorCurso($conn, $idCurso) {
+    $materias = [];
+    $sql = "SELECT idMateria, nombre FROM materiaterciario WHERE idCurso = ? ORDER BY nombre";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar getMateriasPorCurso: " . $conn->error);
+        return [];
+    }
+    $stmt->bind_param("i", $idCurso);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $materias[] = $row;
+    }
+    $stmt->close();
+    return $materias;
+}
+/**
+ * ==========================================================
+ * FUNCIONES PARA INSCRIPCIÓN MASIVA A EXAMEN (Secretaría)
+ * ==========================================================
+ */
+
+/**
+ * Busca alumnos para inscripción masiva a examen.
+ *
+ * Devuelve alumnos que (A) están en matriculacionmateria para esa materia/ciclo
+ * y (B) cuyo estado de cursado (estadoCursadoNumero) en calificacionesterciario
+ * coincide con el idCondicion proporcionado.
+ *
+ * @param mysqli $conexion Conexión a la DB.
+ * @param int $idMateria
+ * @param int $idCiclo
+ * @param int $idCondicionEstado El ID de la tabla 'condicion' (que mapea a 'estadoCursadoNumero')
+ * @return array Lista de alumnos [idAlumno, apellido, nombre, dni].
+ */
+function buscarAlumnosParaInscripcionMasiva($conexion, $idMateria, $idCiclo, $idCondicionEstado) {
+    $alumnos = [];
+    
+    // Consulta principal
+    // Usamos DISTINCT para asegurar que cada alumno aparezca una sola vez,
+    // independientemente de múltiples registros si la lógica de negocio lo permitiera.
+    $sql = "SELECT DISTINCT a.idAlumno, p.apellido, p.nombre, p.dni
+            FROM alumno a
+            JOIN persona p ON a.idPersona = p.idPersona
+            JOIN matriculacionmateria mm ON a.idAlumno = mm.idAlumno
+            JOIN calificacionesterciario ct ON a.idAlumno = ct.idAlumno AND mm.idMateria = ct.idMateria
+            WHERE mm.idMateria = ?
+            AND mm.idCicloLectivo = ?
+            AND ct.estadoCursadoNumero = ?
+            ORDER BY p.apellido, p.nombre";
+            
+    $stmt = $conexion->prepare($sql);
+    
+    if (!$stmt) {
+        error_log("Error al preparar (buscarAlumnosParaInscripcionMasiva): " . $conexion->error);
+        return []; // Devuelve vacío en caso de error
+    }
+    
+    // Asumimos todos enteros
+    $stmt->bind_param("iii", $idMateria, $idCiclo, $idCondicionEstado);
+    
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $alumnos[] = $row;
+        }
+    } else {
+        error_log("Error al ejecutar (buscarAlumnosParaInscripcionMasiva): " . $stmt->error);
+    }
+    
+    $stmt->close();
+    return $alumnos;
+}
+
 ?>

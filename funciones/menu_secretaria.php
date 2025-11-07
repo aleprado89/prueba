@@ -25,6 +25,7 @@
                         <li><h6 class="dropdown-header">Gestión de Alumnos</h6></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=legajo">Legajo</a></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=presistema">Registros Presistema</a></li>
+                        <li> <a class="dropdown-item" href="buscarAlumno.php?origin=equivalencias">Equivalencias</a></li>                        
                         <li><h6 class="dropdown-header">Inscripciones</h6></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=matriculacion">Matriculación (Plan/Curso)</a></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=inscripcionMateria">Inscripción a Materia</a></li>

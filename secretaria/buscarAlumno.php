@@ -172,6 +172,11 @@ if (empty($apellido_busqueda) && empty($nombre_busqueda) && !isset($_GET['search
                 $button_text = "Certificado Regular";
                 $target_blank = true; // 🔹 abrir solo este en nueva pestaña
             } 
+            elseif($redirect_origin == 'equivalencias'){
+                $action_link = 'equivalencias.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
+                $button_text = 'Equivalencias';
+
+            }
             elseif ($redirect_origin == 'presistema') {
                 $action_link = 'registrosPresistema.php?idAlumno=' . htmlspecialchars($alumno['idAlumno']);
                 $button_text = 'Registros Presistema';
