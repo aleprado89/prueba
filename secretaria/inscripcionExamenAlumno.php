@@ -1,6 +1,6 @@
 <?php
 // Incluir el script de verificación de sesión
-include '../funciones/verificarSesion.php';
+include_once '../funciones/verificarSesion.php';
 
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
@@ -8,8 +8,13 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Incluir la conexión a la base de datos y consultas
-include '../inicio/conexion.php';
-include '../funciones/consultas.php';
+include_once '../inicio/conexion.php';
+include_once '../funciones/consultas.php';
+
+// *** NUEVO: Inicializar variable global e incluir control de correlatividad ***
+$materiasAdeuda = ''; // Es crucial inicializarla ANTES de incluir el archivo
+include_once '../funciones/controlCorrelatividad.php';
+
 
 // --- MANEJO DE SOLICITUDES AJAX (POST) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -55,7 +60,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
                 
                 if ($idCiclo && $idTurno && $idMateria) {
-                    // Usamos filtrarMesasExamen, pasando null a plan y curso ya que tenemos la materia
                     $mesas = filtrarMesasExamen($conn, $idCiclo, $idTurno, null, null, $idMateria);
                     $response = ['success' => true, 'data' => $mesas];
                 } else {
@@ -63,24 +67,73 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 break;
             
-            // Inscribir Alumno
+            // --- *** LÓGICA DE INSCRIPCIÓN ACTUALIZADA *** ---
             case 'inscribir':
                 $idAlumno = filter_input(INPUT_POST, 'idAlumno', FILTER_VALIDATE_INT);
                 $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idFechaExamen = filter_input(INPUT_POST, 'idFechaExamen', FILTER_VALIDATE_INT);
                 $idCondicion = filter_input(INPUT_POST, 'idCondicion', FILTER_VALIDATE_INT);
+                
+                // Nuevo: Recibimos el texto de la condición para la función de control
+$inscripcionTexto = filter_input(INPUT_POST, 'inscripcionTexto', FILTER_UNSAFE_RAW);
+                if (!$idAlumno || !$idMateria || !$idCiclo || !$idFechaExamen || !$idCondicion || !$inscripcionTexto) {
+                    $response['message'] = 'Datos incompletos. Faltan IDs o el texto de la condición.';
+                    break; // Salir del switch
+                }
 
-                if ($idAlumno && $idMateria && $idCiclo && $idFechaExamen && $idCondicion) {
+                // 1. Obtener idUnicoMateria a partir de idMateria
+                $stmtUnico = $conn->prepare("SELECT idUnicoMateria FROM materiaterciario WHERE idMateria = ?");
+                if (!$stmtUnico) {
+                    $response['message'] = 'Error al preparar la consulta de idUnicoMateria.';
+                    break;
+                }
+                $stmtUnico->bind_param("i", $idMateria);
+                $stmtUnico->execute();
+                $resultUnico = $stmtUnico->get_result();
+                
+                if ($resultUnico->num_rows == 0) {
+                    $response['message'] = 'Error: No se pudo encontrar el identificador único (idUnicoMateria) de la materia.';
+                    $stmtUnico->close();
+                    break;
+                }
+                $rowUnico = $resultUnico->fetch_assoc();
+                $idUnicoMateria = $rowUnico['idUnicoMateria'];
+                $stmtUnico->close();
+
+                // 2. Ejecutar el control de correlatividad y estado
+                // La función inscripcionExamenControl() debe estar disponible via el include
+                $control_result = inscripcionExamenControl($conn, $idAlumno, $idUnicoMateria, $inscripcionTexto);
+                // 3. Evaluar el resultado del control
+                if ($control_result === true) {
+                    // Si el control es exitoso (devuelve true), proceder con la inscripción
                     $response = inscribirAlumnoExamen($conn, $idAlumno, $idMateria, $idCiclo, $idFechaExamen, $idCondicion);
+                    // Sobrescribimos el mensaje para ser claros
+                    if ($response['success']) {
+                        $response['message'] = 'Inscripción realizada con éxito. Se cumplieron todas las validaciones.';
+                    }
                 } else {
-                    $response['message'] = 'Datos incompletos. Faltan IDs necesarios para la inscripción.';
+                    // Si el control falla, devuelve el string de error
+                    $response = [
+                        'success' => false, 
+                        // El \n es para el JS, que lo convertirá a <br>
+                        'message' => "El alumno no cumple con la siguiente condición:\n".htmlspecialchars($control_result) 
+                    ];
                 }
                 break;
         }
-    } catch (Exception $e) {
-        error_log("Error en AJAX (inscripcionExamenAlumno.php): " . $e->getMessage());
-        $response = ['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()];
+    } catch (Throwable $e) { // <-- 1. CAMBIADO A Throwable
+        
+        // 2. Reporte de error más detallado
+        $error_message = 'Error fatal del servidor: ' . htmlspecialchars($e->getMessage()) . 
+                         '<br><br><b>Archivo:</b> ' . htmlspecialchars($e->getFile()) . 
+                         '<br><b>Línea:</b> ' . htmlspecialchars($e->getLine());
+
+        // 3. Loguear el error completo para nosotros
+        error_log("Error FATAL en AJAX (inscripcionExamenAlumno.php): " . $e->getMessage() . " en " . $e->getFile() . ":" . $e->getLine());
+        
+        // 4. Enviar el error detallado al modal
+        $response = ['success' => false, 'message' => $error_message];
     }
 
     echo json_encode($response);
@@ -107,16 +160,15 @@ try {
         die("Error: No se encontró al alumno con ID " . htmlspecialchars($idAlumno));
     }
     
-    // Usamos las funciones existentes de consultas.php
     $resultCiclos = obtenerCiclosLectivos($conn);
     while($fila = $resultCiclos->fetch_assoc()) { $ciclos[] = $fila; }
     
     $resultTurnos = obtenerTurnosExamen($conn);
     while($fila = $resultTurnos->fetch_assoc()) { $turnos[] = $fila; }
     
-    $planes = buscarPlanes($conn, $idAlumno); // Planes del alumno
+    $planes = buscarPlanes($conn, $idAlumno);
     
-    $condiciones = obtenerCondicionesCursado($conn); // Condiciones (Regular, Libre, etc.)
+    $condiciones = obtenerCondicionesCursado($conn);
 
 } catch (Exception $e) {
     die("Error al cargar datos iniciales: " . $e->getMessage());
@@ -303,10 +355,27 @@ try {
                        <strong><?php echo htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']); ?></strong> 
                        a la mesa de examen seleccionada?
                     </p>
+                    <p class="text-muted small">Se realizarán los controles de correlatividad.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btnConfirmarInscripcion">Confirmar Inscripción</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resultModalLabel">Resultado de la Inscripción</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="resultModalBody">
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -331,14 +400,22 @@ try {
             const btnInscribir = $('#btnInscribir');
             const messageContainer = $('#messageContainer');
 
-            // *** NUEVO: Cachear instancia del Modal y botón de confirmar ***
+            // --- *** MODALES *** ---
             const modalConfirm = new bootstrap.Modal(document.getElementById('confirmInscripcionModal'));
             const btnConfirmarInscripcion = $('#btnConfirmarInscripcion');
+            
+            // Nuevo modal de resultado
+            const modalResult = new bootstrap.Modal(document.getElementById('resultModal'));
+            const resultModalLabel = $('#resultModalLabel');
+            const resultModalBody = $('#resultModalBody');
+
 
             // --- Funciones auxiliares ---
 
             function showLoader() { loader.fadeIn('fast'); }
             function hideLoader() { loader.fadeOut('fast'); }
+            
+            // Esta función ahora solo se usa para validaciones previas
             function showMessage(type, message) {
                 messageContainer
                     .html(`<div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -348,12 +425,10 @@ try {
                     .fadeIn();
             }
 
-            // Función para resetear selectores
             function resetSelect(selector, message) {
                 $(selector).html(`<option value="">${message}</option>`).prop('disabled', true);
             }
             
-            // Función para poblar selectores
             function populateSelect(selector, data, keyId, keyName, firstMessage) {
                 const select = $(selector);
                 select.html(`<option value="">${firstMessage}</option>`);
@@ -367,13 +442,11 @@ try {
                 }
             }
 
-            // Función para buscar mesas (el filtro principal)
             function buscarMesas() {
                 const idCiclo = $('#idCiclo').val();
                 const idTurno = $('#idTurno').val();
                 const idMateria = $('#idMateria').val();
 
-                // Resetear tabla y botón
                 tablaMesasBody.empty();
                 containerMesas.hide();
                 noMesas.hide();
@@ -418,7 +491,6 @@ try {
 
             // --- Control de Filtros Dependientes ---
 
-            // 1. (Plan y Ciclo) -> Cursos
             $('#idPlan, #idCiclo').on('change', function() {
                 const idPlan = $('#idPlan').val();
                 const idCiclo = $('#idCiclo').val();
@@ -448,9 +520,8 @@ try {
                 }
             });
 
-            // 2. (Curso) -> Materias
             $('#idCurso').on('change', function() {
-                const idPlan = $('#idPlan').val(); // El plan ya está seleccionado
+                const idPlan = $('#idPlan').val(); 
                 const idCurso = $(this).val();
 
                 resetSelect('#idMateria', '(Seleccione Curso)');
@@ -466,7 +537,6 @@ try {
                     }, function(response) {
                         hideLoader();
                         if (response.success) {
-                            // Asumimos que la función materiasPlanCurso devuelve idMateria y nombreMateria
                             populateSelect('#idMateria', response.data, 'idMateria', 'nombreMateria', 'Seleccione una materia...');
                         } else {
                             showMessage('danger', response.message || 'Error al cargar materias.');
@@ -478,18 +548,15 @@ try {
                 }
             });
 
-            // 3. (Ciclo, Turno, Materia) -> Mesas (Tabla)
             $('#idCiclo, #idTurno, #idMateria').on('change', buscarMesas);
 
-            // 4. Habilitar botón al seleccionar mesa
-            // Usamos delegación de eventos por si la tabla se recarga
             $(document).on('change', 'input[name="idFechaExamen"]', function() {
                 if ($(this).is(':checked')) {
                     btnInscribir.prop('disabled', false);
                 }
             });
 
-            // --- *** LÓGICA DE INSCRIPCIÓN MODIFICADA *** ---
+            // --- LÓGICA DE INSCRIPCIÓN (con Modales) ---
 
             // 1. Click en el botón principal "Inscribir Alumno"
             $('#btnInscribir').on('click', function() {
@@ -512,60 +579,77 @@ try {
 
                 if (!isValid) {
                     errorMsg += errors.join(' y ') + '.';
-                    showMessage('warning', errorMsg);
+                    showMessage('warning', errorMsg); // Usa el 'alert' para esto
                     return; // No mostrar el modal si falta algo
                 }
                 
-                // Si la validación pasa, mostrar el modal
+                // Si la validación pasa, mostrar el modal de CONFIRMACIÓN
                 modalConfirm.show();
             });
 
             // 2. Click en el botón "Confirmar Inscripción" DENTRO del modal
             btnConfirmarInscripcion.on('click', function() {
-                // Ocultar el modal
+                // Ocultar el modal de confirmación
                 modalConfirm.hide();
 
-                // Recolectar datos (ya sabemos que idCondicion y idFechaExamen existen por la validación anterior)
+                // Recolectar datos
                 const idAlumno = $('#idAlumno').val();
                 const idCiclo = $('#idCiclo').val();
                 const idMateria = $('#idMateria').val();
                 const idCondicion = $('#idCondicion').val();
                 const idFechaExamen = $('input[name="idFechaExamen"]:checked').val();
+                // *** NUEVO: Obtener el texto de la condición ***
+                const inscripcionTexto = $('#idCondicion option:selected').text();
 
                 // Mostrar spinner y deshabilitar botones
                 showLoader();
-                btnInscribir.prop('disabled', true); // Deshabilitar el botón principal
-                btnConfirmarInscripcion.prop('disabled', true); // Deshabilitar el botón del modal
+                btnInscribir.prop('disabled', true); 
+                btnConfirmarInscripcion.prop('disabled', true);
 
-                // Ejecutar el AJAX (esta es la lógica del antiguo handler 'submit')
+                // Ejecutar el AJAX con los datos (incluyendo el texto)
                 $.post(ajaxUrl, {
                     action: 'inscribir',
                     idAlumno: idAlumno,
                     idMateria: idMateria,
                     idCiclo: idCiclo,
                     idFechaExamen: idFechaExamen,
-                    idCondicion: idCondicion
+                    idCondicion: idCondicion,
+                    inscripcionTexto: inscripcionTexto // *** NUEVO ***
                 }, function(response) {
                     hideLoader();
                     btnConfirmarInscripcion.prop('disabled', false); // Reactivar botón del modal
 
                     if (response.success) {
-                        showMessage('success', response.message || 'Inscripción exitosa.');
-                        // Reseteamos la tabla para evitar doble inscripción
+                        // --- MOSTRAR MODAL DE ÉXITO ---
+                        resultModalLabel.text('Inscripción Exitosa');
+                        resultModalBody.html('<i class="bi bi-check-circle-fill text-success me-2"></i>' + response.message);
+                        modalResult.show();
+                        
+                        // Resetear tabla
                         tablaMesasBody.empty();
                         containerMesas.hide();
                         noMesas.hide();
-                        // El botón 'btnInscribir' permanece deshabilitado hasta que se seleccione una nueva mesa
+                        // btnInscribir permanece deshabilitado
                     } else {
-                        showMessage('danger', response.message || 'Error al inscribir.');
-                        // Habilitamos el botón principal de nuevo si falló (ya que la selección sigue activa)
+                        // --- MOSTRAR MODAL DE ERROR ---
+                        resultModalLabel.text('Inscripción Rechazada');
+                        // Formatear el mensaje para incluir saltos de línea (de $materiasAdeuda)
+                        const formattedMessage = (response.message || 'Error desconocido.').replace(/\n/g, '<br>');
+                        resultModalBody.html('<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>' + formattedMessage);
+                        modalResult.show();
+                        
+                        // Habilitamos el botón principal de nuevo si falló
                         btnInscribir.prop('disabled', false);
                     }
                 }, 'json').fail(function() {
                     hideLoader();
-                    btnInscribir.prop('disabled', false); // Reactivar botón principal
-                    btnConfirmarInscripcion.prop('disabled', false); // Reactivar botón del modal
-                    showMessage('danger', 'Error de conexión. No se pudo completar la inscripción.');
+                    btnInscribir.prop('disabled', false); 
+                    btnConfirmarInscripcion.prop('disabled', false);
+                    
+                    // --- MOSTRAR MODAL DE ERROR DE CONEXIÓN ---
+                    resultModalLabel.text('Error de Conexión');
+                    resultModalBody.html('<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Error de conexión. No se pudo completar la inscripción.');
+                    modalResult.show();
                 });
             });
 
