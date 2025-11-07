@@ -20,14 +20,17 @@ if (isset($_GET['ajax_action'])) {
 
     if ($_GET['ajax_action'] == 'get_cursos') {
         $cursos = [];
-        if (!is_null($idPlan) && !is_null($idCiclo)) {
-            // Usamos idCiclo = 0 (o cualquier ciclo) ya que los cursos de un plan son predeterminados
-            // Pero usamos la función existente para mantener consistencia.
-            // Si el ciclo '0' (presistema) no trae cursos, usamos el último ciclo.
+        if (!is_null($idPlan) && !is_null($idCiclo) && $idCiclo != 0) {
+            // 1. Intentar buscar cursos con el ciclo seleccionado
             $cursos = buscarCursosPlanCiclo($conn, $idPlan, $idCiclo);
-            if (empty($cursos) && $idCiclo == 0) {
+            
+            // 2. Si no se encuentran (ej. es un ciclo nuevo sin cursos definidos),
+            //    usar el último ciclo lectivo como referencia para encontrar los cursos del plan.
+            if (empty($cursos)) {
                 $ultimoCiclo = obtenerUltimoCicloLectivo($conn);
-                $cursos = buscarCursosPlanCiclo($conn, $idPlan, $ultimoCiclo['idciclolectivo']);
+                if ($ultimoCiclo && $ultimoCiclo['idciclolectivo'] != $idCiclo) {
+                    $cursos = buscarCursosPlanCiclo($conn, $idPlan, $ultimoCiclo['idciclolectivo']);
+                }
             }
         }
         echo json_encode($cursos);
@@ -65,15 +68,67 @@ $message_type = '';
 // --- LÓGICA DE PROCESAMIENTO DE FORMULARIOS (POST y GET) ---
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $conn->begin_transaction();
+    // La transacción se inicia DESPUÉS de la validación
     try {
         $action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING);
 
         if ($action == 'create_presistema') {
+            
+            // --- INICIO VALIDACIÓN PREVIA ---
             $materias = $_POST['materias'] ?? [];
             if (empty($materias)) {
                 throw new Exception("Debe seleccionar al menos una materia.");
             }
+
+            // Validar Ciclo Lectivo
+            $idCicloLectivo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
+            if (empty($idCicloLectivo) || $idCicloLectivo == 0) {
+                throw new Exception("Debe seleccionar un Ciclo Lectivo válido.");
+            }
+
+            // Validar inscripciones existentes usando la función de Equivalencias
+            $conflictos = [];
+            
+            // Preparamos una consulta para buscar el nombre de la materia SÓLO si hay conflicto
+            $stmt_materia_nombre = $conn->prepare("SELECT nombre FROM materiaterciario WHERE idMateria = ?");
+
+            foreach ($materias as $idMateria) {
+                $idMateria = filter_var($idMateria, FILTER_VALIDATE_INT);
+                if (!$idMateria) continue;
+
+                // 1. Usamos la función correcta (checkMatriculacionMateriaExiste)
+                $existe = checkMatriculacionMateriaExiste($conn, $idAlumno, $idMateria);
+                
+                if ($existe) {
+                    // 2. Si existe, buscamos el nombre para el modal de error
+                    $nombreMateriaConflicto = 'Materia (ID ' . $idMateria . ')'; // Fallback
+                    if ($stmt_materia_nombre) {
+                        $stmt_materia_nombre->bind_param("i", $idMateria);
+                        $stmt_materia_nombre->execute();
+                        $result_nombre = $stmt_materia_nombre->get_result();
+                        if ($row_nombre = $result_nombre->fetch_assoc()) {
+                            $nombreMateriaConflicto = $row_nombre['nombre'];
+                        }
+                    }
+                    $conflictos[] = $nombreMateriaConflicto;
+                }
+            }
+            if ($stmt_materia_nombre) {
+                $stmt_materia_nombre->close(); // Cerramos el statement preparado
+            }
+
+            if (!empty($conflictos)) {
+                // Si hay conflictos, no iniciar la transacción.
+                // Guardar el error para el modal y redirigir.
+                $mensajeError = "Este alumno ya posee una inscripción en la(s) siguiente(s) materia(s) (o sus equivalentes): <br><br><strong>" . implode("<br>", array_unique($conflictos)) . "</strong>";
+                $_SESSION['presistema_error_detalle'] = $mensajeError;
+                header('Location: registrosPresistema.php?idAlumno=' . $idAlumno);
+                exit;
+            }
+            // --- FIN VALIDACIÓN PREVIA ---
+
+            // Si pasa la validación, iniciar la transacción
+            $conn->begin_transaction();
 
             $condicionTipo = filter_input(INPUT_POST, 'condicionTipo', FILTER_SANITIZE_STRING);
             $fechaObtencion = filter_input(INPUT_POST, 'fechaObtencion', FILTER_SANITIZE_STRING);
@@ -82,7 +137,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $turnos = filter_input(INPUT_POST, 'turnosTranscurridos', FILTER_VALIDATE_INT) ?: 0;
                 foreach ($materias as $idMateria) {
                     $idMateria = filter_var($idMateria, FILTER_VALIDATE_INT);
-                    insertarPresistemaRegular($conn, $idAlumno, $idMateria, $fechaObtencion, $turnos);
+                    // Pasar $idCicloLectivo
+                    insertarPresistemaRegular($conn, $idAlumno, $idMateria, $fechaObtencion, $idCicloLectivo, $turnos);
                 }
                 $message = "Registros de regularidad presistema creados exitosamente.";
             
@@ -98,14 +154,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 foreach ($materias as $idMateria) {
                     $idMateria = filter_var($idMateria, FILTER_VALIDATE_INT);
-                    insertarPresistemaAprobado($conn, $idAlumno, $idMateria, $fechaObtencion, $calificacion, $idCondicionExamen, $libro, $folio);
+                    // Pasar $idCicloLectivo
+                    insertarPresistemaAprobado($conn, $idAlumno, $idMateria, $fechaObtencion, $idCicloLectivo, $calificacion, $idCondicionExamen, $libro, $folio);
                 }
                 $message = "Registros de aprobación presistema creados exitosamente.";
             }
-            $conn->commit();
+            $conn->commit(); // Commit solo si la acción fue exitosa
             $message_type = 'success';
 
         } elseif ($action == 'update_presistema') {
+            // --- INICIO TRANSACCIÓN (Update) ---
+            $conn->begin_transaction();
+            
             $idMatriculacionMateria = filter_input(INPUT_POST, 'editIdMatriculacion', FILTER_VALIDATE_INT);
             $idCalificacion = filter_input(INPUT_POST, 'editIdCalificacion', FILTER_VALIDATE_INT);
             $idInscripcion = filter_input(INPUT_POST, 'editIdInscripcion', FILTER_VALIDATE_INT);
@@ -137,6 +197,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 if ($estadoOriginal == 'Regularidad PreSistema') {
                     // Conversión de Regular -> Aprobado
+                    // NOTA: La conversión usará el idCicloLectivo que ya estaba en la matriculación original
                     convertirPresistemaRegularAAprobado($conn, $idMatriculacionMateria, $idCalificacion, $detalles['idMateria'], $idAlumno, $fechaObtencion, $calificacion, $idCondicionExamen, $libro, $folio);
                     $message = "Registro convertido a 'Aprobado' exitosamente.";
                 } else {
@@ -145,12 +206,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $message = "Registro 'Aprobado' actualizado exitosamente.";
                 }
             }
-            $conn->commit();
+            $conn->commit(); // Commit del update
             $message_type = 'success';
         }
 
     } catch (Exception $e) {
-        $conn->rollback();
+        // Rollback solo si la transacción fue iniciada
+        if ($conn->inTransaction()) {
+            $conn->rollback();
+        }
         $message = "Error: " . $e->getMessage();
         $message_type = 'danger';
     }
@@ -262,7 +326,7 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
             <div class="col-md-4">
               <label for="selectCiclo" class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
               <select class="form-select" id="selectCiclo" name="idCiclo" required>
-                <option value="0" selected>Presistema (Sin Ciclo)</option>
+                <option value="" selected disabled>Seleccione un ciclo</option>
                 <?php foreach ($ciclos as $ciclo): ?>
                     <option value="<?php echo htmlspecialchars($ciclo['idCicloLectivo']); ?>">
                         <?php echo htmlspecialchars($ciclo['anio']); ?>
@@ -544,6 +608,23 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
   </div>
 </div>
 
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="errorModalLabel">Error de Inscripción</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="errorModalBody">
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script src="../js/jquery-3.7.1.min.js"></script>
 <script src="../js/popper.min.js"></script>
 <script src="../js/bootstrap.min.js"></script>
@@ -567,7 +648,7 @@ $(document).ready(function() {
         cursoSelect.empty().append('<option value="">Cargando cursos...</option>');
         $('#selectMaterias').empty().trigger('change');
 
-        if (idPlan && idCiclo !== null) {
+        if (idPlan && idCiclo && idCiclo != 0) {
             $.ajax({
                 url: 'registrosPresistema.php',
                 type: 'GET',
@@ -587,6 +668,9 @@ $(document).ready(function() {
                     cursoSelect.empty().append('<option value="">Error al cargar cursos</option>');
                 }
             });
+        } else {
+            cursoSelect.empty().append('<option value="">Seleccione un plan y ciclo</option>');
+            $('#selectMaterias').empty().trigger('change');
         }
     }
 
@@ -692,6 +776,15 @@ $(document).ready(function() {
         toggleEditFields();
     });
 
+    
+    // --- CÓDIGO PARA MOSTRAR MODAL DE ERROR DE DUPLICADO (SI EXISTE) ---
+    <?php if (isset($_SESSION['presistema_error_detalle'])): ?>
+        var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        document.getElementById('errorModalBody').innerHTML = <?php echo json_encode($_SESSION['presistema_error_detalle']); ?>;
+        errorModal.show();
+        <?php unset($_SESSION['presistema_error_detalle']); ?>
+    <?php endif; ?>
+    
 });
 
 // --- Lógica de Confirmación (Eliminar y Editar) ---

@@ -12,19 +12,28 @@ include '../funciones/consultas.php';
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
     
-    if ($_GET['ajax'] == 'get_cursos' && isset($_GET['idPlan'])) {
+    // ==========================================================
+    // == 🔹 MODIFICACIÓN AJAX: USANDO FUNCIONES EXISTENTES
+    // ==========================================================
+    
+    // Usamos la función existente: buscarCursosPlanCiclo
+    if ($_GET['ajax'] == 'get_cursos' && isset($_GET['idPlan']) && isset($_GET['idCiclo'])) {
         $idPlan = intval($_GET['idPlan']);
-        $cursos = getCursosPorPlan($conn, $idPlan); // Usamos la nueva función
+        $idCiclo = intval($_GET['idCiclo']);
+        $cursos = buscarCursosPlanCiclo($conn, $idPlan, $idCiclo); // 🔹 FUNCIÓN EXISTENTE
         echo json_encode($cursos);
         exit;
     }
     
-    if ($_GET['ajax'] == 'get_materias' && isset($_GET['idCurso'])) {
+    // Usamos la función existente: materiasPlanCurso
+    if ($_GET['ajax'] == 'get_materias' && isset($_GET['idCurso']) && isset($_GET['idPlan'])) {
         $idCurso = intval($_GET['idCurso']);
-        $materias = getMateriasPorCurso($conn, $idCurso); // Usamos la nueva función
+        $idPlan = intval($_GET['idPlan']); // 🔹 Requerido por la función existente
+        $materias = materiasPlanCurso($conn, $idPlan, $idCurso); // 🔹 FUNCIÓN EXISTENTE
         echo json_encode($materias);
         exit;
     }
+    // ==========================================================
     
     // Fallback por si la solicitud AJAX no es reconocida
     echo json_encode(['error' => 'Solicitud no válida']);
@@ -57,6 +66,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'add':
                 $idMateria = intval($_POST['idMateria']);
+                
+                // Usamos la función nueva que SÍ agregamos a consultas.php
                 if (checkMatriculacionMateriaExiste($conn, $idAlumno, $idMateria)) {
                     throw new Exception("Este alumno ya posee una inscripción en la materia seleccionada.");
                 }
@@ -70,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                     'calificacion' => $_POST['calificacion'],
                     'procedencia'  => $_POST['procedencia']
                 ];
-                insertarEquivalencia($conn, $data);
+                insertarEquivalencia($conn, $data); // 🔹 FUNCIÓN NUEVA Y ESPECÍFICA
                 $message = "Equivalencia registrada con éxito.";
                 $message_type = "success";
                 break;
@@ -87,14 +98,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                     'calificacion'           => $_POST['calificacion'],
                     'procedencia'            => $_POST['procedencia']
                 ];
-                actualizarEquivalencia($conn, $data);
+                actualizarEquivalencia($conn, $data); // 🔹 FUNCIÓN NUEVA Y ESPECÍFICA
                 $message = "Equivalencia actualizada con éxito.";
                 $message_type = "success";
                 break;
 
             case 'delete':
                 $idMatriculacionMateria = intval($_POST['idMatriculacionMateria']);
-                eliminarEquivalencia($conn, $idMatriculacionMateria);
+                eliminarEquivalencia($conn, $idMatriculacionMateria); // 🔹 FUNCIÓN NUEVA Y ESPECÍFICA
                 $message = "Equivalencia eliminada con éxito.";
                 $message_type = "success";
                 break;
@@ -107,9 +118,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
     }
 }
 
+
 // 4. Obtener datos para los formularios y la tabla
-$planes = buscarTodosPlanes($conn);
-$equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
+$planes = buscarTodosPlanes($conn); // 🔹 FUNCIÓN EXISTENTE
+$ciclos = levantarCiclosLectivos($conn); // 🔹 FUNCIÓN EXISTENTE
+$equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN NUEVA Y ESPECÍFICA
 
 ?>
 <!DOCTYPE html>
@@ -149,7 +162,21 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
                 <input type="hidden" name="action" value="add">
                 
                 <div class="row g-3 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label for="add_idCiclo" class="form-label">Ciclo Lectivo</label>
+                        <select class="form-select" id="add_idCiclo" name="idCiclo" required>
+                            <option value="" selected>Seleccione un Ciclo...</option>
+                            <?php 
+                            $anioActual = date('Y');
+                            // 🔹 Usamos la variable $ciclos cargada con levantarCiclosLectivos()
+                            foreach ($ciclos as $ciclo): ?>
+                                <option value="<?php echo $ciclo['idCicloLectivo']; ?>" <?php echo ($ciclo['anio'] == $anioActual) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($ciclo['anio']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <label for="add_idPlan" class="form-label">Plan de Estudio</label>
                         <select class="form-select" id="add_idPlan" name="idPlan" required>
                             <option value="" selected>Seleccione un Plan...</option>
@@ -158,16 +185,16 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="add_idCurso" class="form-label">Curso</label>
                         <select class="form-select" id="add_idCurso" name="idCurso" required disabled>
-                            <option value="" selected>Seleccione un Curso...</option>
+                            <option value="" selected>Seleccione Ciclo y Plan...</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="add_idMateria" class="form-label">Materia</label>
                         <select class="form-select" id="add_idMateria" name="idMateria" required disabled>
-                            <option value="" selected>Seleccione una Materia...</option>
+                            <option value="" selected>Seleccione un Curso...</option>
                         </select>
                     </div>
                 </div>
@@ -298,6 +325,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
         </div>
     </div>
 
+
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -313,7 +341,19 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
                         <input type="hidden" name="idCalificacion" id="edit_idCalificacion">
                         
                         <div class="row g-3 mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label for="edit_idCiclo" class="form-label">Ciclo Lectivo</label>
+                                <select class="form-select" id="edit_idCiclo" name="idCiclo" required>
+                                    <option value="">Seleccione un Ciclo...</option>
+                                    <?php foreach ($ciclos as $ciclo): ?>
+                                        <option value="<?php echo $ciclo['idCicloLectivo']; ?>">
+                                            <?php echo htmlspecialchars($ciclo['anio']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="form-text text-muted">Ciclo solo para filtrar (no se guarda)</small>
+                            </div>
+                            <div class="col-md-3">
                                 <label for="edit_idPlan" class="form-label">Plan de Estudio</label>
                                 <select class="form-select" id="edit_idPlan" name="idPlan" required>
                                     <option value="" selected>Seleccione un Plan...</option>
@@ -322,13 +362,13 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="edit_idCurso" class="form-label">Curso</label>
                                 <select class="form-select" id="edit_idCurso" name="idCurso" required>
                                     <option value="" selected>Cargando...</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="edit_idMateria" class="form-label">Materia</label>
                                 <select class="form-select" id="edit_idMateria" name="idMateria" required>
                                     <option value="" selected>Cargando...</option>
@@ -382,34 +422,63 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
     <script src="../funciones/sessionControl.js"></script>
 
     <script>
-        // Función para cargar Cursos
-        function cargarCursos(idPlan, selectCurso, idCursoSeleccionado = null) {
-            const url = 'equivalencias.php?ajax=get_cursos&idPlan=' + idPlan;
+        
+        /**
+         * Carga Cursos en un <select> basándose en Ciclo Lectivo y Plan.
+         * Llama a buscarCursosPlanCiclo en el backend.
+         */
+        function cargarCursos(idCiclo, idPlan, selectCurso, idCursoSeleccionado = null) {
+            
+            if (!idCiclo || !idPlan) {
+                $(selectCurso).prop('disabled', true).html('<option value="">Seleccione Ciclo y Plan...</option>');
+                return;
+            }
+
+            const url = `equivalencias.php?ajax=get_cursos&idCiclo=${idCiclo}&idPlan=${idPlan}`;
             $(selectCurso).prop('disabled', true).html('<option value="">Cargando...</option>');
             
             $.getJSON(url, function(data) {
                 $(selectCurso).prop('disabled', false).html('<option value="">Seleccione un Curso...</option>');
+                if (data.length === 0) {
+                     $(selectCurso).html('<option value="">No hay cursos para ese Ciclo/Plan</option>');
+                }
                 $.each(data, function(key, entry) {
+                    // 🔹 buscarCursosPlanCiclo devuelve 'idCurso' y 'nombre'
                     $(selectCurso).append($('<option></option>').attr('value', entry.idCurso).text(entry.nombre));
                 });
                 if (idCursoSeleccionado) {
                     $(selectCurso).val(idCursoSeleccionado);
                 }
             }).fail(function() {
-                alert('Error al cargar cursos.');
+                alert('Error al cargar cursos. Verifique que el Ciclo y Plan tengan cursos asociados.');
                 $(selectCurso).prop('disabled', false).html('<option value="">Error</option>');
             });
         }
 
-        // Función para cargar Materias
-        function cargarMaterias(idCurso, selectMateria, idMateriaSeleccionada = null) {
-            const url = 'equivalencias.php?ajax=get_materias&idCurso=' + idCurso;
+        /**
+         * Carga Materias en un <select> basándose en el Curso Y EL PLAN.
+         * Llama a materiasPlanCurso en el backend.
+         */
+        function cargarMaterias(idCurso, idPlan, selectMateria, idMateriaSeleccionada = null) {
+            
+            // 🔹 MODIFICACIÓN: Requiere idCurso y idPlan
+            if (!idCurso || !idPlan) {
+                $(selectMateria).prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
+                return;
+            }
+            
+            // 🔹 MODIFICACIÓN: Envía idPlan
+            const url = `equivalencias.php?ajax=get_materias&idCurso=${idCurso}&idPlan=${idPlan}`;
             $(selectMateria).prop('disabled', true).html('<option value="">Cargando...</option>');
             
             $.getJSON(url, function(data) {
                 $(selectMateria).prop('disabled', false).html('<option value="">Seleccione una Materia...</option>');
+                 if (data.length === 0) {
+                     $(selectMateria).html('<option value="">No hay materias para ese Curso</option>');
+                }
                 $.each(data, function(key, entry) {
-                    $(selectMateria).append($('<option></option>').attr('value', entry.idMateria).text(entry.nombre));
+                    // 🔹 MODIFICACIÓN: materiasPlanCurso devuelve 'idMateria' y 'nombreMateria'
+                    $(selectMateria).append($('<option></option>').attr('value', entry.idMateria).text(entry.nombreMateria));
                 });
                 if (idMateriaSeleccionada) {
                     $(selectMateria).val(idMateriaSeleccionada);
@@ -421,48 +490,45 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
         }
 
         $(document).ready(function() {
+            
             // --- Lógica para formulario 'ADD' ---
-            $('#add_idPlan').on('change', function() {
-                var idPlan = $(this).val();
-                if (idPlan) {
-                    cargarCursos(idPlan, '#add_idCurso');
-                } else {
-                    $('#add_idCurso').prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
-                }
-                $('#add_idMateria').prop('disabled', true).html('<option value="">Seleccione una Materia...</option>');
+            
+            $('#add_idCiclo, #add_idPlan').on('change', function() {
+                var idCiclo = $('#add_idCiclo').val();
+                var idPlan = $('#add_idPlan').val();
+                cargarCursos(idCiclo, idPlan, '#add_idCurso');
+                $('#add_idMateria').prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
             });
 
             $('#add_idCurso').on('change', function() {
                 var idCurso = $(this).val();
-                if (idCurso) {
-                    cargarMaterias(idCurso, '#add_idMateria');
-                } else {
-                    $('#add_idMateria').prop('disabled', true).html('<option value="">Seleccione una Materia...</option>');
-                }
+                var idPlan = $('#add_idPlan').val(); // 🔹 Pasa el idPlan
+                cargarMaterias(idCurso, idPlan, '#add_idMateria');
             });
+            
+            if ($('#add_idCiclo').val() && $('#add_idPlan').val()) {
+                 $('#add_idCiclo').trigger('change');
+            }
+
 
             // --- Lógica para formulario 'EDIT' (en el modal) ---
-            $('#edit_idPlan').on('change', function() {
-                var idPlan = $(this).val();
-                if (idPlan) {
-                    cargarCursos(idPlan, '#edit_idCurso');
-                } else {
-                    $('#edit_idCurso').prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
-                }
-                $('#edit_idMateria').prop('disabled', true).html('<option value="">Seleccione una Materia...</option>');
+            
+            $('#edit_idCiclo, #edit_idPlan').on('change', function() {
+                var idCiclo = $('#edit_idCiclo').val();
+                var idPlan = $('#edit_idPlan').val();
+                cargarCursos(idCiclo, idPlan, '#edit_idCurso'); 
+                $('#edit_idMateria').prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
             });
 
             $('#edit_idCurso').on('change', function() {
                 var idCurso = $(this).val();
-                if (idCurso) {
-                    cargarMaterias(idCurso, '#edit_idMateria');
-                } else {
-                    $('#edit_idMateria').prop('disabled', true).html('<option value="">Seleccione una Materia...</option>');
-                }
+                var idPlan = $('#edit_idPlan').val(); // 🔹 Pasa el idPlan
+                cargarMaterias(idCurso, idPlan, '#edit_idMateria');
             });
 
 
             // --- Lógica para poblar modales ---
+            
             $('#deleteModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var idMatriculacion = button.data('idmatriculacion');
@@ -501,37 +567,22 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno);
                 modal.find('#edit_procedencia').val(procedencia);
 
                 // --- Cascada de Dropdowns para Edit ---
+                
                 modal.find('#edit_idPlan').val(idPlan);
-
+                var cicloActual = $('#add_idCiclo').val(); 
+                modal.find('#edit_idCiclo').val(cicloActual);
+                
                 // 1. Cargar Cursos
                 var selectCurso = '#edit_idCurso';
-                const urlCursos = 'equivalencias.php?ajax=get_cursos&idPlan=' + idPlan;
-                $(selectCurso).prop('disabled', true).html('<option value="">Cargando...</option>');
+                cargarCursos(cicloActual, idPlan, selectCurso, idCurso);
                 
-                $.getJSON(urlCursos, function(dataCursos) {
-                    $(selectCurso).prop('disabled', false).html('<option value="">Seleccione un Curso...</option>');
-                    $.each(dataCursos, function(key, entry) {
-                        $(selectCurso).append($('<option></option>').attr('value', entry.idCurso).text(entry.nombre));
-                    });
-                    // Seleccionar el curso
-                    $(selectCurso).val(idCurso);
-
-                    // 2. Cargar Materias (basado en el curso ya seleccionado)
+                // 2. Cargar Materias (con delay)
+                setTimeout(function() {
                     var selectMateria = '#edit_idMateria';
-                    const urlMaterias = 'equivalencias.php?ajax=get_materias&idCurso=' + idCurso;
-                    $(selectMateria).prop('disabled', true).html('<option value="">Cargando...</option>');
-                    
-                    $.getJSON(urlMaterias, function(dataMaterias) {
-                        $(selectMateria).prop('disabled', false).html('<option value="">Seleccione una Materia...</option>');
-                        $.each(dataMaterias, function(key, entry) {
-                            $(selectMateria).append($('<option></option>').attr('value', entry.idMateria).text(entry.nombre));
-                        });
-                        // Seleccionar la materia
-                        $(selectMateria).val(idMateria);
+                    // 🔹 Pasa el idPlan
+                    cargarMaterias(idCurso, idPlan, selectMateria, idMateria);
+                }, 500); 
 
-                    }).fail(function() { alert('Error al cargar materias para editar.'); });
-
-                }).fail(function() { alert('Error al cargar cursos para editar.'); });
             });
 
         });
