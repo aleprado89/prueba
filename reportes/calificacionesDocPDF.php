@@ -140,8 +140,8 @@ $html = '
             </thead>
             <tbody>';
 foreach ($alumnosCalif as $alumno) {
-    if (!$mostrarEstadoParcial)
-        $alumno['estadoCursado']='';
+    //if (!$mostrarEstadoParcial)
+      //  $alumno['estadoCursado']='';
     $html .= '
                 <tr>
                     <td>' . $alumno['apellido'] . ', ' . $alumno['nombre'] . '</td>
