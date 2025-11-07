@@ -136,30 +136,48 @@ $cantidadFechas = count($listadoFechasExamenes);
     <!-- FORM SOLICITAR -->
     <form id="formulario" action="../alumnos/examenes_solicitar.php" method="POST">
       
-      <select class="form-select margenes padding" name="fechaExamen" id="fechaExamen">
-        <?php
-        $a = 0;
-        while ($a < $cantidadFechas) {
-          $idFechaExamen = $listadoFechasExamenes[$a]['idFechaExamen'];
-          $Fecha = $listadoFechasExamenes[$a]['Fecha'];
-          $Hora = $listadoFechasExamenes[$a]['Hora'];
-          ?>
-          <option value="<?php echo $idFechaExamen; ?>">
-            <?php 
-            $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
-            $fechaFormateada = $fechaFormato->format('d-m-Y');
-            echo $fechaFormateada . " " . $Hora; ?>
-          </option>
-          <?php
-          $a++;
-        }
-        if ($cantidadFechas == 0) {
-          ?>
-          <option value="" disabled selected>No hay fechas disponibles</option>
-          <?php
-        }
-        ?>
-      </select>
+     <select class="form-select margenes padding" name="fechaExamen" id="fechaExamen">
+  <?php
+  $a = 0;
+  $fechaHoraActual = new DateTime(); // Fecha y hora actual del servidor
+  $fechasDisponibles = 0;
+
+  while ($a < $cantidadFechas) {
+    $idFechaExamen = $listadoFechasExamenes[$a]['idFechaExamen'];
+    $Fecha = $listadoFechasExamenes[$a]['Fecha'];
+    $Hora = $listadoFechasExamenes[$a]['Hora'];
+
+    // Crear objeto DateTime combinando fecha y hora
+    $fechaHoraExamen = DateTime::createFromFormat('Y-m-d H:i:s', $Fecha . ' ' . $Hora);
+
+    // Si no tiene segundos en la base, usar formato sin ellos
+    if (!$fechaHoraExamen) {
+      $fechaHoraExamen = DateTime::createFromFormat('Y-m-d H:i', $Fecha . ' ' . $Hora);
+    }
+
+    // Mostrar solo si la fecha y hora del examen es futura o actual
+    if ($fechaHoraExamen >= $fechaHoraActual) {
+      $fechaFormato = DateTime::createFromFormat('Y-m-d', $Fecha);
+      $fechaFormateada = $fechaFormato->format('d-m-Y');
+      ?>
+      <option value="<?php echo $idFechaExamen; ?>">
+        <?php echo $fechaFormateada . " " . $Hora; ?>
+      </option>
+      <?php
+      $fechasDisponibles++;
+    }
+
+    $a++;
+  }
+
+  if ($fechasDisponibles == 0) {
+    ?>
+    <option value="" disabled selected>No hay fechas disponibles</option>
+    <?php
+  }
+  ?>
+</select>
+
       </div>
       
       <div class="col-12 col-md-6">
