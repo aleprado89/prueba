@@ -240,6 +240,346 @@ function correlatividadAprobadoGrupal($idUnicoMateria, $idAlumno, $tipoInscripci
     return $habilitacion;
 }
 
+function inscripcionExamenEstado($inscripcion, $estadoNumero, $nombreMateria) {
+    $habilitacion = true;
+    $texto = "";
+        if ($inscripcion == "Libre" || $inscripcion == "No Regular")
+        {
+            if ($estadoNumero == 0) { }
+            if ($estadoNumero == 1)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 2)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad para Coloquio en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 3) { }
+            if ($estadoNumero == 4)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 5)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad para Coloquio en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 6)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Calificaciones en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 7) { }
+            if ($estadoNumero == 8)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene la Asistencia Requerida en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 9)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Asistencia Registrada en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 10)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 11)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Aprobada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 12)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 13)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Aprobada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 14)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Promocionada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 15)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Promocionada la Materia:" . $nombreMateria;
+            }
+            }
+        if ($inscripcion == "Regular")
+        {
+            if ($estadoNumero == 0)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 1) { }
+            if ($estadoNumero == 2)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad para Coloquio en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 3)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 4) { }
+            if ($estadoNumero == 5)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad para Coloquio en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 6)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Calificaciones en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 7) { }
+            if ($estadoNumero == 8)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene la Asistencia Requerida en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 9)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Asistencia Registrada en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 10)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 11)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Aprobada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 12)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 13)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Aprobada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 14)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Promocionada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 15)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Promocionada la Materia:" . $nombreMateria;
+            }
+        }
+        if ($inscripcion == "Coloquio")
+        {
+            if ($estadoNumero == 0)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 1)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 2) { }
+            if ($estadoNumero == 3)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 4)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 5) { }
+            if ($estadoNumero == 6)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Calificaciones en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 7) { }
+            if ($estadoNumero == 8)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene la Asistencia Requerida en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 9)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Asistencia Registrada en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 10)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 11)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Aprobada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 12)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 13)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Aprobada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 14)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Promocionada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 15)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Promocionada la Materia:" . $nombreMateria;
+            }
+        }
+        if ($inscripcion == "Promoción")
+        {
+            if ($estadoNumero == 0)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 1)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 2)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad para Coloquio en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 3)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 4)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 5)
+            {
+                $habilitacion = false;
+                $texto = "El alumno tiene Regularidad para Coloquio en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 6)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Calificaciones en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 7) { }
+            if ($estadoNumero == 8)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene la Asistencia Requerida en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 9)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Asistencia Registrada en la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 10)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 11) { }
+            if ($estadoNumero == 12)
+            {
+                $habilitacion = false;
+                $texto = "El alumno no tiene Regularizada la Materia:" . $nombreMateria;
+            }
+            if ($estadoNumero == 13) { }
+            if ($estadoNumero == 14) { }
+            if ($estadoNumero == 15) { }
+        }
+        $salida = [ $habilitacion, $texto ];
+        return $salida;
+}
+
+function inscripcionExamenControl($conexion, $idAlumno, $idUnicoMateria, $inscripcion) {
+    global $materiasAdeuda;
+    $habilitacionInscripcion = false;
+    $existeCursado = false;    
+    $tipoInscripcion = 1;
+
+    $consulta = "SELECT *
+        from calificacionesterciario c inner join materiaterciario m
+        on m.idMateria = c.idMateria
+        where m.idUnicoMateria = ? and c.idAlumno = ?";
+
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("ii", $idUnicoMateria, $idAlumno);
+    $stmt->execute();
+    $calif = $stmt->get_result();
+
+    $i = 0;
+    if (!empty($calif)) {
+        while ($data = mysqli_fetch_array($calif)) {
+
+            $existeCursado = true;
+
+            $estadoCursadoNumero = $data['estadoCursadoNumero'];
+            $nombreMateria = $data['nombre'];
+    
+            $habilitadoEstado = inscripcionExamenEstado($inscripcion, $estadoCursadoNumero, $nombreMateria);
+            if ($habilitadoEstado[0]) { break; }
+            $i++;
+        }
+    }
+    if ($existeCursado)
+    {
+        if ($habilitadoEstado[0])
+        {
+            $habilitacionCorrelatividades = controlCorrelatividades($idUnicoMateria, $idAlumno, $tipoInscripcion);
+            if ($habilitacionCorrelatividades) 
+                { $habilitacionInscripcion = true; }
+            else
+                {
+                    $habilitacionInscripcion = false; 
+                    $salida = $materiasAdeuda;
+                }
+        } 
+        else
+        {
+            $habilitacionInscripcion = false; 
+            $salida = $habilitadoEstado[1];
+        }
+    }
+    else 
+    { 
+        $habilitacionInscripcion = false; 
+        $salida = "El alumno no tiene registro de Cursado.";
+    }
+    if ($habilitacionInscripcion){ return $habilitacionInscripcion; }
+    else { return $salida; }
+}
 
 
 include '../inicio/conexion.php';
