@@ -27,8 +27,9 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
 
 //FUNCIONES
 //LISTAR SOLICITUDES
+$idTurno=$datosColegio[$i]['idTurno'];
 $listadoSolicitudes = array();
-$listadoSolicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo);
+$listadoSolicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo,$idTurno);
 $cantidad = count($listadoSolicitudes);
 ?>
 <!DOCTYPE html>
