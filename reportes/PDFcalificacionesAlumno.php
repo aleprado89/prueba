@@ -8,6 +8,13 @@ require_once '../vendor/autoload.php';
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+$hoy = new DateTime();
+$anio = $hoy->format("Y");
+$fechaLimite = new DateTime("$anio-11-15");
+
+// Verificamos si mostrar columna
+$mostrarEstadoParcial = ($hoy >= $fechaLimite);
+
 // Crear una instancia de Dompdf
 $options = new Options();
 $options->set('isHtml5ParserEnabled', true);
@@ -80,34 +87,32 @@ $html = '
     </div>
     <div class="container">
         <table>
-            <thead>
-                <tr>
-                    <th class="columna1">Curso</th>
-                    <th class="columna2">Materia</th>
-                    <th class="columna3">Estado</th>
-                    <th class="columna4">Final</th>
-                </tr>
-            </thead>
-            <tbody>';
+            <tr>
+                <th class="columna1">Curso</th>
+                <th class="columna2">Materia</th>
+                <th class="columna3">Estado</th>
+                <th class="columna4">Final</th>
+            </tr>';
 
-$htmlBody = "";
-foreach ($listadoCalificaciones as $calificacion) {
-    // Verificar si la materia está aprobada
-    $esAprobada = isset($calificacion['materiaAprobada']) && $calificacion['materiaAprobada'] == 1;
-    
-    // Determinar el estado a mostrar
-    $estadoMostrado = $esAprobada ? '<span class="aprobada">Materia Aprobada</span>' : htmlspecialchars($calificacion['Estado']);
-    
-    $htmlBody .= '<tr>
-        <td>'.htmlspecialchars($calificacion['Curso']).'</td>
-        <td>'.htmlspecialchars($calificacion['Materia']).'</td>
-        <td>'.$estadoMostrado.'</td>
-        <td class="columna4">'.htmlspecialchars($calificacion['CalificacionFinal']).'</td>
-    </tr>';
-}
-
-$html .= $htmlBody . '
-            </tbody>
+            //RECORRER TABLA DE CALIFICACIONES
+        
+        $a = 0;
+        $html2="";
+        while ($a < $cantidad) {        
+          $Materia = $listadoCalificaciones[$a]['Materia'];
+          $Curso = $listadoCalificaciones[$a]['Curso'];
+          $Estado = $listadoCalificaciones[$a]['Estado'];
+          $CalificacionFinal = $listadoCalificaciones[$a]['CalificacionFinal'];
+                        if (!$mostrarEstadoParcial)
+                            $listadoCalificaciones[$a]['Estado'] = '';
+          $html2=$html2.' <tr>
+                <td>'.$listadoCalificaciones[$a]['Curso'].'  </td>
+                <td>'.$listadoCalificaciones[$a]['Materia'].'</td>
+                <td>'.$listadoCalificaciones[$a]['Estado'].'</td>
+                <td>'.$listadoCalificaciones[$a]['CalificacionFinal'].'</td>
+            </tr>';
+            $a++;  }
+            $html=$html.$html2.'
         </table>
     </div>
 </body>

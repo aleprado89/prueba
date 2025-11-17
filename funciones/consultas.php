@@ -459,16 +459,16 @@ group by idPlan";
 }
 
 //Listado solicitudes a examen de un alumno por Plan
-function buscarSolicitudesExamen($conexion, $idAlumno, $idPlan, $idCicloLectivo)
+function buscarSolicitudesExamen($conexion, $idAlumno, $idPlan, $idCicloLectivo,$idTurno)
 {
   $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from inscripcionexamenes_web inner join fechasexamenes
 on inscripcionexamenes_web.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
 on inscripcionexamenes_web.idMateria = materiaterciario.idMateria
-where inscripcionexamenes_web.idAlumno = ? and materiaterciario.idPlan = ?
+where inscripcionexamenes_web.idAlumno = ? and materiaterciario.idPlan = ? and fechasexamenes= ?
 and inscripcionexamenes_web.idcicloLectivo = ? order by inscripcionexamenes_web.fechhora_inscri desc";
 
   $stmt = $conexion->prepare($consulta);
-  $stmt->bind_param("iii", $idAlumno, $idPlan, $idCicloLectivo);
+  $stmt->bind_param("iiii", $idAlumno, $idPlan, $idCicloLectivo,$idTurno);
   $stmt->execute();
   $sol = $stmt->get_result();
 

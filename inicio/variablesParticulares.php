@@ -41,7 +41,7 @@ $req15 = "Completo";      // Checkbox (contexto: Superior)
 $req16 = "Incompleto";    // Checkbox (contexto: Superior)
 
 // Posiciones 17-20: Libres (vacíos)
-$req17 = " "; // Vacio
+$req17 = "Falta Documentación";
 $req18 = " "; // Vacio
 $req19 = " "; // Vacio
 $req20 = " "; // Vacio
