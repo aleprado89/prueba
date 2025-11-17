@@ -243,7 +243,7 @@ function correlatividadAprobadoGrupal($idUnicoMateria, $idAlumno, $tipoInscripci
 function inscripcionExamenEstado($inscripcion, $estadoNumero, $nombreMateria) {
     $habilitacion = true;
     $texto = "";
-        if ($inscripcion == "Libre" || $inscripcion == "No Regular")
+        if ($inscripcion == "Libre" || $inscripcion == "No Regular" || $inscripcion == "Recursa")
         {
             if ($estadoNumero == 0) { }
             if ($estadoNumero == 1)
@@ -314,7 +314,7 @@ function inscripcionExamenEstado($inscripcion, $estadoNumero, $nombreMateria) {
                 $texto = "El alumno tiene Promocionada la Materia:" . $nombreMateria;
             }
             }
-        if ($inscripcion == "Regular")
+        if ($inscripcion == "Regular"|| $inscripcion == "Aprobó Cursada")
         {
             if ($estadoNumero == 0)
             {
