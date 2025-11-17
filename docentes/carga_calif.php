@@ -15,6 +15,8 @@ include '../funciones/analisisestado.php';
 include '../funciones/verificarSesion.php';
 // die("4. Llegó después de verificarSesion.php"); // Prueba de depuración 4
 
+include '../inicio/variablesParticulares.php';
+
 $doc_legajo = $_SESSION['doc_legajo'] ?? null;
 $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
 
