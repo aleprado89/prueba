@@ -1336,7 +1336,7 @@ function obtenerActa($conexion, $idFechaExamen){
         ON i.idAlumno = a.idAlumno
         INNER JOIN persona p
         ON a.idPersona = p.idPersona
-        WHERE i.idFechaExamen = ?";
+        WHERE i.idFechaExamen = ? order by p.apellido, p.nombre";
 
   $stmt = mysqli_prepare($conexion, $consulta);
   mysqli_stmt_bind_param($stmt, "i", $idFechaExamen);
