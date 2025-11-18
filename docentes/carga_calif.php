@@ -458,11 +458,9 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
 <td class="border text-center">
 <?php
 if ($listado['estado'] == 'Abandonó Cursado') {
-echo '<input type="checkbox" id="abandono-'.$listado['idAlumno'].'" checked>';
-}
+echo '<input type="checkbox" checked disabled title="La edición de este campo está deshabilitada. Contacte a Secretaría.">';}
 else {
-echo '<input type="checkbox" id="abandono-'.$listado['idAlumno'].'">';
-}
+echo '<input type="checkbox" disabled title="La edición de este campo está deshabilitada. Contacte a Secretaría.">';}
 ?>
 </td>
 </tr>
@@ -475,23 +473,7 @@ echo '<input type="checkbox" id="abandono-'.$listado['idAlumno'].'">';
 </div>
 </div>
 <?php include '../funciones/footer.html'; ?>
-<!-- Ventana modal con confirmación -->
-<div id="confirmarAbandono" class="modal fade" role="dialog">
-<div class="modal-dialog">
-<div class="modal-content">
-<div class="modal-header">
-<h4 class="modal-title">Confirmar abandono de materia</h4>
-</div>
-<div class="modal-body">
-<p>Al marcar esta casilla, se bloquea la carga de calificaciones y asistencia del alumno. Esta opción solo se puede revertir desde secretaria ¿Desea continuar?</p>
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-primary" id="confirmarAbandonoBtn">Confirmar</button>
-</div>
-</div>
-</div>
-</div>
+
 <script>
 $(document).ready(function() {
     var idMateria = '<?php echo $idMateria; ?>';
@@ -522,71 +504,17 @@ $(document).ready(function() {
     // --- Existing Abandonment Logic ---
 
     // Buscar los checkboxes que estén marcados como "Abandonó Cursado"
-    $('input[type="checkbox"][id^="abandono-"]').each(function() {
-        if ($(this).is(':checked')) {
-            var fila = $(this).closest('tr');
-            fila.find('td').css('background-color', '#ccc'); // Pintar la fila de gris
-            fila.find('td[contenteditable="true"]').attr('contenteditable', 'false'); // Bloquear las celdas
-             // Additionally, block the new 'prom-cell' if it's there
-            fila.find('.prom-cell').attr('contenteditable', 'false');
-            $(this).attr('disabled', true); // Deshabilitar el checkbox
-        }
+   $('input[type="checkbox"][disabled][checked]').each(function() {
+        var fila = $(this).closest('tr');
+        fila.find('td').css('background-color', '#ccc'); // Pintar la fila de gris
+        // Bloquear las celdas que por defecto son editables
+        fila.find('td[contenteditable="true"]').attr('contenteditable', 'false');
+        // Bloquear la celda de promoción si se habilitó su edición
+        fila.find('.prom-cell').attr('contenteditable', 'false');
+        // Ya no es necesario $(this).attr('disabled', true); porque ya lo pusimos en PHP
     });
 
-    //boton confirmar (for abandonment modal)
-    $(document).on('click', '#confirmarAbandonoBtn', function() {
-        var checkbox = $('#confirmarAbandono').data('checkbox');
-        var fila = checkbox.closest('tr');
-        var idAlumno = fila.attr('data-idAlumno');
-        var abandono = true; // El checkbox ya está marcado
-
-        // Actualizar la propiedad abandono en la base de datos
-        $.ajax({
-            type: "POST",
-            url: "carga_calif.php",
-            data: {
-                idAlumno: idAlumno,
-                abandono: abandono,
-                idMateria: idMateria,
-                materia: materia,
-                curso: curso,
-                plan: plan,
-                ciclolectivo: ciclolectivo
-            },
-            success: function(response) {
-                console.log('Abandono status update response:', response);
-                checkbox.prop('checked', true); // Marca el checkbox
-                fila.find('td').css('background-color', '#ccc'); // Pintar la fila de gris
-                fila.find('td[contenteditable="true"]').attr('contenteditable', 'false'); // Bloquear las celdas
-                fila.find('.prom-cell').attr('contenteditable', 'false'); // Ensure 'prom-cell' is also blocked
-                checkbox.attr('disabled', true); // Deshabilitar el checkbox
-                $('#confirmarAbandono').modal('hide'); // Ocultar ventana modal
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                 console.error("AJAX Error updating abandonment: " + textStatus, errorThrown);
-                 alert("Error de conexión al actualizar abandono.");
-            }
-        });
-    });
-
-    //abre el modal (for abandonment)
-    $(document).on('mousedown', 'input[type="checkbox"][id^="abandono-"]', function(event) {
-        // Only show modal if the checkbox is not already checked/disabled
-        if (!$(this).is(':checked') && !$(this).is(':disabled')) {
-            event.preventDefault(); // Evita que se marque el checkbox al hacer click
-            $('#confirmarAbandono').data('checkbox', $(this)); // Almacena el checkbox en la ventana modal
-            $('#confirmarAbandono').modal('show'); // Muestra la ventana modal
-        }
-    });
-
-    //boton cancelar del modal (for abandonment)
-    $(document).on('click', '#confirmarAbandono .btn-default', function() { // Target specific modal's cancel button
-        var checkbox = $('#confirmarAbandono').data('checkbox');
-        // No need to change its state or enable/disable, as it was never checked initially
-        // by the user due to preventDefault(). Just hide modal.
-        $('#confirmarAbandono').modal('hide'); // Ocultar ventana modal
-    });
-});
+   
 </script>
 </body>
 </html>
