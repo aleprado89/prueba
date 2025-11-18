@@ -3617,5 +3617,219 @@ function buscarAlumnosParaInscripcionMasiva($conexion, $idMateria, $idCiclo, $id
     $stmt->close();
     return $alumnos;
 }
+// =================================================================
+// FUNCIONES GENERALES
+// =================================================================
 
-?>
+/**
+ * Busca todos los ciclos lectivos disponibles y los devuelve como array asociativo.
+ * Función de soporte para la carga inicial de selects.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @return array Listado de ciclos lectivos [idciclolectivo, anio].
+ */
+function buscarCiclosLectivosArray($conexion) {
+    $sql = "SELECT idciclolectivo, anio FROM ciclolectivo ORDER BY anio DESC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar (buscarCiclosLectivosArray): " . $conexion->error);
+        return [];
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+
+
+
+// =================================================================
+// FUNCIONES PARA GESTIÓN DE ACTAS DE EXAMEN (SECRETARÍA)
+// =================================================================
+
+/**
+ * Busca todos los turnos disponibles en el sistema.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @return array Listado de turnos [idTurno, nombre].
+ */
+function buscarTurnosDisponibles($conexion) {
+    $sql = "SELECT idTurno, nombre FROM turno ORDER BY nombre ASC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar (buscarTurnosDisponibles): " . $conexion->error);
+        return [];
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Busca los planes con materias activas en un ciclo y turno específicos.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @param int $idCiclo ID del ciclo lectivo.
+ * @param int $idTurno ID del turno.
+ * @return array Listado de planes [idPlan, nombre].
+ */
+function buscarPlanesPorCicloTurno($conexion, $idCiclo, $idTurno) {
+    $sql = "SELECT DISTINCT t1.idPlan, t1.nombre \n"
+         . "FROM plan t1 \n"
+         . "INNER JOIN materiaterciario t2 ON t1.idPlan = t2.idPlan \n"
+         . "INNER JOIN curso t3 ON t2.idCurso = t3.idCurso \n"
+         . "WHERE t2.idCicloLectivo = ? AND t3.idTurno = ? \n"
+         . "ORDER BY t1.nombre ASC";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar (buscarPlanesPorCicloTurno): " . $conexion->error);
+        return [];
+    }
+    $stmt->bind_param("ii", $idCiclo, $idTurno);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Busca las materias de un curso, plan y ciclo lectivo.
+ * Asumo que 'buscarCursosPlanCiclo' ya existe.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @param int $idPlan ID del plan.
+ * @param int $idCurso ID del curso.
+ * @param int $idCiclo ID del ciclo lectivo.
+ * @return array Listado de materias [idMateria, nombre].
+ */
+function buscarMateriasCursoPlanCiclo($conexion, $idPlan, $idCurso, $idCiclo) {
+    $sql = "SELECT idMateria, nombre \n"
+         . "FROM materiaterciario \n"
+         . "WHERE idPlan = ? AND idCurso = ? AND idCicloLectivo = ? \n"
+         . "ORDER BY nombre ASC";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar (buscarMateriasCursoPlanCiclo): " . $conexion->error);
+        return [];
+    }
+    $stmt->bind_param("iii", $idPlan, $idCurso, $idCiclo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Busca las mesas de examen para una materia y ciclo lectivo.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @param int $idMateria ID de la materia.
+ * @param int $idCiclo ID del ciclo lectivo.
+ * @return array Listado de mesas [idFechaExamen, Fecha, Hora, libro, folio].
+ */
+function buscarMesasExamenPorMateriaCiclo($conexion, $idMateria, $idCiclo) {
+    $sql = "SELECT idFechaExamen, DATE_FORMAT(fecha, '%d/%m/%Y') as Fecha, TIME_FORMAT(hora, '%H:%i') as Hora, libro, folio \n"
+         . "FROM fechaexamen \n"
+         . "WHERE idMateria = ? AND idCicloLectivo = ? \n"
+         . "ORDER BY fecha DESC, hora DESC";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar (buscarMesasExamenPorMateriaCiclo): " . $conexion->error);
+        return [];
+    }
+    $stmt->bind_param("ii", $idMateria, $idCiclo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Obtiene el listado completo de alumnos inscriptos para un acta de examen, incluyendo su condición.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @param int $idFechaExamen ID de la mesa de examen.
+ * @return array Listado de alumnos [idAlumno, apellido, nombre, condicion, oral, escrito, calificacion, libro, folio, idCondicion].
+ */
+function obtenerActaSecretaria($conexion, $idFechaExamen) {
+    $sql = "SELECT \n"
+         . "    ie.idAlumno, \n"
+         . "    p.apellido, \n"
+         . "    p.nombre, \n"
+         . "    c.condicion, \n" 
+         . "    ie.oral, \n"
+         . "    ie.escrito, \n"
+         . "    ie.calificacion, \n"
+         . "    ie.libro, \n"
+         . "    ie.folio, \n"
+         . "    ie.idCondicion \n" 
+         . "FROM inscripcionexamenes ie \n"
+         . "JOIN alumno a ON ie.idAlumno = a.idAlumno \n"
+         . "JOIN persona p ON a.idPersona = p.idPersona \n"
+         . "JOIN condicion c ON ie.idCondicion = c.idCondicion \n"
+         . "WHERE ie.idFechaExamen = ? \n"
+         . "ORDER BY p.apellido, p.nombre";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar (obtenerActaSecretaria): " . $conexion->error);
+        return [];
+    }
+    $stmt->bind_param("i", $idFechaExamen);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Actualiza de forma segura un único campo del acta de examen para un alumno específico.
+ * Utiliza una lista blanca de columnas para evitar inyección SQL.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @param int $idFechaExamen ID de la mesa de examen.
+ * @param int $idAlumno ID del alumno.
+ * @param string $columna Nombre de la columna a actualizar (validada).
+ * @param string $valor Nuevo valor.
+ * @return string Mensaje de estado.
+ */
+function actualizarActaExamen($conexion, $idFechaExamen, $idAlumno, $columna, $valor) {
+    // Lista blanca estricta de columnas para la actualización.
+    $columnasPermitidas = ['oral', 'escrito', 'calificacion', 'libro', 'folio'];
+
+    if (!in_array($columna, $columnasPermitidas)) {
+        error_log("Intento de actualización de columna no permitida: " . $columna);
+        return "Columna no permitida.";
+    }
+
+    // La columna es inyectada con seguridad después de la validación.
+    $sql = "UPDATE inscripcionexamenes \n"
+         . "SET {$columna} = ? \n" 
+         . "WHERE idFechaExamen = ? AND idAlumno = ?";
+
+    $stmt = $conexion->prepare($sql);
+
+    if (!$stmt) {
+        error_log("Error al preparar (actualizarActaExamen): " . $conexion->error);
+        return "Error al preparar la consulta: " . $conexion->error;
+    }
+    
+    // Binding: s (string para el valor), i (int para idFechaExamen), i (int para idAlumno)
+    $stmt->bind_param("sii", $valor, $idFechaExamen, $idAlumno);
+
+    if ($stmt->execute()) {
+        return "actualizado";
+    } else {
+        error_log("Error al ejecutar (actualizarActaExamen): " . $stmt->error);
+        return "Error al actualizar: " . $stmt->error;
+    }
+}
+
+/**
+ * Busca todas las condiciones de inscripción a examen para el filtro.
+ * @param mysqli $conexion Conexión a la base de datos.
+ * @return array Listado de condiciones [idCondicion, condicion].
+ */
+function buscarCondicionesExamen($conexion) {
+    $sql = "SELECT idCondicion, condicion FROM condicion ORDER BY condicion ASC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar (buscarCondicionesExamen): " . $conexion->error);
+        return [];
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
