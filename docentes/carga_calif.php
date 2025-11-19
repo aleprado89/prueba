@@ -39,54 +39,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $plan = $_POST['plan'] ?? null;
     $materia = $_POST['materia'] ?? null;
 
-    if (isset($_POST['idAlumno']) && isset($_POST['abandono'])) {
-        // die("6. Entró en el bloque de abandono."); // Prueba de depuración 6
-        $idAlumno = $_POST['idAlumno'];
-        $abandono = $_POST['abandono'];
-        $estado = ($abandono == 'true') ? 'Abandonó Cursado' : '';
-        $resultado = actualizarAbandonoCursado($conn, $idAlumno, $idMateria, $estado);
+    // EL BLOQUE DE LÓGICA DE ABANDONO HA SIDO ELIMINADO DE AQUÍ.
+    // Solo se permite la actualización de calificaciones (la parte 'else' del código original).
 
-        ob_clean();
-        echo json_encode(array('success' => true, 'message' => 'Estado de abandono actualizado correctamente!', 'new_state' => $estado));
-        exit;
-    } else { // Este es el bloque para la actualización de calificaciones (tu caso de prueba)
-        if (
-            isset($_POST['idCalificacion']) &&
-            isset($_POST['columna']) &&
-            isset($_POST['nuevoValor']) &&
-            isset($_POST['idAlumno'])
-        ) {
-            // die("7. Entró en el bloque de actualización de calificación."); // Prueba de depuración 7
-            $idCalificacion = $_POST['idCalificacion'];
-            $columna = $_POST['columna'];
-            $nuevoValor = trim($_POST['nuevoValor']);
+    // Este es el bloque para la actualización de calificaciones
+    if (
+        isset($_POST['idCalificacion']) &&
+        isset($_POST['columna']) &&
+        isset($_POST['nuevoValor']) &&
+        isset($_POST['idAlumno'])
+    ) {
+        // die("7. Entró en el bloque de actualización de calificación."); // Prueba de depuración 7
+        $idCalificacion = $_POST['idCalificacion'];
+        $columna = $_POST['columna'];
+        $nuevoValor = trim($_POST['nuevoValor']);
 
-            // die("8. Antes de la validación de columna. Columna: " . $columna . ", NuevoValor: " . $nuevoValor); // Prueba de depuración 8
-            $allowedColumns = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'examenIntegrador'];
-            if (!in_array($columna, $allowedColumns)) {
-                ob_clean();
-                echo json_encode(array('respuesta' => 'error', 'mensaje' => 'Columna no permitida para actualización.'));
-                exit;
-            }
-            // die("9. Después de la validación de columna."); // Prueba de depuración 9
-
-            // Validación de valores (tu lógica actual)
-            // ... (no la modificamos aquí, ya la tienes)
-            // die("10. Después de la validación de valores."); // Prueba de depuración 10
-
-            // die("11. Antes de llamar a actualizarCalifDocente. Conn válido: " . (is_object($conn) ? "Sí" : "No o no es objeto")); // Prueba de depuración 11
-            $respuesta = actualizarCalifDocente($conn, $idCalificacion, $columna, $nuevoValor);
-            // die("12. Después de actualizarCalifDocente. Respuesta: " . $respuesta); // Prueba de depuración 12
-
-            // die("13. Antes de llamar a iniciarAnalisis."); // Prueba de depuración 13
-            $idAlumno = $_POST['idAlumno'];
-            $resultado = iniciarAnalisis($conn, $idMateria, $idAlumno, $idCalificacion);
-            // die("14. Después de iniciarAnalisis. Resultado: " . $resultado); // Prueba de depuración 14
-
+        // die("8. Antes de la validación de columna. Columna: " . $columna . ", NuevoValor: " . $nuevoValor); // Prueba de depuración 8
+        $allowedColumns = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'examenIntegrador'];
+        if (!in_array($columna, $allowedColumns)) {
             ob_clean();
-            echo json_encode(array('respuesta' => $respuesta, 'resultado' => $resultado));
+            echo json_encode(array('respuesta' => 'error', 'mensaje' => 'Columna no permitida para actualización.'));
             exit;
         }
+        // die("9. Después de la validación de columna."); // Prueba de depuración 9
+
+        // Validación de valores (tu lógica actual)
+        // ... (no la modificamos aquí, ya la tienes)
+        // die("10. Después de la validación de valores."); // Prueba de depuración 10
+
+        // die("11. Antes de llamar a actualizarCalifDocente. Conn válido: " . (is_object($conn) ? "Sí" : "No o no es objeto")); // Prueba de depuración 11
+        $respuesta = actualizarCalifDocente($conn, $idCalificacion, $columna, $nuevoValor);
+        // die("12. Después de actualizarCalifDocente. Respuesta: " . $respuesta); // Prueba de depuración 12
+
+        // die("13. Antes de llamar a iniciarAnalisis."); // Prueba de depuración 13
+        $idAlumno = $_POST['idAlumno'];
+        $resultado = iniciarAnalisis($conn, $idMateria, $idAlumno, $idCalificacion);
+        // die("14. Después de iniciarAnalisis. Resultado: " . $resultado); // Prueba de depuración 14
+
+        ob_clean();
+        echo json_encode(array('respuesta' => $respuesta, 'resultado' => $resultado));
+        exit;
     }
 }
 
@@ -99,14 +91,11 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cargar calificaciones</title>
-<!-- Bootstrap CSS -->
 <link rel="stylesheet" href="../css/bootstrap.min.css">
-<!-- Bootstrap CSS from material folder -->
 <link rel="stylesheet" href="../css/material/bootstrap.min.css">
 <link rel="stylesheet" href="../css/estilos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<!-- Bootstrap JS (necesario para el navvar) -->
 <script src="../js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -127,11 +116,11 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 <p><small>* Las calificaciones se guardan automaticamente en cada modificación. La celda se pinta de verde cuando la calificacion se ha guardado exitosamente. Si no se pinta de verde revise su conexion a internet.
 <br>Valores permitidos:1-10(notas), A(ausente), AP(aprobado), NA(no aprobado), EP(en proceso).
 <br>* Las celdas de "Prom" están deshabilitadas por defecto. Marque el casillero encima de "Prom" para habilitar la edición.
+<br>* La columna **"Abandonó Cursado" está deshabilitada** para edición. Cualquier cambio en este estado debe ser realizado por Secretaría.
 </small></p>
 
 </div>
 <script src="../funciones/sessionControl.js"></script>
-<!-- Bootstrap JS y jQuery (necesario para el modal) -->
 <script src="../js/jquery-3.7.1.min.js"></script>
 <script src="../js/popper.min.js"></script>
 <script src="../js/bootstrap.min.js"></script>
@@ -251,7 +240,6 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
 </script>
 <br>
 <div class="text-center">
-<!-- BOTON VER LISTADO CALIFICACIONES -->
 <a href="../reportes/calificacionesDocPDF.php?idMateria=<?php echo htmlspecialchars($idMateria); ?>&curso=<?php echo htmlspecialchars($curso); ?>&ciclolectivo=<?php echo htmlspecialchars($idCiclo); ?>&plan=<?php echo htmlspecialchars($plan); ?>&materia=<?php echo htmlspecialchars($materia); ?>" target="_blank">
 <button class="btn btn-primary">Imprimir Calificaciones</button>
 </a>
@@ -281,14 +269,12 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
 <th scope="col">RP6</th>
 <th scope="col">RP7</th>
 <th scope="col">RIEFI</th>
-<!-- NEW COLUMN FOR PROM -->
 <th scope="col" title="Esta columna es solo para la nota de promoción si corresponde">
     <div class="prom-header-content">
         <input type="checkbox" id="enablePromEdit">
         <span class="prom-text">Prom</span>
     </div>
 </th>
-<!-- END NEW COLUMN -->
 <th scope="col">Estado Parcial</th>
 <th scope="col">Asist</th>
 <th scope="col">Abandonó Cursado</th>
@@ -297,8 +283,7 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
 <tbody>
 <?php if (empty($alumnosCalif)) { ?>
 <tr>
-<td colspan="21">Sin registros</td> <!-- Updated colspan to reflect new column -->
-</tr>
+<td colspan="21">Sin registros</td> </tr>
 <?php } else { ?>
 <?php if (isset($alumnosCalif)) { ?>
 <?php foreach ($alumnosCalif as $listado) { ?>
@@ -448,19 +433,22 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
 <?php echo $listado['r8']; ?>
 </td>
 <?php endif; ?>
-<!-- NEW BODY CELL FOR PROM -->
 <td class="border prom-cell" contenteditable="false" oninput="actualizarCalif(this, 'examenIntegrador')" data-id="<?php echo $listado['idCalificacion']; ?>">
 <?php echo $listado['examenIntegrador']; ?>
 </td>
-<!-- END NEW BODY CELL -->
 <td class="border" id="estadoCursado" ><?php echo $listado['estadoCursado']; ?></td>
 <td class="border"><?php echo $listado['asistencia']; ?></td>
+
 <td class="border text-center">
 <?php
 if ($listado['estado'] == 'Abandonó Cursado') {
-echo '<input type="checkbox" checked disabled title="La edición de este campo está deshabilitada. Contacte a Secretaría.">';}
+// Marcado y DESHABILITADO
+echo '<input type="checkbox" checked disabled title="La edición de este campo está deshabilitada. Contacte a Secretaría.">';
+}
 else {
-echo '<input type="checkbox" disabled title="La edición de este campo está deshabilitada. Contacte a Secretaría.">';}
+// Desmarcado y DESHABILITADO
+echo '<input type="checkbox" disabled title="La edición de este campo está deshabilitada. Contacte a Secretaría.">';
+}
 ?>
 </td>
 </tr>
@@ -473,7 +461,6 @@ echo '<input type="checkbox" disabled title="La edición de este campo está des
 </div>
 </div>
 <?php include '../funciones/footer.html'; ?>
-
 <script>
 $(document).ready(function() {
     var idMateria = '<?php echo $idMateria; ?>';
@@ -494,27 +481,29 @@ $(document).ready(function() {
         if ($(this).is(':checked')) {
             promCells.attr('contenteditable', 'true');
             promCells.css('background-color', ''); // Remove grey background, make it look editable
-            // You might want to add a light yellow or white background here
         } else {
             promCells.attr('contenteditable', 'false');
             promCells.css('background-color', '#f0f0f0'); // Set back to grey
         }
     });
 
-    // --- Existing Abandonment Logic ---
+    // --- Existing Abandonment Logic (Mantenida para Pintar/Bloquear) ---
 
     // Buscar los checkboxes que estén marcados como "Abandonó Cursado"
-   $('input[type="checkbox"][disabled][checked]').each(function() {
+    // Usamos [disabled][checked] para seleccionar solo las casillas de abandono que están marcadas.
+    $('input[type="checkbox"][disabled][checked]').each(function() {
         var fila = $(this).closest('tr');
         fila.find('td').css('background-color', '#ccc'); // Pintar la fila de gris
-        // Bloquear las celdas que por defecto son editables
+        
+        // Bloquear todas las celdas que son o podrían ser editables
         fila.find('td[contenteditable="true"]').attr('contenteditable', 'false');
-        // Bloquear la celda de promoción si se habilitó su edición
-        fila.find('.prom-cell').attr('contenteditable', 'false');
-        // Ya no es necesario $(this).attr('disabled', true); porque ya lo pusimos en PHP
+        fila.find('.prom-cell').attr('contenteditable', 'false'); 
     });
-
-   
+    
+    // --- Lógica de Manejo de Abandono (Eliminada) ---
+    // Se ha eliminado toda la lógica que manejaba el modal, los eventos de clic y la actualización AJAX
+    // de la columna "Abandonó Cursado".
+});
 </script>
 </body>
 </html>
