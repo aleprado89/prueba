@@ -1413,7 +1413,7 @@ function materiasAlumnoCurso($conn, $idAlumno, $idPlan, $idCursoPredeterminado)
             AND materiaterciario.idPlan = ?
             AND cursospredeterminado.idcursopredeterminado = ?
             AND  (calificacionesterciario.materiaAprobada is null or calificacionesterciario.materiaAprobada = 0)
-            AND CURDATE() > materiaterciario.FechaFin
+            /*AND CURDATE() > materiaterciario.FechaFin*/
             ORDER BY curso.idcursopredeterminado, materiaterciario.ubicacion DESC";
 
   // Preparar el statement
