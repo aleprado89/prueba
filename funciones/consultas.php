@@ -2578,258 +2578,6 @@ function obtenerAlumnosPorMateria($conexion, $idMateria) {
 
 /**
  * ==========================================================
- * FUNCIONES PARA GESTIÓN DE MESAS DE EXAMEN (mesasExamen.php)
- * ==========================================================
- */
-
-/**
- * Inserta una nueva mesa de examen.
- *
- * @param mysqli $conn Conexión a la DB.
- * @param int $idMateria
- * @param int $idTurno
- * @param int $idCicloLectivo
- * @param string $fecha (YYYY-MM-DD)
- * @param string $hora (HH:MM)
- * @return bool True si fue exitoso, false si falló.
- * @throws Exception Si la preparación o ejecución falla.
- */
-function crearMesaExamen($conn, $idMateria, $idTurno, $idCicloLectivo, $fecha, $hora) {
-    $sql = "INSERT INTO fechasexamenes (idMateria, idTurno, idCicloLectivo, fecha, hora) VALUES (?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    if ($stmt === false) {
-        throw new Exception("Error al preparar la consulta de inserción: " . $conn->error);
-    }
-    $stmt->bind_param("iiiss", $idMateria, $idTurno, $idCicloLectivo, $fecha, $hora);
-    $success = $stmt->execute();
-    if (!$success) {
-        throw new Exception("Error al ejecutar la inserción: " . $stmt->error);
-    }
-    $stmt->close();
-    return $success;
-}
-
-/**
- * Actualiza la fecha y hora de una mesa de examen.
- *
- * @param mysqli $conn Conexión a la DB.
- * @param int $idFechaExamen
- * @param string $fecha (YYYY-MM-DD)
- * @param string $hora (HH:MM)
- * @return bool True si fue exitoso, false si falló.
- * @throws Exception Si la preparación o ejecución falla.
- */
-function actualizarMesaExamen($conn, $idFechaExamen, $fecha, $hora) {
-    $sql = "UPDATE fechasexamenes SET fecha = ?, hora = ? WHERE idFechaExamen = ?";
-    $stmt = $conn->prepare($sql);
-    if ($stmt === false) {
-        throw new Exception("Error al preparar la consulta de actualización: " . $conn->error);
-    }
-    $stmt->bind_param("ssi", $fecha, $hora, $idFechaExamen);
-    $success = $stmt->execute();
-    if (!$success) {
-        throw new Exception("Error al ejecutar la actualización: " . $stmt->error);
-    }
-    $stmt->close();
-    return $success;
-}
-
-/**
- * Asigna los 7 docentes (titular y vocales) a una mesa de examen.
- *
- * @param mysqli $conn Conexión a la DB.
- * @param int $idFechaExamen
- * @param int|null $p1 Legajo del Titular (o null)
- * @param int|null $p2 Legajo del Vocal (o null)
- * @param int|null $p3 Legajo del Vocal (o null)
- * @param int|null $p4 Legajo del Vocal (o null)
- * @param int|null $p5 Legajo del Vocal (o null)
- * @param int|null $p6 Legajo del Vocal (o null)
- * @param int|null $p7 Legajo del Vocal (o null)
- * @return bool True si fue exitoso, false si falló.
- * @throws Exception Si la preparación o ejecución falla.
- */
-function asignarDocentesMesa($conn, $idFechaExamen, $p1, $p2, $p3, $p4, $p5, $p6, $p7) {
-    $sql = "UPDATE fechasexamenes SET p1 = ?, p2 = ?, p3 = ?, p4 = ?, p5 = ?, p6 = ?, p7 = ? WHERE idFechaExamen = ?";
-    $stmt = $conn->prepare($sql);
-    if ($stmt === false) {
-        throw new Exception("Error al preparar la asignación de docentes: " . $conn->error);
-    }
-    // 'iiiiiiii' - 7 ints para docentes (que pueden ser null), 1 int para el ID
-    $stmt->bind_param("iiiiiiii", $p1, $p2, $p3, $p4, $p5, $p6, $p7, $idFechaExamen);
-    $success = $stmt->execute();
-    if (!$success) {
-        throw new Exception("Error al ejecutar la asignación de docentes: " . $stmt->error);
-    }
-    $stmt->close();
-    return $success;
-}
-
-/**
- * Elimina todas las inscripciones de alumnos asociadas a una mesa de examen.
- * (Parte de una transacción)
- *
- * @param mysqli $conn Conexión a la DB.
- * @param int $idFechaExamen
- * @return bool True si fue exitoso, false si falló.
- * @throws Exception Si la preparación o ejecución falla.
- */
-function eliminarInscripcionesPorMesa($conn, $idFechaExamen) {
-    $sql_insc = "DELETE FROM inscripcionexamenes WHERE idFechaExamen = ?";
-    $stmt_insc = $conn->prepare($sql_insc);
-    if ($stmt_insc === false) {
-        throw new Exception("Error al preparar borrado de inscripciones: " . $conn->error);
-    }
-    $stmt_insc->bind_param("i", $idFechaExamen);
-    $success = $stmt_insc->execute();
-    $stmt_insc->close();
-    return $success;
-}
-
-/**
- * Elimina la mesa de examen (fecha).
- * (Parte de una transacción)
- *
- * @param mysqli $conn Conexión a la DB.
- * @param int $idFechaExamen
- * @return bool True si fue exitoso, false si falló.
- * @throws Exception Si la preparación o ejecución falla.
- */
-function eliminarFechaExamen($conn, $idFechaExamen) {
-    $sql_fecha = "DELETE FROM fechasexamenes WHERE idFechaExamen = ?";
-    $stmt_fecha = $conn->prepare($sql_fecha);
-    if ($stmt_fecha === false) {
-        throw new Exception("Error al preparar borrado de fecha de examen: " . $conn->error);
-    }
-    $stmt_fecha->bind_param("i", $idFechaExamen);
-    $success = $stmt_fecha->execute();
-    $stmt_fecha->close();
-    return $success;
-}
-
-/**
- * Obtiene todos los ciclos lectivos ordenados por año descendente.
- *
- * @param mysqli $conn Conexión a la DB.
- * @return mysqli_result
- */
-function obtenerCiclosLectivos($conn) {
-    $sql = "SELECT idciclolectivo, anio FROM ciclolectivo ORDER BY anio DESC";
-    return $conn->query($sql);
-}
-
-/**
- * Obtiene todos los turnos de examen.
- *
- * @param mysqli $conn Conexión a la DB.
- * @return mysqli_result
- */
-function obtenerTurnosExamen($conn) {
-    $sql = "SELECT idTurno, nombre FROM turnosexamenes ORDER BY nombre";
-    return $conn->query($sql);
-}
-
-/**
- * Obtiene todos los planes de estudio.
- *
- * @param mysqli $conn Conexión a la DB.
- * @return mysqli_result
- */
-function obtenerPlanesEstudio($conn) {
-    $sql = "SELECT idPlan, nombre FROM plandeestudio ORDER BY nombre";
-    return $conn->query($sql);
-}
-
-/**
- * Filtra las mesas de examen según los criterios proporcionados.
- *
- * *** MODIFICADA: ***
- * Ahora requiere que $idCicloFilter Y $idTurnoFilter tengan valor
- * para empezar a buscar.
- *
- * @param mysqli $conn Conexión a la DB.
- * @param int|null $idCicloFilter
- * @param int|null $idTurnoFilter
- * @param int|null $idPlanFilter
- * @param int|null $idCursoFilter
- * @param int|null $idMateriaFilter
- * @return array Lista de mesas de examen.
- */
-function filtrarMesasExamen($conn, $idCicloFilter = null, $idTurnoFilter = null, $idPlanFilter = null, $idCursoFilter = null, $idMateriaFilter = null) {
-    $mesas_examen = [];
-    
-    // *** NUEVA CONDICIÓN MÍNIMA ***
-    // Solo buscar si se especificó al menos Ciclo Lectivo Y Turno.
-    if (empty($idCicloFilter) || empty($idTurnoFilter)) {
-        return $mesas_examen; // Devuelve vacío si no se cumple el mínimo
-    }
-
-    $sql_grid = "SELECT f.idFechaExamen, f.fecha, f.hora, 
-                        m.nombre as nombreMateria, 
-                        c.nombre as nombreCurso, 
-                        p.nombre as nombrePlan, 
-                        t.nombre as nombreTurno, 
-                        cl.anio as anioCiclo,
-                        f.p1, f.p2, f.p3, f.p4, f.p5, f.p6, f.p7
-                 FROM fechasexamenes f
-                 JOIN materiaterciario m ON f.idMateria = m.idMateria
-                 JOIN curso c ON m.idCurso = c.idCurso
-                 JOIN plandeestudio p ON m.idPlan = p.idPlan
-                 JOIN turnosexamenes t ON f.idTurno = t.idTurno
-                 JOIN ciclolectivo cl ON f.idCicloLectivo = cl.idciclolectivo
-                 WHERE f.idCicloLectivo = ? AND f.idTurno = ?"; // Filtros base
-    
-    $params = [$idCicloFilter, $idTurnoFilter];
-    $types = "ii";
-
-    // Filtros adicionales
-    if ($idPlanFilter) { $sql_grid .= " AND m.idPlan = ?"; $params[] = $idPlanFilter; $types .= "i"; }
-    if ($idCursoFilter) { $sql_grid .= " AND m.idCurso = ?"; $params[] = $idCursoFilter; $types .= "i"; }
-    if ($idMateriaFilter) { $sql_grid .= " AND f.idMateria = ?"; $params[] = $idMateriaFilter; $types .= "i"; }
-
-    $sql_grid .= " ORDER BY f.fecha DESC, m.nombre ASC";
-
-    $stmt_grid = $conn->prepare($sql_grid);
-    if ($stmt_grid) {
-        $stmt_grid->bind_param($types, ...$params);
-        $stmt_grid->execute();
-        $result_grid = $stmt_grid->get_result();
-        while ($row = $result_grid->fetch_assoc()) {
-            $mesas_examen[] = $row;
-        }
-        $stmt_grid->close();
-    }
-    return $mesas_examen;
-}
-/**
- * Obtiene todos los docentes activos (personal.actual = 1).
- *
- * @param mysqli $conn Conexión a la DB.
- * @return array Lista de docentes [legajo, apellido, nombre].
- * @throws Exception Si la consulta falla.
- */
-function obtenerDocentesActivos($conn) {
-    $docentes = [];
-    $sql = "SELECT p.legajo, pe.apellido, pe.nombre 
-            FROM personal p 
-            JOIN persona pe ON p.idPersona = pe.idPersona 
-            WHERE p.actual = 1 
-            ORDER BY pe.apellido, pe.nombre";
-    
-    $result = $conn->query($sql);
-    
-    if (!$result) {
-         throw new Exception("Error al consultar docentes: " . $conn->error);
-    }
-    
-    while ($row = $result->fetch_assoc()) {
-        $docentes[] = $row;
-    }
-    return $docentes;
-}
-
-/**
- * ==========================================================
  * FUNCIONES PARA INSCRIPCIÓN INDIVIDUAL A EXAMEN (Secretaría)
  * ==========================================================
  */
@@ -3586,7 +3334,7 @@ function buscarAlumnosParaInscripcionMasiva($conexion, $idMateria, $idCiclo, $id
     // Usamos DISTINCT para asegurar que cada alumno aparezca una sola vez,
     // independientemente de múltiples registros si la lógica de negocio lo permitiera.
     $sql = "SELECT DISTINCT a.idAlumno, p.apellido, p.nombre, p.dni
-            FROM alumno a
+            FROM alumnosterciario a
             JOIN persona p ON a.idPersona = p.idPersona
             JOIN matriculacionmateria mm ON a.idAlumno = mm.idAlumno
             JOIN calificacionesterciario ct ON a.idAlumno = ct.idAlumno AND mm.idMateria = ct.idMateria
@@ -3617,133 +3365,271 @@ function buscarAlumnosParaInscripcionMasiva($conexion, $idMateria, $idCiclo, $id
     $stmt->close();
     return $alumnos;
 }
-// =================================================================
-// FUNCIONES GENERALES
-// =================================================================
 
-/**
- * Busca todos los ciclos lectivos disponibles y los devuelve como array asociativo.
- * Función de soporte para la carga inicial de selects.
- * @param mysqli $conexion Conexión a la base de datos.
- * @return array Listado de ciclos lectivos [idciclolectivo, anio].
- */
-function buscarCiclosLectivosArray($conexion) {
-    $sql = "SELECT idciclolectivo, anio FROM ciclolectivo ORDER BY anio DESC";
-    $stmt = $conexion->prepare($sql);
-    if (!$stmt) {
-        error_log("Error al preparar (buscarCiclosLectivosArray): " . $conexion->error);
-        return [];
-    }
+// --- FUNCIONES PARA ACTAS DE EXAMEN (Gestión de Notas de Mesa) ---
+
+// 1. Obtener Turnos
+function obtenerTodosTurnos($conn) {
+    $sql = "SELECT idTurno, nombre FROM turnosexamenes ORDER BY nombre ASC";
+    $stmt = $conn->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();
-    return $result->fetch_all(MYSQLI_ASSOC);
+    $data = [];
+    while ($row = $result->fetch_assoc()) { $data[] = $row; }
+    return $data;
 }
 
-
-
-
-// ==========================================================
-// NUEVAS FUNCIONES PARA EL MÓDULO DE ACTAS (actas.php)
-// ==========================================================
-
-/**
- * Obtiene las fechas de examen disponibles según la cascada de selección.
- */
-function obtenerFechasParaActa($conexion, $idMateria, $idCicloLectivo, $idTurno) {
-    $sql = "SELECT idFechaExamen, fecha, hora 
+// 2. Buscar Mesas (Fecha/Hora)
+function buscarMesasExamen($conn, $idCiclo, $idTurno, $idMateria) {
+    $sql = "SELECT idFechaExamen, DATE_FORMAT(fecha, '%d/%m/%Y') as fecha, DATE_FORMAT(hora, '%H:%i') as hora 
             FROM fechasexamenes 
-            WHERE idMateria = ? AND idCicloLectivo = ? AND idTurno = ?
-            ORDER BY fecha DESC";
-            
-    $stmt = $conexion->prepare($sql);
-    if (!$stmt) {
-        error_log("Error prepare obtenerFechasParaActa: " . $conexion->error);
-        return [];
-    }
-    
-    $stmt->bind_param("iii", $idMateria, $idCicloLectivo, $idTurno);
+            WHERE idCicloLectivo = ? AND idTurno = ? AND idMateria = ?
+            ORDER BY fechasexamenes.fecha DESC";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return [];
+    $stmt->bind_param("iii", $idCiclo, $idTurno, $idMateria);
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    $fechas = [];
-    while ($row = $result->fetch_assoc()) {
-        $fechas[] = $row;
-    }
-    $stmt->close();
-    return $fechas;
+    $data = [];
+    while ($row = $result->fetch_assoc()) { $data[] = $row; }
+    return $data;
 }
 
-/**
- * Obtiene el acta de examen con el nombre de la condición incluido.
- * Mejora la función 'obtenerActa' anterior.
- */
-function obtenerDetalleActaCompleto($conexion, $idFechaExamen) {
-    $sql = "SELECT i.idInscripcion, i.idAlumno, i.oral, i.escrito, i.calificacion, i.libro, i.folio,
-            i.idCondicion, c.condicion as nombreCondicion, p.apellido, p.nombre, p.dni
-            FROM inscripcionexamenes i
-            INNER JOIN alumnosterciario a ON i.idAlumno = a.idAlumno
-            INNER JOIN persona p ON a.idPersona = p.idPersona
-            LEFT JOIN condicion c ON i.idCondicion = c.idCondicion
-            WHERE i.idFechaExamen = ? 
-            ORDER BY p.apellido, p.nombre ASC";
+// 3. Obtener Alumnos Inscriptos en la Mesa (JOIN CORRECTO)
+function obtenerDetalleActaCompleto($conn, $idFechaExamen) {
+    $sql = "SELECT 
+                ie.idInscripcion, 
+                p.apellido, 
+                p.nombre, 
+                p.dni,
+                ie.oral, 
+                ie.escrito, 
+                ie.calificacion, 
+                ie.libro, 
+                ie.folio, 
+                c.condicion,
+                c.idCondicion
+            FROM inscripcionexamenes ie
+            INNER JOIN alumnosterciario at ON ie.idAlumno = at.idAlumno 
+            INNER JOIN persona p ON at.idPersona = p.idPersona
+            LEFT JOIN condicion c ON ie.idCondicion = c.idCondicion
+            WHERE ie.idFechaExamen = ?
+            ORDER BY p.apellido ASC, p.nombre ASC";
 
-    $stmt = $conexion->prepare($sql);
-    if (!$stmt) {
-        error_log("Error prepare obtenerDetalleActaCompleto: " . $conexion->error);
-        return [];
-    }
-
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return [];
     $stmt->bind_param("i", $idFechaExamen);
     $stmt->execute();
     $result = $stmt->get_result();
+    $data = [];
+    while ($row = $result->fetch_assoc()) { $data[] = $row; }
+    return $data;
+}
+
+// 4. Actualizar Nota (Seguridad: Lista blanca de campos)
+function actualizarDatoActa($conn, $idInscripcion, $campo, $valor) {
+    $camposPermitidos = ['oral', 'escrito', 'calificacion', 'libro', 'folio'];
+    if (!in_array($campo, $camposPermitidos)) return false;
+
+    $sql = "UPDATE inscripcionexamenes SET $campo = ? WHERE idInscripcion = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return false;
+
+    if ($valor === '') $valor = null;
+    $stmt->bind_param("si", $valor, $idInscripcion);
     
-    $acta = [];
-    while ($row = $result->fetch_assoc()) {
-        $acta[] = $row;
+    $exito = $stmt->execute();
+    $stmt->close();
+    return $exito;
+}
+
+/**
+ * ==========================================================
+ * FUNCIONES PARA GESTIÓN DE MESAS DE EXAMEN (mesasExamen.php)
+ * ==========================================================
+ */
+function crearMesaExamen($conn, $idMateria, $idTurno, $idCicloLectivo, $fecha, $hora) {
+    $sql = "INSERT INTO fechasexamenes (idMateria, idTurno, idCicloLectivo, fecha, hora) VALUES (?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        throw new Exception("Error al preparar la consulta de inserción: " . $conn->error);
+    }
+    $stmt->bind_param("iiiss", $idMateria, $idTurno, $idCicloLectivo, $fecha, $hora);
+    $success = $stmt->execute();
+    if (!$success) {
+        throw new Exception("Error al ejecutar la inserción: " . $stmt->error);
     }
     $stmt->close();
-    return $acta;
+    return $success;
 }
 
 /**
- * Actualiza los datos de una nota en el acta de forma segura.
+ * Actualiza la fecha y hora de una mesa de examen.
+ *
+ * @param mysqli $conn Conexión a la DB.
+ * @param int $idFechaExamen
+ * @param string $fecha (YYYY-MM-DD)
+ * @param string $hora (HH:MM)
+ * @return bool True si fue exitoso, false si falló.
+ * @throws Exception Si la preparación o ejecución falla.
  */
-function actualizarNotaActaSegura($conexion, $idInscripcion, $oral, $escrito, $calificacion, $libro, $folio) {
-    $sql = "UPDATE inscripcionexamenes 
-            SET oral = ?, escrito = ?, calificacion = ?, libro = ?, folio = ?, registroModificacion = 1
-            WHERE idInscripcion = ?";
-            
-    $stmt = $conexion->prepare($sql);
-    if (!$stmt) {
-        return "Error en preparación: " . $conexion->error;
+function actualizarMesaExamen($conn, $idFechaExamen, $fecha, $hora) {
+    $sql = "UPDATE fechasexamenes SET fecha = ?, hora = ? WHERE idFechaExamen = ?";
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        throw new Exception("Error al preparar la consulta de actualización: " . $conn->error);
     }
-    
-    // Asumimos que todos son strings salvo el ID
-    $stmt->bind_param("sssssi", $oral, $escrito, $calificacion, $libro, $folio, $idInscripcion);
-    
-    if ($stmt->execute()) {
-        $stmt->close();
-        return "ok";
-    } else {
-        $error = $stmt->error;
-        $stmt->close();
-        return "Error al actualizar: " . $error;
+    $stmt->bind_param("ssi", $fecha, $hora, $idFechaExamen);
+    $success = $stmt->execute();
+    if (!$success) {
+        throw new Exception("Error al ejecutar la actualización: " . $stmt->error);
     }
+    $stmt->close();
+    return $success;
 }
 
 /**
- * Busca todas las condiciones de inscripción a examen para el filtro.
- * @param mysqli $conexion Conexión a la base de datos.
- * @return array Listado de condiciones [idCondicion, condicion].
+ * Asigna los 7 docentes (titular y vocales) a una mesa de examen.
+ *
+ * @param mysqli $conn Conexión a la DB.
+ * @param int $idFechaExamen
+ * @param int|null $p1 Legajo del Titular (o null)
+ * @param int|null $p2 Legajo del Vocal (o null)
+ * @param int|null $p3 Legajo del Vocal (o null)
+ * @param int|null $p4 Legajo del Vocal (o null)
+ * @param int|null $p5 Legajo del Vocal (o null)
+ * @param int|null $p6 Legajo del Vocal (o null)
+ * @param int|null $p7 Legajo del Vocal (o null)
+ * @return bool True si fue exitoso, false si falló.
+ * @throws Exception Si la preparación o ejecución falla.
  */
-function buscarCondicionesExamen($conexion) {
-    $sql = "SELECT idCondicion, condicion FROM condicion ORDER BY condicion ASC";
-    $stmt = $conexion->prepare($sql);
-    if (!$stmt) {
-        error_log("Error al preparar (buscarCondicionesExamen): " . $conexion->error);
-        return [];
+function asignarDocentesMesa($conn, $idFechaExamen, $p1, $p2, $p3, $p4, $p5, $p6, $p7) {
+    $sql = "UPDATE fechasexamenes SET p1 = ?, p2 = ?, p3 = ?, p4 = ?, p5 = ?, p6 = ?, p7 = ? WHERE idFechaExamen = ?";
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        throw new Exception("Error al preparar la asignación de docentes: " . $conn->error);
     }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    return $result->fetch_all(MYSQLI_ASSOC);
+    // 'iiiiiiii' - 7 ints para docentes (que pueden ser null), 1 int para el ID
+    $stmt->bind_param("iiiiiiii", $p1, $p2, $p3, $p4, $p5, $p6, $p7, $idFechaExamen);
+    $success = $stmt->execute();
+    if (!$success) {
+        throw new Exception("Error al ejecutar la asignación de docentes: " . $stmt->error);
+    }
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Elimina todas las inscripciones de alumnos asociadas a una mesa de examen.
+ * (Parte de una transacción)
+ *
+ * @param mysqli $conn Conexión a la DB.
+ * @param int $idFechaExamen
+ * @return bool True si fue exitoso, false si falló.
+ * @throws Exception Si la preparación o ejecución falla.
+ */
+function eliminarInscripcionesPorMesa($conn, $idFechaExamen) {
+    $sql_insc = "DELETE FROM inscripcionexamenes WHERE idFechaExamen = ?";
+    $stmt_insc = $conn->prepare($sql_insc);
+    if ($stmt_insc === false) {
+        throw new Exception("Error al preparar borrado de inscripciones: " . $conn->error);
+    }
+    $stmt_insc->bind_param("i", $idFechaExamen);
+    $success = $stmt_insc->execute();
+    $stmt_insc->close();
+    return $success;
+}
+
+/**
+ * Elimina la mesa de examen (fecha).
+ * (Parte de una transacción)
+ *
+ * @param mysqli $conn Conexión a la DB.
+ * @param int $idFechaExamen
+ * @return bool True si fue exitoso, false si falló.
+ * @throws Exception Si la preparación o ejecución falla.
+ */
+function eliminarFechaExamen($conn, $idFechaExamen) {
+    $sql_fecha = "DELETE FROM fechasexamenes WHERE idFechaExamen = ?";
+    $stmt_fecha = $conn->prepare($sql_fecha);
+    if ($stmt_fecha === false) {
+        throw new Exception("Error al preparar borrado de fecha de examen: " . $conn->error);
+    }
+    $stmt_fecha->bind_param("i", $idFechaExamen);
+    $success = $stmt_fecha->execute();
+    $stmt_fecha->close();
+    return $success;
+}
+function filtrarMesasExamen($conn, $idCicloFilter = null, $idTurnoFilter = null, $idPlanFilter = null, $idCursoFilter = null, $idMateriaFilter = null) {
+    $mesas_examen = [];
+    
+    // *** NUEVA CONDICIÓN MÍNIMA ***
+    // Solo buscar si se especificó al menos Ciclo Lectivo Y Turno.
+    if (empty($idCicloFilter) || empty($idTurnoFilter)) {
+        return $mesas_examen; // Devuelve vacío si no se cumple el mínimo
+    }
+
+    $sql_grid = "SELECT f.idFechaExamen, f.fecha, f.hora, 
+                        m.nombre as nombreMateria, 
+                        c.nombre as nombreCurso, 
+                        p.nombre as nombrePlan, 
+                        t.nombre as nombreTurno, 
+                        cl.anio as anioCiclo,
+                        f.p1, f.p2, f.p3, f.p4, f.p5, f.p6, f.p7
+                 FROM fechasexamenes f
+                 JOIN materiaterciario m ON f.idMateria = m.idMateria
+                 JOIN curso c ON m.idCurso = c.idCurso
+                 JOIN plandeestudio p ON m.idPlan = p.idPlan
+                 JOIN turnosexamenes t ON f.idTurno = t.idTurno
+                 JOIN ciclolectivo cl ON f.idCicloLectivo = cl.idciclolectivo
+                 WHERE f.idCicloLectivo = ? AND f.idTurno = ?"; // Filtros base
+    
+    $params = [$idCicloFilter, $idTurnoFilter];
+    $types = "ii";
+
+    // Filtros adicionales
+    if ($idPlanFilter) { $sql_grid .= " AND m.idPlan = ?"; $params[] = $idPlanFilter; $types .= "i"; }
+    if ($idCursoFilter) { $sql_grid .= " AND m.idCurso = ?"; $params[] = $idCursoFilter; $types .= "i"; }
+    if ($idMateriaFilter) { $sql_grid .= " AND f.idMateria = ?"; $params[] = $idMateriaFilter; $types .= "i"; }
+
+    $sql_grid .= " ORDER BY f.fecha DESC, m.nombre ASC";
+
+    $stmt_grid = $conn->prepare($sql_grid);
+    if ($stmt_grid) {
+        $stmt_grid->bind_param($types, ...$params);
+        $stmt_grid->execute();
+        $result_grid = $stmt_grid->get_result();
+        while ($row = $result_grid->fetch_assoc()) {
+            $mesas_examen[] = $row;
+        }
+        $stmt_grid->close();
+    }
+    return $mesas_examen;
+}
+
+/**
+ * Obtiene todos los docentes activos (personal.actual = 1).
+ *
+ * @param mysqli $conn Conexión a la DB.
+ * @return array Lista de docentes [legajo, apellido, nombre].
+ * @throws Exception Si la consulta falla.
+ */
+function obtenerDocentesActivos($conn) {
+    $docentes = [];
+    $sql = "SELECT p.legajo, pe.apellido, pe.nombre 
+            FROM personal p 
+            JOIN persona pe ON p.idPersona = pe.idPersona 
+            WHERE p.actual = 1 
+            ORDER BY pe.apellido, pe.nombre";
+    
+    $result = $conn->query($sql);
+    
+    if (!$result) {
+         throw new Exception("Error al consultar docentes: " . $conn->error);
+    }
+    
+    while ($row = $result->fetch_assoc()) {
+        $docentes[] = $row;
+    }
+    return $docentes;
 }

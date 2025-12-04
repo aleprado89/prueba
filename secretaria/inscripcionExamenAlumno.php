@@ -160,10 +160,10 @@ try {
         die("Error: No se encontró al alumno con ID " . htmlspecialchars($idAlumno));
     }
     
-    $resultCiclos = obtenerCiclosLectivos($conn);
+    $resultCiclos = levantarCiclosLectivos($conn);
     while($fila = $resultCiclos->fetch_assoc()) { $ciclos[] = $fila; }
     
-    $resultTurnos = obtenerTurnosExamen($conn);
+    $resultTurnos = obtenerTodosTurnos($conn);
     while($fila = $resultTurnos->fetch_assoc()) { $turnos[] = $fila; }
     
     $planes = buscarPlanes($conn, $idAlumno);
