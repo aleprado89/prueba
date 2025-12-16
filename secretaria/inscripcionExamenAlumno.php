@@ -160,11 +160,11 @@ try {
         die("Error: No se encontró al alumno con ID " . htmlspecialchars($idAlumno));
     }
     
-    $resultCiclos = levantarCiclosLectivos($conn);
-    while($fila = $resultCiclos->fetch_assoc()) { $ciclos[] = $fila; }
+    $ciclos = levantarCiclosLectivos($conn);
+    //while($fila = $resultCiclos->fetch_assoc()) { $ciclos[] = $fila; }
     
-    $resultTurnos = obtenerTodosTurnos($conn);
-    while($fila = $resultTurnos->fetch_assoc()) { $turnos[] = $fila; }
+    $turnos = obtenerTodosTurnos($conn);
+    //while($fila = $resultTurnos->fetch_assoc()) { $turnos[] = $fila; }
     
     $planes = buscarPlanes($conn, $idAlumno);
     
@@ -229,7 +229,7 @@ try {
                             <select class="form-select" id="idCiclo" name="idCiclo" required>
                                 <option value="">Seleccione un ciclo...</option>
                                 <?php foreach ($ciclos as $ciclo): ?>
-                                    <option value="<?php echo htmlspecialchars($ciclo['idciclolectivo']); ?>">
+                                    <option value="<?php echo htmlspecialchars($ciclo['idCicloLectivo']); ?>">
                                         <?php echo htmlspecialchars($ciclo['anio']); ?>
                                     </option>
                                 <?php endforeach; ?>
