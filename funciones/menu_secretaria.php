@@ -47,7 +47,7 @@
                         <li><a class="dropdown-item" href="mesasExamen.php">Mesas de Examen</a></li>
                         <li><a class="dropdown-item" href="buscarAlumno.php?origin=inscribirExamen">Inscripción a Examen (individual)</a></li>
                         <li><a class="dropdown-item" href="inscripcionExamenMasivo.php">Inscripción a Examen (Masivo)</a></li>
-                        <li><a class="dropdown-item" href="buscarActas.php">Actas</a></li>
+                        <li><a class="dropdown-item" href="actas.php">Actas</a></li>
                     </ul>
                 </li>
 

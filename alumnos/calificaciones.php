@@ -40,6 +40,15 @@ $listadoCalificaciones = array();
 $listadoCalificaciones = buscarMateriasCurso($conn, $idAlumno, $idPlan, $idCursoPredeterminado);
 $cantidad = count($listadoCalificaciones);
 }
+
+
+$hoy = new DateTime();
+$anio = $hoy->format("Y");
+$fechaLimite = new DateTime("$anio-11-15");
+
+// Verificamos si mostrar columna
+$mostrarEstadoParcial = ($hoy >= $fechaLimite);
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -131,7 +140,9 @@ $cantidad = count($listadoCalificaciones);
          <th scope="col">Materia</th>
          <th scope="col">Año</th> <!-- Nueva columna para el año de la materia -->
          <th scope="col">Asistencia</th>
+           <?php if ($mostrarEstadoParcial): ?>
          <th scope="col">Estado</th>
+         <?php endif; ?>
          <th scope="col">Exa. Final</th>
          <th scope="col">Ver Calificaciones</th>
          <th scope="col">Ver Asistencia</th> <!-- Nueva columna para ver asistencia global -->
@@ -202,9 +213,11 @@ $cantidad = count($listadoCalificaciones);
                     <?php echo $Asistencia ?>
                 </a>
              </td>
+               <?php if ($mostrarEstadoParcial): ?>
              <td>
                <?php echo $Estado ?>
              </td>
+             <?php endif; ?>
              <td class= "text-center">
                <?php echo $CalificacionFinal ?>
              </td>

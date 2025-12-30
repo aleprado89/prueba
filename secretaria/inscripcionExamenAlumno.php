@@ -5,89 +5,85 @@ include_once '../funciones/verificarSesion.php';
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+error_reporting(E_ALL & ~E_DEPRECATED); // Ignorar deprecated para JSON limpio
 
 // Incluir la conexión a la base de datos y consultas
 include_once '../inicio/conexion.php';
 include_once '../funciones/consultas.php';
 
-// *** NUEVO: Inicializar variable global e incluir control de correlatividad ***
+// Incluir control de correlatividad
 $materiasAdeuda = ''; // Es crucial inicializarla ANTES de incluir el archivo
 include_once '../funciones/controlCorrelatividad.php';
 
 
 // --- MANEJO DE SOLICITUDES AJAX (POST) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    header('Content-Type: application/json'); // Aseguramos que la respuesta sea JSON
+    header('Content-Type: application/json'); 
     $response = ['success' => false, 'data' => [], 'message' => 'Acción no válida.'];
-
-    // Sanitizamos la acción
     $action = $_POST['action'] ?? '';
 
     try {
         switch ($action) {
             
-            // Cargar Cursos
             case 'load_cursos':
                 $idPlan = filter_input(INPUT_POST, 'idPlan', FILTER_VALIDATE_INT);
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
-                
                 if ($idPlan && $idCiclo) {
-                    $cursos = buscarCursosPlanCiclo($conn, $idPlan, $idCiclo);
-                    $response = ['success' => true, 'data' => $cursos];
-                } else {
-                    $response['message'] = 'ID de Plan o Ciclo no válido.';
+                    $response = ['success' => true, 'data' => buscarCursosPlanCiclo($conn, $idPlan, $idCiclo)];
+                } else { 
+                    $response['message'] = 'ID de Plan o Ciclo no válido.'; 
                 }
                 break;
 
-            // Cargar Materias
             case 'load_materias':
                 $idPlan = filter_input(INPUT_POST, 'idPlan', FILTER_VALIDATE_INT);
                 $idCurso = filter_input(INPUT_POST, 'idCurso', FILTER_VALIDATE_INT);
-                
                 if ($idPlan && $idCurso) {
-                    $materias = materiasPlanCurso($conn, $idPlan, $idCurso);
-                    $response = ['success' => true, 'data' => $materias];
-                } else {
-                    $response['message'] = 'ID de Plan o Curso no válido.';
+                    $response = ['success' => true, 'data' => materiasPlanCurso($conn, $idPlan, $idCurso)];
+                } else { 
+                    $response['message'] = 'ID de Plan o Curso no válido.'; 
                 }
                 break;
 
-            // Cargar Mesas de Examen
             case 'load_mesas':
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idTurno = filter_input(INPUT_POST, 'idTurno', FILTER_VALIDATE_INT);
                 $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
-                
                 if ($idCiclo && $idTurno && $idMateria) {
-                    $mesas = filtrarMesasExamen($conn, $idCiclo, $idTurno, null, null, $idMateria);
-                    $response = ['success' => true, 'data' => $mesas];
-                } else {
-                    $response['message'] = 'Ciclo, Turno o Materia no seleccionados.';
+                    $response = ['success' => true, 'data' => filtrarMesasExamen($conn, $idCiclo, $idTurno, null, null, $idMateria)];
+                } else { 
+                    $response['message'] = 'Ciclo, Turno o Materia no seleccionados.'; 
                 }
                 break;
             
-            // --- *** LÓGICA DE INSCRIPCIÓN ACTUALIZADA *** ---
+            case 'load_inscripciones_turno':
+                $idAlumno = filter_input(INPUT_POST, 'idAlumno', FILTER_VALIDATE_INT);
+                $idTurno = filter_input(INPUT_POST, 'idTurno', FILTER_VALIDATE_INT);
+                $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
+                if ($idAlumno && $idTurno && $idCiclo) {
+                    $inscripciones = obtenerInscripcionesTurno($conn, $idAlumno, $idTurno, $idCiclo);
+                    $response = ['success' => true, 'data' => $inscripciones];
+                } else {
+                    $response['message'] = 'Faltan datos (Alumno, Turno o Ciclo) para buscar inscripciones.';
+                }
+                break;
+
             case 'inscribir':
                 $idAlumno = filter_input(INPUT_POST, 'idAlumno', FILTER_VALIDATE_INT);
                 $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idFechaExamen = filter_input(INPUT_POST, 'idFechaExamen', FILTER_VALIDATE_INT);
                 $idCondicion = filter_input(INPUT_POST, 'idCondicion', FILTER_VALIDATE_INT);
-                
-                // Nuevo: Recibimos el texto de la condición para la función de control
-$inscripcionTexto = filter_input(INPUT_POST, 'inscripcionTexto', FILTER_UNSAFE_RAW);
-                if (!$idAlumno || !$idMateria || !$idCiclo || !$idFechaExamen || !$idCondicion || !$inscripcionTexto) {
-                    $response['message'] = 'Datos incompletos. Faltan IDs o el texto de la condición.';
-                    break; // Salir del switch
-                }
+                $inscripcionTexto = filter_input(INPUT_POST, 'inscripcionTexto', FILTER_UNSAFE_RAW);
+                $idTurno = filter_input(INPUT_POST, 'idTurno', FILTER_VALIDATE_INT);
 
-                // 1. Obtener idUnicoMateria a partir de idMateria
-                $stmtUnico = $conn->prepare("SELECT idUnicoMateria FROM materiaterciario WHERE idMateria = ?");
-                if (!$stmtUnico) {
-                    $response['message'] = 'Error al preparar la consulta de idUnicoMateria.';
+                if (!$idAlumno || !$idMateria || !$idCiclo || !$idFechaExamen || !$idCondicion || !$inscripcionTexto || !$idTurno) {
+                    $response['message'] = 'Datos incompletos. Faltan IDs o el texto de la condición o el turno.';
                     break;
                 }
+
+                // 1. Obtener idUnicoMateria
+                $stmtUnico = $conn->prepare("SELECT idUnicoMateria FROM materiaterciario WHERE idMateria = ?");
                 $stmtUnico->bind_param("i", $idMateria);
                 $stmtUnico->execute();
                 $resultUnico = $stmtUnico->get_result();
@@ -102,13 +98,13 @@ $inscripcionTexto = filter_input(INPUT_POST, 'inscripcionTexto', FILTER_UNSAFE_R
                 $stmtUnico->close();
 
                 // 2. Ejecutar el control de correlatividad y estado
-                // La función inscripcionExamenControl() debe estar disponible via el include
                 $control_result = inscripcionExamenControl($conn, $idAlumno, $idUnicoMateria, $inscripcionTexto);
+
                 // 3. Evaluar el resultado del control
                 if ($control_result === true) {
-                    // Si el control es exitoso (devuelve true), proceder con la inscripción
-                    $response = inscribirAlumnoExamen($conn, $idAlumno, $idMateria, $idCiclo, $idFechaExamen, $idCondicion);
-                    // Sobrescribimos el mensaje para ser claros
+                    // Pasar $idTurno a la función de inscripción para la nueva validación
+                    $response = inscribirAlumnoExamen($conn, $idAlumno, $idMateria, $idCiclo, $idFechaExamen, $idCondicion, $idTurno);
+                    
                     if ($response['success']) {
                         $response['message'] = 'Inscripción realizada con éxito. Se cumplieron todas las validaciones.';
                     }
@@ -116,23 +112,27 @@ $inscripcionTexto = filter_input(INPUT_POST, 'inscripcionTexto', FILTER_UNSAFE_R
                     // Si el control falla, devuelve el string de error
                     $response = [
                         'success' => false, 
-                        // El \n es para el JS, que lo convertirá a <br>
-                        'message' => "El alumno no cumple con la siguiente condición:\n".htmlspecialchars($control_result) 
+                        'message' => "Error en la inscripción: \n" . htmlspecialchars($control_result) 
                     ];
                 }
                 break;
+
+            case 'eliminar_inscripcion':
+                $idInscripcion = filter_input(INPUT_POST, 'idInscripcion', FILTER_VALIDATE_INT);
+                
+                if ($idInscripcion) {
+                    // Llamamos a la nueva función de consultas.php
+                    $response = eliminarInscripcionExamen($conn, $idInscripcion);
+                } else {
+                    $response['message'] = 'ID de Inscripción no válido o no proporcionado.';
+                }
+                break;
         }
-    } catch (Throwable $e) { // <-- 1. CAMBIADO A Throwable
-        
-        // 2. Reporte de error más detallado
+    } catch (Throwable $e) {
         $error_message = 'Error fatal del servidor: ' . htmlspecialchars($e->getMessage()) . 
                          '<br><br><b>Archivo:</b> ' . htmlspecialchars($e->getFile()) . 
                          '<br><b>Línea:</b> ' . htmlspecialchars($e->getLine());
-
-        // 3. Loguear el error completo para nosotros
         error_log("Error FATAL en AJAX (inscripcionExamenAlumno.php): " . $e->getMessage() . " en " . $e->getFile() . ":" . $e->getLine());
-        
-        // 4. Enviar el error detallado al modal
         $response = ['success' => false, 'message' => $error_message];
     }
 
@@ -147,7 +147,7 @@ $alumno = null;
 $ciclos = [];
 $turnos = [];
 $planes = [];
-$condiciones = [];
+$condicionesExamen = []; // Usaremos esta variable
 
 if (!$idAlumno) {
     die("Error: ID de Alumno no proporcionado o no válido.");
@@ -160,15 +160,16 @@ try {
         die("Error: No se encontró al alumno con ID " . htmlspecialchars($idAlumno));
     }
     
-    $resultCiclos = obtenerCiclosLectivos($conn);
-    while($fila = $resultCiclos->fetch_assoc()) { $ciclos[] = $fila; }
+    $ciclos = levantarCiclosLectivos($conn);
+    //while($fila = $resultCiclos->fetch_assoc()) { $ciclos[] = $fila; }
     
-    $resultTurnos = obtenerTurnosExamen($conn);
-    while($fila = $resultTurnos->fetch_assoc()) { $turnos[] = $fila; }
+    $turnos = obtenerTodosTurnos($conn);
+    //while($fila = $resultTurnos->fetch_assoc()) { $turnos[] = $fila; }
     
     $planes = buscarPlanes($conn, $idAlumno);
     
-    $condiciones = obtenerCondicionesCursado($conn);
+    // Usamos la función correcta para leer la tabla 'condicion'
+    $condicionesExamen = obtenerCondicionesExamen($conn); 
 
 } catch (Exception $e) {
     die("Error al cargar datos iniciales: " . $e->getMessage());
@@ -177,7 +178,6 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -186,22 +186,12 @@ try {
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
     <style>
-        #loader {
-            display: none; /* Oculto por defecto, se muestra con JS */
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1050;
-        }
-        .table-hover tbody tr:hover {
-            cursor: pointer;
-        }
+        #loader { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; }
+        .table-hover tbody tr:hover { cursor: pointer; }
+        .btn-eliminar-inscripcion { cursor: pointer; }
     </style>
 </head>
-
 <body>
     <div id="loader">
         <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
@@ -228,11 +218,9 @@ try {
                     <strong><?php echo htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']); ?></strong>
                     (DNI: <?php echo htmlspecialchars($alumno['dni']); ?>)
                 </h5>
-
                 <hr>
 
                 <div id="formInscripcion">
-                    
                     <input type="hidden" name="idAlumno" id="idAlumno" value="<?php echo htmlspecialchars($idAlumno); ?>">
 
                     <div class="row mb-3">
@@ -241,7 +229,7 @@ try {
                             <select class="form-select" id="idCiclo" name="idCiclo" required>
                                 <option value="">Seleccione un ciclo...</option>
                                 <?php foreach ($ciclos as $ciclo): ?>
-                                    <option value="<?php echo htmlspecialchars($ciclo['idciclolectivo']); ?>">
+                                    <option value="<?php echo htmlspecialchars($ciclo['idCicloLectivo']); ?>">
                                         <?php echo htmlspecialchars($ciclo['anio']); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -270,7 +258,6 @@ try {
                             </select>
                         </div>
                     </div>
-
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="idCurso" class="form-label">Curso <span class="text-danger">*</span></label>
@@ -285,7 +272,6 @@ try {
                             </select>
                         </div>
                     </div>
-
                     <hr>
 
                     <div class="row mb-3">
@@ -298,7 +284,6 @@ try {
                                 </div>
                                 <span class="ms-2">Buscando mesas...</span>
                             </div>
-
                             <div class="table-responsive" id="containerMesas" style="display: none;">
                                 <table class="table table-striped table-hover">
                                     <thead>
@@ -325,7 +310,7 @@ try {
                             <label for="idCondicion" class="form-label">Condición de Inscripción <span class="text-danger">*</span></label>
                             <select class="form-select" id="idCondicion" name="idCondicion" required>
                                 <option value="">Seleccione condición...</option>
-                                <?php foreach ($condiciones as $condicion): ?>
+                                <?php foreach ($condicionesExamen as $condicion): ?>
                                     <option value="<?php echo htmlspecialchars($condicion['idCondicion']); ?>">
                                         <?php echo htmlspecialchars($condicion['condicion']); ?>
                                     </option>
@@ -336,6 +321,38 @@ try {
                             <button type="button" class="btn btn-primary" id="btnInscribir" disabled>
                                 <i class="bi bi-check-circle-fill"></i> Inscribir Alumno
                             </button>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6><i class="bi bi-list-task"></i> Inscripciones Previas en este Turno</h6>
+                            <p class="text-muted small">(Se actualiza al seleccionar Ciclo Lectivo y Turno)</p>
+                            <div id="spinnerInscripcionesTurno" style="display: none;" class="text-center">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Buscando...</span>
+                                </div>
+                                <span class="ms-2">Buscando inscripciones...</span>
+                            </div>
+                            <div class="table-responsive" id="containerInscripcionesTurno" style="display: none;">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Materia</th>
+                                            <th>Fecha</th>
+                                            <th>Hora</th>
+                                            <th>Condición</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaInscripcionesTurnoBody">
+                                        </tbody>
+                                </table>
+                            </div>
+                            <div id="noInscripcionesTurno" style="display: none;" class="alert alert-secondary">
+                                No se encontraron inscripciones para este alumno en el turno y ciclo seleccionados.
+                            </div>
                         </div>
                     </div>
 
@@ -355,7 +372,7 @@ try {
                        <strong><?php echo htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']); ?></strong> 
                        a la mesa de examen seleccionada?
                     </p>
-                    <p class="text-muted small">Se realizarán los controles de correlatividad.</p>
+                    <p class="text-muted small">Se realizarán los controles de correlatividad y de inscripciones duplicadas en el turno.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -364,7 +381,6 @@ try {
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -376,6 +392,25 @@ try {
                     </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteLabel"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar esta inscripción?</p>
+                    <p class="text-danger">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminacion">Eliminar Inscripción</button>
                 </div>
             </div>
         </div>
@@ -393,29 +428,37 @@ try {
         $(document).ready(function() {
             const ajaxUrl = 'inscripcionExamenAlumno.php';
             const loader = $('#loader');
+            const messageContainer = $('#messageContainer'); // Para mensajes de borrado
+
+            // Selectores de Mesas
             const spinnerMesas = $('#spinnerMesas');
             const containerMesas = $('#containerMesas');
             const noMesas = $('#noMesas');
             const tablaMesasBody = $('#tablaMesasBody');
-            const btnInscribir = $('#btnInscribir');
-            const messageContainer = $('#messageContainer');
 
-            // --- *** MODALES *** ---
+            // Selectores de Inscripciones Previas
+            const spinnerInscripcionesTurno = $('#spinnerInscripcionesTurno');
+            const containerInscripcionesTurno = $('#containerInscripcionesTurno');
+            const noInscripcionesTurno = $('#noInscripcionesTurno');
+            const tablaInscripcionesTurnoBody = $('#tablaInscripcionesTurnoBody');
+
+            // Modales y Botones
+            const btnInscribir = $('#btnInscribir');
             const modalConfirm = new bootstrap.Modal(document.getElementById('confirmInscripcionModal'));
             const btnConfirmarInscripcion = $('#btnConfirmarInscripcion');
-            
-            // Nuevo modal de resultado
             const modalResult = new bootstrap.Modal(document.getElementById('resultModal'));
             const resultModalLabel = $('#resultModalLabel');
             const resultModalBody = $('#resultModalBody');
 
+            // Modal de Eliminación
+            const modalDelete = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            const btnConfirmarEliminacion = $('#btnConfirmarEliminacion');
 
-            // --- Funciones auxiliares ---
 
+            // --- Funciones Auxiliares ---
             function showLoader() { loader.fadeIn('fast'); }
             function hideLoader() { loader.fadeOut('fast'); }
             
-            // Esta función ahora solo se usa para validaciones previas
             function showMessage(type, message) {
                 messageContainer
                     .html(`<div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -423,10 +466,12 @@ try {
                              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                            </div>`)
                     .fadeIn();
+                // Auto-ocultar después de 5 segundos
+                setTimeout(() => { messageContainer.fadeOut(); }, 5000);
             }
-
-            function resetSelect(selector, message) {
-                $(selector).html(`<option value="">${message}</option>`).prop('disabled', true);
+            
+            function resetSelect(selector, message) { 
+                $(selector).html(`<option value="">${message}</option>`).prop('disabled', true); 
             }
             
             function populateSelect(selector, data, keyId, keyName, firstMessage) {
@@ -442,6 +487,7 @@ try {
                 }
             }
 
+            // --- Función para buscar MESAS ---
             function buscarMesas() {
                 const idCiclo = $('#idCiclo').val();
                 const idTurno = $('#idTurno').val();
@@ -488,9 +534,63 @@ try {
                     });
                 }
             }
+            
+            // --- Función: Buscar Inscripciones Previas ---
+            function buscarInscripcionesTurno() {
+                const idAlumno = $('#idAlumno').val();
+                const idTurno = $('#idTurno').val();
+                const idCiclo = $('#idCiclo').val();
 
-            // --- Control de Filtros Dependientes ---
+                tablaInscripcionesTurnoBody.empty();
+                containerInscripcionesTurno.hide();
+                noInscripcionesTurno.hide();
 
+                if (idAlumno && idTurno && idCiclo) {
+                    spinnerInscripcionesTurno.show();
+                    $.post(ajaxUrl, {
+                        action: 'load_inscripciones_turno',
+                        idAlumno: idAlumno,
+                        idTurno: idTurno,
+                        idCiclo: idCiclo
+                    }, function(response) {
+                        spinnerInscripcionesTurno.hide();
+                        if (response.success && response.data.length > 0) {
+                            response.data.forEach(inscripcion => {
+                                const row = `
+                                    <tr id="inscripcion-row-${inscripcion.idInscripcion}">
+                                        <td>${inscripcion.nombreMateria}</td>
+                                        <td>${inscripcion.fecha}</td>
+                                        <td>${inscripcion.hora}</td>
+                                        <td>${inscripcion.condicion}</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm btn-eliminar-inscripcion" 
+                                                    data-id-inscripcion="${inscripcion.idInscripcion}"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Eliminar esta inscripción">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                                tablaInscripcionesTurnoBody.append(row);
+                            });
+                            containerInscripcionesTurno.show();
+                            // Inicializar tooltips (si usas Bootstrap 5)
+                            $('[data-bs-toggle="tooltip"]').tooltip();
+                        } else if (response.success) {
+                            noInscripcionesTurno.show();
+                        } else {
+                            showMessage('danger', response.message || 'Error al cargar inscripciones previas.');
+                        }
+                    }, 'json').fail(function() {
+                        spinnerInscripcionesTurno.hide();
+                        showMessage('danger', 'Error de conexión al buscar inscripciones previas.');
+                    });
+                }
+            }
+
+
+            // --- Control de Filtros Dependientes (Lógica de Cursos y Materias) ---
             $('#idPlan, #idCiclo').on('change', function() {
                 const idPlan = $('#idPlan').val();
                 const idCiclo = $('#idCiclo').val();
@@ -498,7 +598,6 @@ try {
                 resetSelect('#idCurso', '(Seleccione Plan y Ciclo)');
                 resetSelect('#idMateria', '(Seleccione Curso)');
                 tablaMesasBody.empty(); containerMesas.hide(); noMesas.hide(); btnInscribir.prop('disabled', true);
-
 
                 if (idPlan && idCiclo) {
                     showLoader();
@@ -523,10 +622,8 @@ try {
             $('#idCurso').on('change', function() {
                 const idPlan = $('#idPlan').val(); 
                 const idCurso = $(this).val();
-
                 resetSelect('#idMateria', '(Seleccione Curso)');
                 tablaMesasBody.empty(); containerMesas.hide(); noMesas.hide(); btnInscribir.prop('disabled', true);
-
 
                 if (idPlan && idCurso) {
                     showLoader();
@@ -547,66 +644,57 @@ try {
                     });
                 }
             });
-
+            
+            // --- Triggers ---
+            
+            // 1. Cuando cambian los filtros de mesa, buscar mesas
             $('#idCiclo, #idTurno, #idMateria').on('change', buscarMesas);
+            
+            // 2. Cuando cambian los filtros de turno, buscar inscripciones previas
+            $('#idCiclo, #idTurno').on('change', buscarInscripcionesTurno);
 
+            // 3. Habilitar botón al seleccionar mesa
             $(document).on('change', 'input[name="idFechaExamen"]', function() {
                 if ($(this).is(':checked')) {
                     btnInscribir.prop('disabled', false);
                 }
             });
 
-            // --- LÓGICA DE INSCRIPCIÓN (con Modales) ---
+            // --- Lógica de Inscripción (Modal y Botón) ---
 
-            // 1. Click en el botón principal "Inscribir Alumno"
+            // 1. Botón "Inscribir" (Validación)
             $('#btnInscribir').on('click', function() {
-                // Validar campos *antes* de mostrar el modal
                 const idCondicion = $('#idCondicion').val();
                 const idFechaExamen = $('input[name="idFechaExamen"]:checked').val();
-
                 let isValid = true;
                 let errorMsg = 'Faltan datos. Asegúrese de seleccionar ';
                 let errors = [];
-
-                if (!idFechaExamen) {
-                    errors.push('una mesa');
-                    isValid = false;
-                }
-                if (!idCondicion) {
-                    errors.push('la condición');
-                    isValid = false;
-                }
-
+                if (!idFechaExamen) { errors.push('una mesa'); isValid = false; }
+                if (!idCondicion) { errors.push('la condición'); isValid = false; }
                 if (!isValid) {
                     errorMsg += errors.join(' y ') + '.';
-                    showMessage('warning', errorMsg); // Usa el 'alert' para esto
-                    return; // No mostrar el modal si falta algo
+                    showMessage('warning', errorMsg);
+                    return;
                 }
-                
-                // Si la validación pasa, mostrar el modal de CONFIRMACIÓN
                 modalConfirm.show();
             });
 
-            // 2. Click en el botón "Confirmar Inscripción" DENTRO del modal
+            // 2. Botón "Confirmar Inscripción" (AJAX)
             btnConfirmarInscripcion.on('click', function() {
-                // Ocultar el modal de confirmación
                 modalConfirm.hide();
 
-                // Recolectar datos
                 const idAlumno = $('#idAlumno').val();
                 const idCiclo = $('#idCiclo').val();
                 const idMateria = $('#idMateria').val();
                 const idCondicion = $('#idCondicion').val();
                 const idFechaExamen = $('input[name="idFechaExamen"]:checked').val();
-                // *** NUEVO: Obtener el texto de la condición ***
                 const inscripcionTexto = $('#idCondicion option:selected').text();
+                const idTurno = $('#idTurno').val(); // <-- Se envía el idTurno
 
-                // Mostrar spinner y deshabilitar botones
                 showLoader();
                 btnInscribir.prop('disabled', true); 
                 btnConfirmarInscripcion.prop('disabled', true);
 
-                // Ejecutar el AJAX con los datos (incluyendo el texto)
                 $.post(ajaxUrl, {
                     action: 'inscribir',
                     idAlumno: idAlumno,
@@ -614,47 +702,94 @@ try {
                     idCiclo: idCiclo,
                     idFechaExamen: idFechaExamen,
                     idCondicion: idCondicion,
-                    inscripcionTexto: inscripcionTexto // *** NUEVO ***
+                    inscripcionTexto: inscripcionTexto,
+                    idTurno: idTurno 
                 }, function(response) {
                     hideLoader();
-                    btnConfirmarInscripcion.prop('disabled', false); // Reactivar botón del modal
+                    btnConfirmarInscripcion.prop('disabled', false);
 
                     if (response.success) {
-                        // --- MOSTRAR MODAL DE ÉXITO ---
                         resultModalLabel.text('Inscripción Exitosa');
                         resultModalBody.html('<i class="bi bi-check-circle-fill text-success me-2"></i>' + response.message);
                         modalResult.show();
                         
-                        // Resetear tabla
+                        // Actualizar tabla de inscripciones
+                        buscarInscripcionesTurno(); 
+                        // Resetear tabla de mesas
                         tablaMesasBody.empty();
                         containerMesas.hide();
                         noMesas.hide();
-                        // btnInscribir permanece deshabilitado
+                        btnInscribir.prop('disabled', true);
+                        
                     } else {
-                        // --- MOSTRAR MODAL DE ERROR ---
-                        resultModalLabel.text('Inscripción Rechazada');
-                        // Formatear el mensaje para incluir saltos de línea (de $materiasAdeuda)
+                        resultModalLabel.text('Error en la Inscripción');
                         const formattedMessage = (response.message || 'Error desconocido.').replace(/\n/g, '<br>');
                         resultModalBody.html('<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>' + formattedMessage);
                         modalResult.show();
                         
-                        // Habilitamos el botón principal de nuevo si falló
-                        btnInscribir.prop('disabled', false);
+                        // Habilitar botón si el error no es "ya inscripto"
+                        if (!response.message.includes('ya se encuentra inscripto')) {
+                             btnInscribir.prop('disabled', false);
+                        }
                     }
-                }, 'json').fail(function() {
+                }, 'json').fail(function(jqXHR) {
                     hideLoader();
                     btnInscribir.prop('disabled', false); 
                     btnConfirmarInscripcion.prop('disabled', false);
-                    
-                    // --- MOSTRAR MODAL DE ERROR DE CONEXIÓN ---
                     resultModalLabel.text('Error de Conexión');
-                    resultModalBody.html('<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Error de conexión. No se pudo completar la inscripción.');
+                    let errorMsg = 'Error de conexión. No se pudo completar la inscripción.';
+                    if (jqXHR.responseText) {
+                        errorMsg += '<br><br><code>' + jqXHR.responseText.substring(0, 200) + '...</code>';
+                    }
+                    resultModalBody.html('<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>' + errorMsg);
                     modalResult.show();
+                });
+            });
+
+            // --- Lógica de Eliminación ---
+
+            // 1. Click en el botón de basura
+            $('#tablaInscripcionesTurnoBody').on('click', '.btn-eliminar-inscripcion', function() {
+                const idInscripcion = $(this).data('id-inscripcion');
+                
+                if (idInscripcion) {
+                    // Guardamos el ID en el botón del modal
+                    btnConfirmarEliminacion.data('id-a-eliminar', idInscripcion);
+                    // Abrimos el modal
+                    modalDelete.show();
+                }
+            });
+
+            // 2. Click en el botón "Eliminar Inscripción" del modal
+            btnConfirmarEliminacion.on('click', function() {
+                const idInscripcion = $(this).data('id-a-eliminar');
+                
+                if (!idInscripcion) return;
+
+                modalDelete.hide(); 
+                showLoader(); 
+
+                $.post(ajaxUrl, {
+                    action: 'eliminar_inscripcion',
+                    idInscripcion: idInscripcion
+                }, function(response) {
+                    hideLoader();
+                    if (response.success) {
+                        showMessage('success', response.message);
+                        // Refrescar la tabla de inscripciones
+                        buscarInscripcionesTurno();
+                        // Refrescar la tabla de mesas (por si el borrado habilita una nueva inscripción)
+                        buscarMesas(); 
+                    } else {
+                        showMessage('danger', response.message || 'Error al eliminar.');
+                    }
+                }, 'json').fail(function() {
+                    hideLoader();
+                    showMessage('danger', 'Error de conexión. No se pudo eliminar la inscripción.');
                 });
             });
 
         });
     </script>
 </body>
-
 </html>

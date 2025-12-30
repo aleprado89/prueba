@@ -15,6 +15,8 @@ include '../funciones/analisisestado.php';
 include '../funciones/verificarSesion.php';
 // die("4. Llegó después de verificarSesion.php"); // Prueba de depuración 4
 
+include '../inicio/variablesParticulares.php';
+
 $doc_legajo = $_SESSION['doc_legajo'] ?? null;
 $nombreDoc = $_SESSION['doc_apellido'] . ", " . $_SESSION['doc_nombre'];
 
@@ -89,6 +91,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
+
+
+$hoy = new DateTime();
+$anio = $hoy->format("Y");
+$fechaLimite = new DateTime("$anio-11-15");
+
+// Verificamos si mostrar columna
+$mostrarEstadoParcial = ($hoy >= $fechaLimite);
+
+
 
 // Este código se ejecuta cuando la página se carga vía GET (o si ninguna de las condiciones POST se cumplen)
 $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
@@ -289,8 +301,10 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
     </div>
 </th>
 <!-- END NEW COLUMN -->
-<th scope="col">Estado Parcial</th>
-<th scope="col">Asist</th>
+<?php if ($mostrarEstadoParcial): ?>
+    <th scope="col">Estado Parcial</th>
+  <?php endif; ?>
+  <th scope="col">Asist</th>
 <th scope="col">Abandonó Cursado</th>
 </tr>
 </thead>
@@ -453,8 +467,10 @@ function validarYEnviarCalif(celda, columna, idAlumno) {
 <?php echo $listado['examenIntegrador']; ?>
 </td>
 <!-- END NEW BODY CELL -->
-<td class="border" id="estadoCursado" ><?php echo $listado['estadoCursado']; ?></td>
-<td class="border"><?php echo $listado['asistencia']; ?></td>
+<?php if ($mostrarEstadoParcial): ?>
+    <td class="border" id="estadoParcial"><?php echo $listado['estadoParcial']; ?></td>
+  <?php endif; ?>
+  <td class="border"><?php echo $listado['asistencia']; ?></td>
 <td class="border text-center">
 <?php
 if ($listado['estado'] == 'Abandonó Cursado') {
