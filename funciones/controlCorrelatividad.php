@@ -526,61 +526,108 @@ function inscripcionExamenEstado($inscripcion, $estadoNumero, $nombreMateria) {
 function inscripcionExamenControl($conexion, $idAlumno, $idUnicoMateria, $inscripcion, $masivo) {
     global $materiasAdeuda;
     $habilitacionInscripcion = false;
-    $existeCursado = false;    
+    $existeCursado = false; 
+    $materiaAprobada = false;   
     $tipoInscripcion = 1;
 
-    if (!$masivo){
-        $consulta = "SELECT *
-        from calificacionesterciario c inner join materiaterciario m
-        on m.idMateria = c.idMateria
-        where m.idUnicoMateria = ? and c.idAlumno = ?";
+    //agregar control de aprobado para que no se inscriba
+    $consulta = "SELECT count(*)
+    from calificacionesterciario c inner join materiaterciario m
+    on m.idMateria = c.idMateria
+    where m.idUnicoMateria = ? and c.idAlumno = ? and c.materiaAprobada = 1";
 
-        $stmt = $conexion->prepare($consulta);
-        $stmt->bind_param("ii", $idUnicoMateria, $idAlumno);
-        $stmt->execute();
-        $calif = $stmt->get_result();
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("ii", $idUnicoMateria, $idAlumno);
+    $stmt->execute();
+    $aprobada = $stmt->get_result();
 
-        $i = 0;
-        if (!empty($calif)) {
-            while ($data = mysqli_fetch_array($calif)) {
-
-                $existeCursado = true;
-
-                $estadoCursadoNumero = $data['estadoCursadoNumero'];
-                $nombreMateria = $data['nombre'];
-
-                $habilitadoEstado = inscripcionExamenEstado($inscripcion, $estadoCursadoNumero, $nombreMateria);
-                if ($habilitadoEstado[0]) { break; }
-                $i++;
+    if (!empty($aprobada)) 
+    {
+        while ($data = mysqli_fetch_array($aprobada)) 
+        {
+            $aprobadoExiste = 0;
+            $aprobadoExiste = $data[0];
+            if ($aprobadoExiste > 0)
+            {
+                $materiaAprobada = true;                
             }
         }
-    } else { $existeCursado = true; $habilitadoEstado[0] = true; }
-    if ($existeCursado)
+    }
+
+    if (!$materiaAprobada)
     {
-        if ($habilitadoEstado[0])
+        if (!$masivo)
         {
-            $habilitacionCorrelatividades = controlCorrelatividades($idUnicoMateria, $idAlumno, $tipoInscripcion);
-            if ($habilitacionCorrelatividades) 
-                { $habilitacionInscripcion = true; }
-            else
+            $consulta = "SELECT *
+            from calificacionesterciario c inner join materiaterciario m
+            on m.idMateria = c.idMateria
+            where m.idUnicoMateria = ? and c.idAlumno = ?";
+
+            $stmt = $conexion->prepare($consulta);
+            $stmt->bind_param("ii", $idUnicoMateria, $idAlumno);
+            $stmt->execute();
+            $calif = $stmt->get_result();
+
+            $i = 0;
+            if (!empty($calif)) 
+            {
+                while ($data = mysqli_fetch_array($calif)) 
+                {
+                    $existeCursado = true;
+
+                    $estadoCursadoNumero = $data['estadoCursadoNumero'];
+                    $nombreMateria = $data['nombre'];
+
+                    $habilitadoEstado = inscripcionExamenEstado($inscripcion, $estadoCursadoNumero, $nombreMateria);
+                    if ($habilitadoEstado[0]) { break; }
+                    $i++;
+                }
+            }
+        } 
+        else 
+        { 
+            $existeCursado = true; $habilitadoEstado[0] = true; 
+        }
+        if ($existeCursado) 
+       {
+            if ($habilitadoEstado[0]) 
+            {
+                $habilitacionCorrelatividades = controlCorrelatividades($idUnicoMateria, $idAlumno, $tipoInscripcion);
+                if ($habilitacionCorrelatividades) 
+                { 
+                    $habilitacionInscripcion = true; 
+                }
+                else
                 {
                     $habilitacionInscripcion = false; 
                     $salida = $materiasAdeuda;
                 }
-        } 
-        else
-        {
-            $habilitacionInscripcion = false; 
-            $salida = $habilitadoEstado[1];
+            } 
+            else
+            {
+                $habilitacionInscripcion = false; 
+                $salida = $habilitadoEstado[1];
+            }
         }
+        else 
+        { 
+            $habilitacionInscripcion = false; 
+            $salida = "El alumno no tiene registro de Cursado.";
+        }
+    }
+    else
+    {
+        $habilitacionInscripcion = false;
+        $salida = "El alumno ya tiene aprobada la materia.";
+    }
+    if ($habilitacionInscripcion)
+    { 
+        return $habilitacionInscripcion; 
     }
     else 
     { 
-        $habilitacionInscripcion = false; 
-        $salida = "El alumno no tiene registro de Cursado.";
+        return $salida; 
     }
-    if ($habilitacionInscripcion){ return $habilitacionInscripcion; }
-    else { return $salida; }
 }
 
 
