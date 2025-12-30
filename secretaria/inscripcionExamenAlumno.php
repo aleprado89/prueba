@@ -98,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmtUnico->close();
 
                 // 2. Ejecutar el control de correlatividad y estado
-                $control_result = inscripcionExamenControl($conn, $idAlumno, $idUnicoMateria, $inscripcionTexto);
+                $control_result = inscripcionExamenControl($conn, $idAlumno, $idUnicoMateria, $inscripcionTexto,false);
 
                 // 3. Evaluar el resultado del control
                 if ($control_result === true) {
