@@ -1,170 +1,108 @@
 <?php
+// ==============================================================================
+// NOMBRE DEL ARCHIVO: inscripcionExamenMasivo.php
+// OBJETIVO: Inscribir masivamente alumnos a una mesa de examen.
+// ESTILO: Bootstrap + Bootswatch Materia (SistemasEscolares)
+// ==============================================================================
 
-// Incluir el script de verificación de sesión
 include_once '../funciones/verificarSesion.php';
 
-// Habilitar reporte de errores
+// Configuración de errores
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL & ~E_DEPRECATED);
 
-// Incluir la conexión a la base de datos y consultas
 include_once '../inicio/conexion.php';
 include_once '../funciones/consultas.php';
 
-// Incluir control de correlatividad e inicializar variable global de reporte
+// Inicializar variable para control de correlatividades
 $materiasAdeuda = ''; 
 include_once '../funciones/controlCorrelatividad.php';
 
-
-// --- MANEJO DE SOLICITUDES AJAX (POST) ---
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// ==============================================================================
+// BLOQUE LÓGICO: AJAX (Backend)
+// ==============================================================================
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
     header('Content-Type: application/json'); 
-    $response = ['success' => false, 'data' => [], 'message' => 'Acción no válida.'];
-    $action = $_POST['action'] ?? '';
+    $response = ['success' => false, 'message' => 'Acción no válida.'];
 
     try {
-        switch ($action) {
+        switch ($_POST['action']) {
             
-            // 1. CARGA DE COMBOS (Igual a inscripcionExamenAlumno)
+            // 1. Cargar Cursos
             case 'load_cursos':
                 $idPlan = filter_input(INPUT_POST, 'idPlan', FILTER_VALIDATE_INT);
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 if ($idPlan && $idCiclo) {
                     $response = ['success' => true, 'data' => buscarCursosPlanCiclo($conn, $idPlan, $idCiclo)];
-                } else { 
-                    $response['message'] = 'ID de Plan o Ciclo no válido.'; 
                 }
                 break;
 
+            // 2. Cargar Materias
             case 'load_materias':
                 $idPlan = filter_input(INPUT_POST, 'idPlan', FILTER_VALIDATE_INT);
                 $idCurso = filter_input(INPUT_POST, 'idCurso', FILTER_VALIDATE_INT);
                 if ($idPlan && $idCurso) {
                     $response = ['success' => true, 'data' => materiasPlanCurso($conn, $idPlan, $idCurso)];
-                } else { 
-                    $response['message'] = 'ID de Plan o Curso no válido.'; 
                 }
                 break;
 
+            // 3. Cargar Mesas Disponibles
             case 'load_mesas':
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idTurno = filter_input(INPUT_POST, 'idTurno', FILTER_VALIDATE_INT);
                 $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
                 if ($idCiclo && $idTurno && $idMateria) {
                     $response = ['success' => true, 'data' => filtrarMesasExamen($conn, $idCiclo, $idTurno, null, null, $idMateria)];
-                } else { 
-                    $response['message'] = 'Faltan datos para buscar mesas.'; 
                 }
                 break;
 
-            // 2. BÚSQUEDA DE CANDIDATOS (Lógica de filtrado)
+            // 4. Buscar Alumnos Candidatos
             case 'buscar_candidatos':
-                $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
+                $idUnicoMateria = $_POST['idUnicoMateria'] ?? ''; 
                 $idCurso = filter_input(INPUT_POST, 'idCurso', FILTER_VALIDATE_INT);
-                $condicionTexto = $_POST['condicionTexto'] ?? ''; // 'Regular', 'Libre'
+                $condicionTexto = $_POST['condicionTexto'] ?? ''; 
 
-                if (!$idMateria || !$idCurso || !$condicionTexto) {
-                    $response['message'] = 'Faltan datos para buscar alumnos.';
+                if (!$idUnicoMateria || !$idCurso || !$condicionTexto) {
+                    $response['message'] = 'Faltan datos para buscar candidatos.';
                     break;
                 }
 
-                // A. Obtenemos idUnicoMateria
-                $stmtUnico = $conn->prepare("SELECT idUnicoMateria FROM materiaterciario WHERE idMateria = ?");
-                $stmtUnico->bind_param("i", $idMateria);
-                $stmtUnico->execute();
-                $resUnico = $stmtUnico->get_result();
-                if ($rowU = $resUnico->fetch_assoc()) {
-                    $idUnicoMateria = $rowU['idUnicoMateria'];
-                } else {
-                    $response['message'] = 'Materia no encontrada.';
-                    break;
-                }
-                $stmtUnico->close();
-
-                // B. Obtenemos TODOS los alumnos del curso (Necesitamos esta función en consultas.php o usamos una query directa aquí solo por lectura)
-                // Nota: Usaré una query directa aquí para no pedirte modificar consultas.php ahora, pero idealmente va allá.
-                $sqlAlumnos = "SELECT a.idAlumno, p.dni, p.apellido, p.nombre 
-                               FROM alumnosterciario a 
-                               JOIN persona p ON a.idPersona = p.idPersona 
-                               WHERE a.idCurso = ? ORDER BY p.apellido ASC";
-                $stmtAlu = $conn->prepare($sqlAlumnos);
-                $stmtAlu->bind_param("i", $idCurso);
-                $stmtAlu->execute();
-                $resAlumnos = $stmtAlu->get_result();
+                $alumnosEncontrados = buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condicionTexto);
                 
                 $candidatos = [];
-
-                // C. FILTRADO: Verificamos uno por uno si cumplen la condición "inscripcionExamenEstado"
-                while ($alu = $resAlumnos->fetch_assoc()) {
-                    // Esta función viene de controlCorrelatividad.php
-                    // Devuelve TRUE si el estado numérico del alumno coincide con la condición solicitada (ej: Regular)
-                    $esApto = inscripcionExamenEstado($alu['idAlumno'], $idUnicoMateria, $condicionTexto);
-                    
-                    if ($esApto === true) {
-                        // Buscamos el estado numérico solo para mostrarlo en la tabla (informativo)
-                        // Reutilizo lógica interna, idealmente esto debería venir optimizado
-                        $estadoNum = obtenerIdEstadoCursada($conn, $alu['idAlumno'], $idUnicoMateria); // Función auxiliar definida abajo o en consultas
-                        
-                        $candidatos[] = [
-                            'idAlumno' => $alu['idAlumno'],
-                            'dni' => $alu['dni'],
-                            'nombreCompleto' => $alu['apellido'] . ', ' . $alu['nombre'],
-                            'estado' => $estadoNum ?? 'S/D'
-                        ];
-                    }
+                foreach ($alumnosEncontrados as $alu) {
+                    $candidatos[] = [
+                        'idAlumno' => $alu['idAlumno'],
+                        'dni' => $alu['dni'],
+                        'nombreCompleto' => $alu['apellido'] . ', ' . $alu['nombre'],
+                        'estado' =>  ($alu['estadoCursado'] ?? '-') 
+                    ];
                 }
-                
-                $response = ['success' => true, 'data' => $candidatos, 'idUnicoMateria' => $idUnicoMateria];
+                $response = ['success' => true, 'data' => $candidatos];
                 break;
 
-            // 3. EJECUCIÓN MASIVA
+            // 5. EJECUCIÓN DE INSCRIPCIÓN MASIVA
             case 'inscribir_masivo':
-                $listaAlumnos = json_decode($_POST['listaAlumnos'], true); // Array de IDs
-                $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
-                $idUnicoMateria = $_POST['idUnicoMateria']; // Viene del hidden
-                $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
-                $idTurno = filter_input(INPUT_POST, 'idTurno', FILTER_VALIDATE_INT);
+                $listaAlumnos = $_POST['listaAlumnos'] ?? [];
                 $idFechaExamen = filter_input(INPUT_POST, 'idFechaExamen', FILTER_VALIDATE_INT);
-                $idCondicion = filter_input(INPUT_POST, 'idCondicion', FILTER_VALIDATE_INT);
-                $condicionTexto = $_POST['condicionTexto'];
+                $condicionTexto = $_POST['condicionTexto'] ?? '';
+
+                if (!is_array($listaAlumnos) && !empty($listaAlumnos)) {
+                    $decoded = json_decode($listaAlumnos, true);
+                    if (json_last_error() === JSON_ERROR_NONE) $listaAlumnos = $decoded;
+                }
 
                 if (empty($listaAlumnos) || !$idFechaExamen) {
-                    $response['message'] = 'Datos incompletos para la inscripción.';
-                    break;
+                    $response = ['success' => false, 'message' => 'Datos incompletos.'];
+                } else {
+                    // Llama a la función en consultas.php que devuelve el array 'detalles'
+                    $resultado = inscribirAlumnosMasivo($conn, $listaAlumnos, $idFechaExamen, $condicionTexto);
+                    $response = $resultado;
                 }
-
-                $resultados = [];
-
-                foreach ($listaAlumnos as $idAlumno) {
-                    // Resetear variable global de errores de correlatividad
-                    $materiasAdeuda = ''; 
-
-                    // A. CONTROL DE SEGURIDAD (Estado + Correlativas)
-                    // Esta función es el "Director de Orquesta" que definimos anteriormente
-                    $control = inscripcionExamenControl($conn, $idAlumno, $idUnicoMateria, $condicionTexto);
-
-                    if ($control === true) {
-                        // B. INSCRIPCIÓN EFECTIVA
-                        // Usamos la misma función de consultas.php que usas en la inscripción individual
-                        $resInscripcion = inscribirAlumnoExamen($conn, $idAlumno, $idMateria, $idCiclo, $idFechaExamen, $idCondicion, $idTurno);
-                        
-                        if ($resInscripcion['success']) {
-                            $resultados[] = ['id' => $idAlumno, 'status' => 'OK', 'msg' => 'Inscripto correctamente'];
-                        } else {
-                            $resultados[] = ['id' => $idAlumno, 'status' => 'ERROR', 'msg' => $resInscripcion['message']];
-                        }
-                    } else {
-                        // Falló Correlatividades o Estado
-                        $resultados[] = ['id' => $idAlumno, 'status' => 'RECHAZADO', 'msg' => $control];
-                    }
-                }
-
-                $response = ['success' => true, 'resultados' => $resultados];
                 break;
         }
     } catch (Throwable $e) {
-        error_log("Error FATAL en inscripcionExamenMasivo.php: " . $e->getMessage());
         $response = ['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()];
     }
 
@@ -172,37 +110,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
 }
 
-// --- FUNCIONES AUXILIARES PHP (Para no romper si faltan en consultas.php) ---
-// Si ya la tienes en consultas.php, puedes borrarla de aquí.
-if (!function_exists('obtenerIdEstadoCursada')) {
-    function obtenerIdEstadoCursada($conn, $idAlumno, $idUnicoMateria) {
-        $sql = "SELECT c.estadoCursadoNumero 
-                FROM calificacionesterciario c
-                INNER JOIN materiaterciario m ON c.idMateria = m.idMateria
-                WHERE c.idAlumno = ? AND m.idUnicoMateria = ? 
-                LIMIT 1";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("is", $idAlumno, $idUnicoMateria);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        if ($row = $res->fetch_assoc()) return $row['estadoCursadoNumero'];
-        return null;
-    }
-}
-
-
-// --- LÓGICA DE CARGA DE PÁGINA (GET) ---
-// Cargar selectores iniciales
+// ==============================================================================
+// BLOQUE VISTA HTML
+// ==============================================================================
 $ciclos = []; $turnos = []; $planes = []; $condicionesExamen = [];
 try {
     $ciclos = levantarCiclosLectivos($conn);
     $turnos = obtenerTodosTurnos($conn);
-    // Para planes, traemos todos los planes activos (ya que no filtramos por alumno aun)
-    $planes = buscarTodosPlanes($conn); // O usar funcion buscarPlanes generica si existe
-    
+    $planes = buscarTodosPlanes($conn); 
     $condicionesExamen = obtenerCondicionesExamen($conn); 
 } catch (Exception $e) {
-    die("Error al cargar datos iniciales.");
+    die("Error al cargar combos iniciales.");
 }
 ?>
 
@@ -212,21 +130,69 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscripción Masiva - Secretaría</title>
+    
     <link rel="stylesheet" href="../css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/material/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/material/bootstrap.min.css"> 
     <link rel="stylesheet" href="../css/estilos.css">
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <style>
-        #loader { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; }
-        .fila-alumno-borrada { text-decoration: line-through; color: #dc3545; background-color: #f8d7da; }
-        .step-container { border-left: 4px solid #007bff; padding-left: 15px; margin-bottom: 20px; }
+        /* Estilos específicos para esta página manteniendo la línea gráfica */
+        #loader { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.85); 
+            z-index: 9999; 
+            justify-content: center; 
+            align-items: center; 
+            flex-direction: column;
+        }
+        
+        .step-section { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #2fa4e7; /* Color primario Materia */
+            padding: 20px; 
+            margin-bottom: 25px; 
+            border-radius: 4px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .mesa-card { 
+            transition: all 0.2s ease-in-out; 
+            border: 1px solid #dee2e6; 
+            cursor: pointer; 
+            background-color: #fff;
+        }
+        .mesa-card:hover { 
+            background-color: #e9ecef; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .mesa-card.active { 
+            background-color: #e7f1ff; 
+            border-color: #2fa4e7; 
+            box-shadow: 0 0 0 2px rgba(47, 164, 231, 0.5); 
+        }
+
+        .table-container-custom {
+            max-height: 450px; 
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        /* Ajuste para modal de resultados */
+        .resultado-icon { font-size: 1.2rem; margin-right: 8px; vertical-align: middle; }
     </style>
 </head>
 <body>
+
     <div id="loader">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Procesando...</span>
-        </div>
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+        <h5 class="mt-3 text-primary fw-bold">Procesando solicitud...</h5>
     </div>
 
     <?php include '../funciones/menu_secretaria.php'; ?>
@@ -234,146 +200,129 @@ try {
     <div class="container-fluid fondo">
         <br>
         <div class="container">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-                <li class="breadcrumb-item active">Inscripción Masiva</li>
-            </ol>
+            
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
+                    <li class="breadcrumb-item active">Inscripción Masiva</li>
+                </ol>
+            </nav>
 
-            <div id="messageContainer" class="mb-3" style="display: none;"></div>
+            <div id="alertContainer"></div>
 
-            <div class="card p-4 mb-4">
-                <h4 class="mb-3 text-primary"><i class="bi bi-people-fill"></i> Inscripción Masiva a Exámenes</h4>
-                <p class="text-muted">Seleccione los parámetros para filtrar alumnos y la mesa de destino.</p>
-                <hr>
-
-                <div class="step-container">
-                    <h5>1. Configuración de Búsqueda y Mesa</h5>
-                    <form id="formFiltros">
-                        <div class="row mb-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
-                                <select class="form-select" id="idCiclo" required>
-                                    <option value="">Seleccione...</option>
-                                    <?php foreach ($ciclos as $c): ?>
-                                        <option value="<?= $c['idCicloLectivo'] ?>"><?= $c['anio'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Turno Examen <span class="text-danger">*</span></label>
-                                <select class="form-select" id="idTurno" required>
-                                    <option value="">Seleccione...</option>
-                                    <?php foreach ($turnos as $t): ?>
-                                        <option value="<?= $t['idTurno'] ?>"><?= $t['nombre'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
-                                <select class="form-select" id="idPlan" required>
-                                    <option value="">Seleccione...</option>
-                                    <?php foreach ($planes as $p): ?>
-                                        <option value="<?= $p['idPlan'] ?>"><?= $p['nombre'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                             <div class="col-md-3">
-                                <label class="form-label">Condición Inscripción <span class="text-danger">*</span></label>
-                                <select class="form-select" id="idCondicion" required>
-                                    <option value="">Seleccione...</option>
-                                    <?php foreach ($condicionesExamen as $ce): ?>
-                                        <option value="<?= $ce['idCondicion'] ?>"><?= $ce['condicion'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-5">
-                                <label class="form-label">Curso <span class="text-danger">*</span></label>
-                                <select class="form-select" id="idCurso" disabled>
-                                    <option value="">(Seleccione Plan y Ciclo)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label">Materia <span class="text-danger">*</span></label>
-                                <select class="form-select" id="idMateria" disabled>
-                                    <option value="">(Seleccione Curso)</option>
-                                </select>
-                                <input type="hidden" id="idUnicoMateria">
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-info text-white w-100" id="btnBuscarAlumnos" disabled>
-                                    <i class="bi bi-search"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                    
-                    <div id="contenedorMesas" style="display:none;" class="mt-3 bg-light p-3 border rounded">
-                        <h6><i class="bi bi-calendar-event"></i> Seleccione la Mesa de Examen:</h6>
-                        <div id="listaMesas"></div>
-                    </div>
-                    <div id="noMesas" style="display:none;" class="alert alert-warning mt-2">
-                        No hay mesas configuradas para estos filtros.
-                    </div>
+            <div class="card shadow-sm mb-5">
+                <div class="card-header bg-white border-bottom">
+                    <h3 class="text-primary mb-0">
+                        <i class="bi bi-people-fill"></i> Inscripción Masiva a Exámenes
+                    </h3>
                 </div>
+                
+                <div class="card-body">
+                    
+                    <div class="step-section">
+                        <h5 class="text-primary mb-3"><i class="bi bi-1-circle"></i> Seleccionar Filtros</h5>
+                        <form id="formFiltros">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Ciclo Lectivo</label>
+                                    <select class="form-select" id="idCiclo">
+                                        <option value="">Seleccione...</option>
+                                        <?php foreach ($ciclos as $c): echo "<option value='{$c['idCicloLectivo']}'>{$c['anio']}</option>"; endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Turno Examen</label>
+                                    <select class="form-select" id="idTurno">
+                                        <option value="">Seleccione...</option>
+                                        <?php foreach ($turnos as $t): echo "<option value='{$t['idTurno']}'>{$t['nombre']}</option>"; endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Plan de Estudio</label>
+                                    <select class="form-select" id="idPlan">
+                                        <option value="">Seleccione...</option>
+                                        <?php foreach ($planes as $p): echo "<option value='{$p['idPlan']}'>{$p['nombre']}</option>"; endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Condición Inscripción</label>
+                                    <select class="form-select" id="idCondicion">
+                                        <option value="">Seleccione...</option>
+                                        <?php foreach ($condicionesExamen as $ce): echo "<option value='{$ce['idCondicion']}'>{$ce['condicion']}</option>"; endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold">Curso</label>
+                                    <select class="form-select" id="idCurso" disabled><option value="">(Seleccione Plan y Ciclo)</option></select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold">Materia</label>
+                                    <select class="form-select" id="idMateria" disabled><option value="">(Seleccione Curso)</option></select>
+                                    <input type="hidden" id="idUnicoMateria"> 
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-primary w-100 shadow-sm" id="btnBuscar" disabled>
+                                        <i class="bi bi-search"></i> BUSCAR
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
-                <div id="paso2Container" style="display:none;">
-                    <div class="step-container">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5>2. Alumnos Candidatos</h5>
-                            <span class="badge bg-secondary" id="contadorAlumnos">0 alumnos</span>
-                        </div>
-                        <p class="small text-muted">A continuación se muestran los alumnos que cumplen la condición de cursado. Puede eliminar los que no desee inscribir.</p>
+                    <div id="seccionMesas" style="display:none;" class="step-section">
+                        <h5 class="text-primary mb-3"><i class="bi bi-2-circle"></i> Seleccionar Mesa de Destino</h5>
+                        <p class="text-muted small">Haga clic sobre la mesa correspondiente para seleccionarla.</p>
                         
-                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                            <table class="table table-striped table-hover table-sm" id="tablaCandidatos">
-                                <thead class="table-dark">
+                        <div id="contenedorMesas" class="row g-3"></div>
+                        
+                        <div id="msgNoMesas" class="alert alert-warning mt-2 shadow-sm" style="display:none;">
+                            <i class="bi bi-exclamation-triangle-fill"></i> No existen mesas configuradas para esta materia en el turno y ciclo seleccionados.
+                        </div>
+                    </div>
+
+                    <div id="seccionAlumnos" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-primary mb-0"><i class="bi bi-3-circle"></i> Alumnos Aptos para Inscribir</h5>
+                            <span class="badge bg-secondary fs-6">Total: <span id="badgeCount">0</span></span>
+                        </div>
+                        
+                        <div class="table-container-custom">
+                            <table class="table table-striped table-hover mb-0" id="tablaAlumnos">
+                                <thead class="table-dark sticky-top">
                                     <tr>
                                         <th>DNI</th>
                                         <th>Apellido y Nombre</th>
-                                        <th>Estado (Cód)</th>
-                                        <th class="text-center">Acción</th>
+                                        <th>Estado Cursado</th>
+                                        <th class="text-center" style="width: 100px;">Acción</th>
                                     </tr>
                                 </thead>
-                                <tbody></tbody>
+                                <tbody>
+                                    </tbody>
                             </table>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-success btn-lg shadow" id="btnProcesar" disabled>
+                                <i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA
+                            </button>
                         </div>
                     </div>
 
-                    <div class="text-end mt-4">
-                        <button class="btn btn-success btn-lg" id="btnEjecutarMasivo" disabled>
-                            <i class="bi bi-check-circle-fill"></i> EJECUTAR INSCRIPCIÓN MASIVA
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+                </div> </div> </div>
     </div>
 
-    <div class="modal fade" id="modalResultados" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal fade" id="modalResultados" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Resultados de la Inscripción</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-card-checklist"></i> Resultado del Proceso</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="progress mb-3" style="height: 25px;">
-                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%">Procesando...</div>
-                    </div>
-                    
-                    <table class="table table-bordered table-sm" id="tablaResultados">
-                        <thead>
-                            <tr>
-                                <th>Alumno</th>
-                                <th>Resultado</th>
-                                <th>Detalle</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <p class="mb-3 text-muted">A continuación se detalla el resultado de la inscripción por cada alumno:</p>
+                    <div id="contenedorResultados"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -385,20 +334,26 @@ try {
     <?php include '../funciones/footer.html'; ?>
 
     <script src="../js/jquery-3.7.1.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
     <script src="../funciones/sessionControl.js"></script>
 
     <script>
     $(document).ready(function() {
-        const ajaxUrl = 'inscripcionExamenMasivo.php';
         
-        // --- HELPERS ---
-        function showLoader() { $('#loader').fadeIn('fast'); }
-        function hideLoader() { $('#loader').fadeOut('fast'); }
-        function showMessage(type, msg) {
-            $('#messageContainer').html(`<div class="alert alert-${type}">${msg}</div>`).show();
-            setTimeout(() => $('#messageContainer').fadeOut(), 5000);
+        const loader = $('#loader');
+
+        // --- FUNCIONES UI ---
+        function showAlert(msg, type='danger') {
+            $('#alertContainer').html(`
+                <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                    ${msg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `);
+            // Auto-cerrar alertas de éxito
+            if(type === 'success') {
+                setTimeout(() => { $('.alert').alert('close'); }, 5000);
+            }
         }
 
         // --- COMBOS ENCADENADOS ---
@@ -408,7 +363,7 @@ try {
             $('#idCurso').html('<option value="">Cargando...</option>').prop('disabled', true);
             
             if(plan && ciclo) {
-                $.post(ajaxUrl, { action: 'load_cursos', idPlan: plan, idCiclo: ciclo }, function(res){
+                $.post('inscripcionExamenMasivo.php', { action: 'load_cursos', idPlan: plan, idCiclo: ciclo }, function(res){
                     if(res.success) {
                         let opts = '<option value="">Seleccione Curso...</option>';
                         res.data.forEach(c => opts += `<option value="${c.idCurso}">${c.nombre}</option>`);
@@ -422,177 +377,214 @@ try {
             const plan = $('#idPlan').val();
             const curso = $(this).val();
             $('#idMateria').html('<option value="">Cargando...</option>').prop('disabled', true);
+            $('#idUnicoMateria').val('');
 
             if(plan && curso) {
-                $.post(ajaxUrl, { action: 'load_materias', idPlan: plan, idCurso: curso }, function(res){
+                $.post('inscripcionExamenMasivo.php', { action: 'load_materias', idPlan: plan, idCurso: curso }, function(res){
                     if(res.success) {
                         let opts = '<option value="">Seleccione Materia...</option>';
-                        res.data.forEach(m => opts += `<option value="${m.idMateria}">${m.nombreMateria}</option>`);
+                        res.data.forEach(m => {
+                            opts += `<option value="${m.idMateria}" data-unico="${m.idUnicoMateria}">${m.nombreMateria}</option>`;
+                        });
                         $('#idMateria').html(opts).prop('disabled', false);
                     }
                 }, 'json');
             }
         });
 
-        // Detectar cambios para habilitar botón Buscar
-        $('#idMateria, #idCondicion, #idTurno').change(function() {
-            const ok = $('#idMateria').val() && $('#idCondicion').val() && $('#idTurno').val();
-            $('#btnBuscarAlumnos').prop('disabled', !ok);
-            // Si cambian la materia o el turno, resetear la tabla
-            $('#paso2Container').hide();
+        $('#idMateria').change(function() {
+            const unico = $(this).find(':selected').data('unico');
+            $('#idUnicoMateria').val(unico);
         });
 
-        // --- BUSCAR ALUMNOS Y MESAS ---
-        $('#btnBuscarAlumnos').click(function() {
+        // Activar botón Buscar
+        $('#idMateria, #idCondicion, #idTurno').change(function() {
+            const ok = $('#idMateria').val() && $('#idCondicion').val() && $('#idTurno').val();
+            $('#btnBuscar').prop('disabled', !ok);
+            // Resetear vistas si cambian filtros
+            $('#seccionMesas, #seccionAlumnos').slideUp();
+            $('#btnProcesar').prop('disabled', true);
+        });
+
+        // --- ACCIÓN: BUSCAR ---
+        $('#btnBuscar').click(function() {
             const idMateria = $('#idMateria').val();
+            const idUnico = $('#idUnicoMateria').val();
             const idCurso = $('#idCurso').val();
             const idCiclo = $('#idCiclo').val();
             const idTurno = $('#idTurno').val();
-            const condicionTexto = $('#idCondicion option:selected').text(); // "Regular" o "Libre"
+            const condicionTexto = $('#idCondicion option:selected').text(); 
 
-            if(!idMateria || !idCurso) return;
+            if(!idUnico) { showAlert("Error: Identificador de materia no válido."); return; }
 
-            showLoader();
-            $('#paso2Container').hide();
-            $('#contenedorMesas').hide();
-            $('#listaMesas').empty();
-            $('#tablaCandidatos tbody').empty();
+            loader.css("display", "flex");
+            $('#seccionMesas, #seccionAlumnos').hide();
+            $('#contenedorMesas').empty();
+            $('#tablaAlumnos tbody').empty();
 
-            // 1. Buscar Mesas primero
-            $.post(ajaxUrl, { 
-                action: 'load_mesas', idCiclo: idCiclo, idTurno: idTurno, idMateria: idMateria 
+            // 1. Cargar Mesas
+            $.post('inscripcionExamenMasivo.php', {
+                action: 'load_mesas', idCiclo: idCiclo, idTurno: idTurno, idMateria: idMateria
             }, function(resMesas) {
                 
                 if(resMesas.success && resMesas.data.length > 0) {
                     let htmlMesas = '';
                     resMesas.data.forEach(m => {
                         htmlMesas += `
-                        <div class="form-check">
-                            <input class="form-check-input mesa-radio" type="radio" name="mesaSel" value="${m.idFechaExamen}" id="mesa${m.idFechaExamen}">
-                            <label class="form-check-label" for="mesa${m.idFechaExamen}">
-                                <strong>Fecha:</strong> ${m.fecha} - <strong>Hora:</strong> ${m.hora}
-                            </label>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card p-3 mesa-card h-100" data-id="${m.idFechaExamen}">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-calendar-check fs-3 text-primary me-3"></i>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-primary">Fecha: ${m.fecha}</h6>
+                                        <span class="text-muted small">Hora: ${m.hora}</span>
+                                    </div>
+                                </div>
+                                <div class="small text-secondary mt-2 border-top pt-2">
+                                    Tribunal (P1): ${m.p1 || 'Sin asignar'}
+                                </div>
+                            </div>
                         </div>`;
                     });
-                    $('#listaMesas').html(htmlMesas);
-                    $('#contenedorMesas').show();
+                    $('#contenedorMesas').html(htmlMesas);
+                    $('#msgNoMesas').hide();
+                    $('#seccionMesas').fadeIn();
 
-                    // 2. Buscar Alumnos
-                    $.post(ajaxUrl, {
+                    // 2. Cargar Alumnos Candidatos
+                    $.post('inscripcionExamenMasivo.php', {
                         action: 'buscar_candidatos',
-                        idMateria: idMateria,
+                        idUnicoMateria: idUnico,
                         idCurso: idCurso,
                         condicionTexto: condicionTexto
                     }, function(resAlu) {
-                        hideLoader();
+                        loader.hide();
                         if(resAlu.success) {
-                            $('#idUnicoMateria').val(resAlu.idUnicoMateria); // Guardar para uso posterior
                             const lista = resAlu.data;
-                            $('#contadorAlumnos').text(lista.length + ' alumnos');
+                            $('#badgeCount').text(lista.length);
                             
                             if(lista.length === 0) {
-                                showMessage('warning', 'No se encontraron alumnos en condiciones de inscribirse en este estado.');
+                                showAlert("No se encontraron alumnos aptos con la condición seleccionada.", "warning");
                             } else {
                                 let html = '';
                                 lista.forEach(a => {
                                     html += `
-                                    <tr data-id="${a.idAlumno}">
-                                        <td>${a.dni}</td>
-                                        <td>${a.nombreCompleto}</td>
-                                        <td>${a.estado}</td>
-                                        <td class="text-center">
-                                            <button class="btn btn-outline-danger btn-sm btn-borrar-fila" title="Quitar de la lista">
+                                    <tr data-id="${a.idAlumno}" data-nombre="${a.nombreCompleto}">
+                                        <td class="align-middle">${a.dni}</td>
+                                        <td class="align-middle fw-bold">${a.nombreCompleto}</td>
+                                        <td class="align-middle"><span class="badge bg-info text-dark">${a.estado}</span></td>
+                                        <td class="text-center align-middle">
+                                            <button class="btn btn-outline-danger btn-sm btn-borrar" title="Quitar de la lista">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </td>
                                     </tr>`;
                                 });
-                                $('#tablaCandidatos tbody').html(html);
-                                $('#paso2Container').fadeIn();
+                                $('#tablaAlumnos tbody').html(html);
+                                $('#seccionAlumnos').fadeIn();
                             }
                         } else {
-                            showMessage('danger', resAlu.message);
+                            showAlert(resAlu.message);
                         }
                     }, 'json');
 
                 } else {
-                    hideLoader();
-                    $('#noMesas').show();
+                    loader.hide();
+                    $('#msgNoMesas').show();
+                    $('#seccionMesas').fadeIn();
                 }
-            }, 'json');
+            }, 'json').fail(function(){ loader.hide(); showAlert("Error de conexión."); });
         });
 
-        // --- MANEJO DE LA TABLA (QUITAR FILAS) ---
-        $(document).on('click', '.btn-borrar-fila', function() {
-            $(this).closest('tr').remove();
-            // Actualizar contador
-            const count = $('#tablaCandidatos tbody tr').length;
-            $('#contadorAlumnos').text(count + ' alumnos');
+        // Selección de Mesa
+        $(document).on('click', '.mesa-card', function() {
+            $('.mesa-card').removeClass('active');
+            $(this).addClass('active');
+            $('#btnProcesar').prop('disabled', false);
         });
 
-        // Habilitar botón Ejecutar solo si hay mesa seleccionada
-        $(document).on('change', '.mesa-radio', function() {
-            $('#btnEjecutarMasivo').prop('disabled', false);
+        // Borrar fila de alumno
+        $(document).on('click', '.btn-borrar', function() {
+            $(this).closest('tr').fadeOut(300, function() { 
+                $(this).remove(); 
+                $('#badgeCount').text($('#tablaAlumnos tbody tr').length);
+            });
         });
 
-        // --- EJECUCIÓN MASIVA ---
-        $('#btnEjecutarMasivo').click(function() {
-            const idMesa = $('input[name="mesaSel"]:checked').val();
-            const idCondicion = $('#idCondicion').val();
-            const condicionTexto = $('#idCondicion option:selected').text();
-            
-            // Recolectar IDs
-            let ids = [];
-            $('#tablaCandidatos tbody tr').each(function() {
-                ids.push($(this).data('id'));
+        // --- CONFIRMAR INSCRIPCIÓN ---
+        $('#btnProcesar').click(function() {
+            let listaIds = [];
+            $('#tablaAlumnos tbody tr').each(function() {
+                listaIds.push($(this).data('id'));
             });
 
-            if(ids.length === 0) { alert('No hay alumnos para inscribir.'); return; }
-            if(!idMesa) { alert('Seleccione una mesa.'); return; }
+            const idMesa = $('.mesa-card.active').data('id');
+            const condTexto = $('#idCondicion option:selected').text();
+            const btn = $(this);
 
-            // Configurar Modal
-            $('#modalResultados').modal('show');
-            $('#tablaResultados tbody').empty();
-            $('#progressBar').css('width', '100%').addClass('progress-bar-animated').removeClass('bg-success bg-danger').text('Procesando inscripciones...');
+            if(listaIds.length === 0) { alert('No hay alumnos en la lista.'); return; }
+            if(!idMesa) { alert('Debe seleccionar una mesa (haga clic en una tarjeta).'); return; }
 
-            // AJAX Enviar Lote
-            $.post(ajaxUrl, {
+            // UI Cargando
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Procesando...');
+            loader.css("display", "flex");
+
+            // Envío AJAX
+            $.post('inscripcionExamenMasivo.php', {
                 action: 'inscribir_masivo',
-                listaAlumnos: JSON.stringify(ids),
-                idMateria: $('#idMateria').val(),
-                idUnicoMateria: $('#idUnicoMateria').val(),
-                idCiclo: $('#idCiclo').val(),
-                idTurno: $('#idTurno').val(),
+                listaAlumnos: listaIds,
                 idFechaExamen: idMesa,
-                idCondicion: idCondicion,
-                condicionTexto: condicionTexto
-            }, function(res) {
-                $('#progressBar').removeClass('progress-bar-animated').addClass('bg-success').text('Proceso Finalizado');
+                condicionTexto: condTexto
+            }, function(response) {
                 
-                if(res.success) {
-                    let html = '';
-                    res.resultados.forEach(r => {
-                        let clase = r.status === 'OK' ? 'table-success' : 'table-danger';
-                        let icono = r.status === 'OK' ? '<i class="bi bi-check text-success"></i>' : '<i class="bi bi-x text-danger"></i>';
-                        
-                        // Buscar nombre en la tabla visual para mostrarlo en el modal
-                        let nombre = $(`tr[data-id="${r.id}"] td:nth-child(2)`).text() || 'ID: ' + r.id;
+                loader.hide();
+                btn.prop('disabled', false).html('<i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA');
 
-                        html += `
-                        <tr class="${clase}">
-                            <td>${nombre}</td>
-                            <td>${icono} ${r.status}</td>
-                            <td><small>${r.msg}</small></td>
+                if (response.success && response.detalles) {
+                    
+                    let htmlReporte = '<div class="table-responsive"><table class="table table-bordered table-striped align-middle">';
+                    htmlReporte += '<thead class="table-light"><tr><th>Alumno</th><th>Resultado</th></tr></thead><tbody>';
+
+                    response.detalles.forEach(function(item) {
+                        let claseColor = 'text-dark';
+                        let icono = '';
+                        let bg = '';
+                        
+                        if (item.estado === 'success') {
+                            claseColor = 'text-success'; 
+                            icono = '<i class="bi bi-check-circle-fill resultado-icon"></i>';
+                        } else if (item.estado === 'warning') {
+                            claseColor = 'text-warning'; 
+                            icono = '<i class="bi bi-exclamation-triangle-fill resultado-icon"></i>';
+                        } else {
+                            claseColor = 'text-danger'; 
+                            icono = '<i class="bi bi-x-circle-fill resultado-icon"></i>';
+                            bg = 'style="background-color: #fff5f5"';
+                        }
+
+                        htmlReporte += `<tr ${bg}>
+                            <td class="fw-bold">${item.nombre}</td>
+                            <td class="${claseColor}">${icono} ${item.mensaje}</td>
                         </tr>`;
                     });
-                    $('#tablaResultados tbody').html(html);
+
+                    htmlReporte += '</tbody></table></div>';
+                    
+                    $('#contenedorResultados').html(htmlReporte);
+                    $('#modalResultados').modal('show');
+
+                    // Limpiar tabla tras éxito
+                    $('#tablaAlumnos tbody').empty();
+                    $('#badgeCount').text('0');
+                    $('#btnProcesar').prop('disabled', true);
+
                 } else {
-                    $('#tablaResultados tbody').html(`<tr><td colspan="3" class="text-danger">${res.message}</td></tr>`);
+                    alert(response.message || "Error desconocido.");
                 }
 
             }, 'json').fail(function() {
-                $('#progressBar').removeClass('bg-success').addClass('bg-danger').text('Error de conexión');
-                alert('Error crítico de conexión.');
+                loader.hide();
+                btn.prop('disabled', false).html('<i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA');
+                alert("Error de conexión con el servidor.");
             });
         });
 

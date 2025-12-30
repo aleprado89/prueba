@@ -3374,10 +3374,10 @@ function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condi
     // Definimos los IDs de estado según la condición (Replicando la lógica de tu controlCorrelatividad)
     $estadosPermitidos = [];
     
-    if ($condicionInscripcion == 'Regular') {
-        $estadosPermitidos = [4, 11, 13]; // Agrega aquí los IDs que consideras "Regular" (Regular, Aprobado, etc si aplica)
+    if ($condicionInscripcion == 'Regular' || $condicionInscripcion == 'Aprobó Cursada') {
+        $estadosPermitidos = [1,4, 11, 13]; // Agrega aquí los IDs que consideras "Regular" (Regular, Aprobado, etc si aplica)
     } elseif ($condicionInscripcion == 'Libre') {
-        $estadosPermitidos = [1, 3, 5, 10, 12]; // Libre, Abandono, etc.
+        $estadosPermitidos = [ 3, 5, 10, 12]; // Libre, Abandono, etc.
         // Nota: Si los "Sin cursar" (null) pueden rendir libre, la lógica cambia, 
         // pero por SQL necesitamos registros existentes. Para masivos, asumimos que tienen legajo.
     } else {
@@ -3389,9 +3389,9 @@ function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condi
     // Convertimos array a string para el IN de SQL
     $listaEstados = implode(',', $estadosPermitidos);
 
-    $sql = "SELECT c.idAlumno, p.apellido, p.nombre, p.dni, c.estadoCursadoNumero, c.nota
+    $sql = "SELECT c.idAlumno, p.apellido, p.nombre, p.dni, c.estadoCursadoNumero, c.estadoCursado
             FROM calificacionesterciario c
-            INNER JOIN alumno a ON c.idAlumno = a.idAlumno
+            INNER JOIN alumnosterciario a ON c.idAlumno = a.idAlumno
             INNER JOIN persona p ON a.idPersona = p.idPersona
             INNER JOIN materiaterciario m ON c.idMateria = m.idMateria
             WHERE m.idUnicoMateria = ? 
@@ -3407,41 +3407,7 @@ function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condi
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
-/**
- * Verifica si un alumno ya está inscripto en esa mesa para evitar duplicados.
- */
-function yaEstaInscriptoMesa($conn, $idAlumno, $idMesaExamen) {
-    $sql = "SELECT idInscripcion FROM inscripcionesmesas WHERE idAlumno = ? AND idMesaExamen = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $idAlumno, $idMesaExamen);
-    $stmt->execute();
-    $stmt->store_result();
-    $existe = $stmt->num_rows > 0;
-    $stmt->close();
-    return $existe;
-}
 
-/**
- * Realiza la inscripción efectiva en la base de datos.
- */
-function inscribirAlumnoEnMesa($conn, $idAlumno, $idMesaExamen, $condicion) {
-    // Primero verificamos duplicados
-    if (yaEstaInscriptoMesa($conn, $idAlumno, $idMesaExamen)) {
-        return ["success" => false, "message" => "Ya estaba inscripto."];
-    }
-
-    $fecha = date('Y-m-d H:i:s');
-    $sql = "INSERT INTO inscripcionesmesas (idAlumno, idMesaExamen, fechaInscripcion, condicion, asistencia) VALUES (?, ?, ?, ?, 0)";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iiss", $idAlumno, $idMesaExamen, $fecha, $condicion);
-    
-    if ($stmt->execute()) {
-        return ["success" => true, "message" => "Inscripto correctamente."];
-    } else {
-        return ["success" => false, "message" => "Error BD: " . $stmt->error];
-    }
-}
  function obtenerIdEstadoCursada($conn, $idAlumno, $idUnicoMateria) {
         $sql = "SELECT c.estadoCursadoNumero 
                 FROM calificacionesterciario c
@@ -3531,6 +3497,114 @@ function actualizarDatoActa($conn, $idInscripcion, $campo, $valor) {
     $exito = $stmt->execute();
     $stmt->close();
     return $exito;
+}
+function inscribirAlumnosMasivo($conn, $listaAlumnos, $idFechaExamen, $condicionTexto) {
+    
+    // 1. Obtener datos faltantes de la mesa
+    $sqlDatos = "SELECT f.idMateria, m.idCicloLectivo 
+                 FROM fechasexamenes f
+                 INNER JOIN materiaterciario m ON f.idMateria = m.idMateria
+                 WHERE f.idFechaExamen = ?";
+    $stmtDatos = $conn->prepare($sqlDatos);
+    $stmtDatos->bind_param("i", $idFechaExamen);
+    $stmtDatos->execute();
+    $resDatos = $stmtDatos->get_result();
+    
+    if ($fila = $resDatos->fetch_assoc()) {
+        $idMateria = $fila['idMateria'];
+        $idCicloLectivo = $fila['idCicloLectivo'];
+    } else {
+        $stmtDatos->close();
+        return ['success' => false, 'message' => 'No se encontró la fecha de examen.'];
+    }
+    $stmtDatos->close();
+
+    // 2. Definir ID de Condición
+    $idCondicion = 1; 
+    if (stripos($condicionTexto, 'Libre') !== false) {
+        $idCondicion = 2;
+    }
+
+    // Preparar consultas REUTILIZABLES
+    // A) Para insertar
+    $sqlInsert = "INSERT INTO inscripcionexamenes 
+                  (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion) 
+                  VALUES (?, ?, ?, ?, ?)";
+    $stmtInsert = $conn->prepare($sqlInsert);
+
+    // B) Para obtener nombre del alumno (Estética del reporte)
+    $sqlNombre = "SELECT p.apellido, p.nombre 
+                  FROM alumno a 
+                  INNER JOIN persona p ON a.idPersona = p.idPersona 
+                  WHERE a.idAlumno = ?";
+    $stmtNombre = $conn->prepare($sqlNombre);
+
+    $detalles = []; // Aquí guardaremos el reporte individual
+    $globalSuccess = true; // Asumimos éxito, si falla uno cambiamos a false parcial si se desea
+
+    foreach ($listaAlumnos as $idAlumno) {
+        $idAlumno = (int)$idAlumno;
+        $nombreCompleto = "Alumno ID: $idAlumno"; // Default por si falla la búsqueda de nombre
+
+        // Obtener nombre
+        $stmtNombre->bind_param("i", $idAlumno);
+        $stmtNombre->execute();
+        $resNom = $stmtNombre->get_result();
+        if ($filaNom = $resNom->fetch_assoc()) {
+            $nombreCompleto = $filaNom['apellido'] . ", " . $filaNom['nombre'];
+        }
+
+        // Verificar existencia
+        if (verificarInscripcionExistente($conn, $idAlumno, $idFechaExamen)) {
+            $detalles[] = [
+                'nombre' => $nombreCompleto,
+                'estado' => 'warning', // Para color amarillo en frontend
+                'mensaje' => 'Ya se encuentra inscripto.'
+            ];
+            continue; 
+        }
+
+        // Intentar Insertar
+        $stmtInsert->bind_param("iiiii", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $idCondicion);
+        
+        if ($stmtInsert->execute()) {
+            $detalles[] = [
+                'nombre' => $nombreCompleto,
+                'estado' => 'success', // Para color verde
+                'mensaje' => 'Inscripción Correcta.'
+            ];
+        } else {
+            $detalles[] = [
+                'nombre' => $nombreCompleto,
+                'estado' => 'danger', // Para color rojo
+                'mensaje' => 'Error: ' . $stmtInsert->error
+            ];
+            $globalSuccess = false;
+        }
+    }
+    
+    $stmtInsert->close();
+    $stmtNombre->close();
+
+    return [
+        'success' => true, // La operación general terminó (aunque haya errores individuales)
+        'message' => 'Proceso finalizado.',
+        'detalles' => $detalles // Array con la info para el modal
+    ];
+}
+
+/**
+ * Verificación auxiliar (se mantiene igual, usando la columna correcta)
+ */
+function verificarInscripcionExistente($conn, $idAlumno, $idFechaExamen) {
+    $sql = "SELECT idAlumno FROM inscripcionexamenes WHERE idAlumno = ? AND idFechaExamen = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $idAlumno, $idFechaExamen);
+    $stmt->execute();
+    $stmt->store_result();
+    $existe = $stmt->num_rows > 0;
+    $stmt->close();
+    return $existe;
 }
 
 /**
