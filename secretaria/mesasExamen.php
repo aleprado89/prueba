@@ -185,9 +185,9 @@ $idCursoFilter = filter_input(INPUT_GET, 'idCurso', FILTER_VALIDATE_INT);
 $idMateriaFilter = filter_input(INPUT_GET, 'idMateria', FILTER_VALIDATE_INT);
 
 // Cargar datos para los selects principales
-$ciclos = obtenerCiclosLectivos($conn);
-$turnos = obtenerTurnosExamen($conn);
-$planes = obtenerPlanesEstudio($conn);
+$ciclos = levantarCiclosLectivos($conn);
+$turnos = obtenerTodosTurnos($conn);
+$planes = obtenerPlanesDeEstudio($conn);
 
 // Cargar la grilla de mesas de examen (Filtrado)
 $mesas_examen = filtrarMesasExamen(
@@ -268,7 +268,7 @@ $mesas_examen = filtrarMesasExamen(
               <select class="form-select filtro-auto-submit" id="filtroCicloLectivo" name="idCicloLectivo" required>
                 <option value="">Seleccione...</option>
                 <?php foreach ($ciclos as $ciclo): ?>
-                  <option value="<?php echo $ciclo['idciclolectivo']; ?>" <?php echo ($idCicloFilter == $ciclo['idciclolectivo']) ? 'selected' : ''; ?>>
+                  <option value="<?php echo $ciclo['idCicloLectivo']; ?>" <?php echo ($idCicloFilter == $ciclo['idCicloLectivo']) ? 'selected' : ''; ?>>
                     <?php echo htmlspecialchars($ciclo['anio']); ?>
                   </option>
                 <?php endforeach; ?>

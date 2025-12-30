@@ -3,7 +3,7 @@
 $servername = "localhost";
 $username = "se_user";
 $password = "88668866";
-$dbname = "sesystem_pruebas";
+$dbname = "sesystem_prueba";
 
 //configuración para pruebas en servidor web sesystem
 /*$servername = "localhost";
