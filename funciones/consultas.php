@@ -3375,7 +3375,7 @@ function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condi
     $estadosPermitidos = [];
     
     if ($condicionInscripcion == 'Regular' || $condicionInscripcion == 'Aprobó Cursada') {
-        $estadosPermitidos = [1,4, 11, 13]; // Agrega aquí los IDs que consideras "Regular" (Regular, Aprobado, etc si aplica)
+        $estadosPermitidos = [1,4]; // Agrega aquí los IDs que consideras "Regular" (Regular, Aprobado, etc si aplica)
     } elseif ($condicionInscripcion == 'Libre') {
         $estadosPermitidos = [ 3, 5, 10, 12]; // Libre, Abandono, etc.
         // Nota: Si los "Sin cursar" (null) pueden rendir libre, la lógica cambia, 
