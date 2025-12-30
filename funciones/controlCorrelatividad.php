@@ -523,36 +523,38 @@ function inscripcionExamenEstado($inscripcion, $estadoNumero, $nombreMateria) {
         return $salida;
 }
 
-function inscripcionExamenControl($conexion, $idAlumno, $idUnicoMateria, $inscripcion) {
+function inscripcionExamenControl($conexion, $idAlumno, $idUnicoMateria, $inscripcion, $masivo) {
     global $materiasAdeuda;
     $habilitacionInscripcion = false;
     $existeCursado = false;    
     $tipoInscripcion = 1;
 
-    $consulta = "SELECT *
+    if (!$masivo){
+        $consulta = "SELECT *
         from calificacionesterciario c inner join materiaterciario m
         on m.idMateria = c.idMateria
         where m.idUnicoMateria = ? and c.idAlumno = ?";
 
-    $stmt = $conexion->prepare($consulta);
-    $stmt->bind_param("ii", $idUnicoMateria, $idAlumno);
-    $stmt->execute();
-    $calif = $stmt->get_result();
+        $stmt = $conexion->prepare($consulta);
+        $stmt->bind_param("ii", $idUnicoMateria, $idAlumno);
+        $stmt->execute();
+        $calif = $stmt->get_result();
 
-    $i = 0;
-    if (!empty($calif)) {
-        while ($data = mysqli_fetch_array($calif)) {
+        $i = 0;
+        if (!empty($calif)) {
+            while ($data = mysqli_fetch_array($calif)) {
 
-            $existeCursado = true;
+                $existeCursado = true;
 
-            $estadoCursadoNumero = $data['estadoCursadoNumero'];
-            $nombreMateria = $data['nombre'];
-    
-            $habilitadoEstado = inscripcionExamenEstado($inscripcion, $estadoCursadoNumero, $nombreMateria);
-            if ($habilitadoEstado[0]) { break; }
-            $i++;
+                $estadoCursadoNumero = $data['estadoCursadoNumero'];
+                $nombreMateria = $data['nombre'];
+
+                $habilitadoEstado = inscripcionExamenEstado($inscripcion, $estadoCursadoNumero, $nombreMateria);
+                if ($habilitadoEstado[0]) { break; }
+                $i++;
+            }
         }
-    }
+    } else { $existeCursado = true; $habilitadoEstado[0] = true; }
     if ($existeCursado)
     {
         if ($habilitadoEstado[0])
