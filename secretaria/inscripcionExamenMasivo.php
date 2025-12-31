@@ -47,13 +47,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 }
                 break;
 
-            // 3. Cargar Mesas Disponibles
+            // 3. Cargar Mesas Disponibles (CON NOMBRE DE DOCENTE)
             case 'load_mesas':
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idTurno = filter_input(INPUT_POST, 'idTurno', FILTER_VALIDATE_INT);
                 $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
+                
                 if ($idCiclo && $idTurno && $idMateria) {
-                    $response = ['success' => true, 'data' => filtrarMesasExamen($conn, $idCiclo, $idTurno, null, null, $idMateria)];
+                    // Obtenemos las mesas crudas de la base de datos
+                    $mesas = filtrarMesasExamen($conn, $idCiclo, $idTurno, null, null, $idMateria);
+                    
+                    // Array final para enviar al frontend
+                    $mesasProcesadas = [];
+
+                    foreach ($mesas as $mesa) {
+                        // Verificamos si existe la clave 'p1' (Presidente de mesa)
+                        $legajoDocente = isset($mesa['p1']) ? $mesa['p1'] : '';
+                        
+                        // Buscamos el nombre explícitamente
+                        $nombreDocente = obtenerNombreDocente($conn, $legajoDocente);
+                        
+                        // Agregamos el campo nuevo
+                        $mesa['nombrePresidente'] = $nombreDocente;
+                        
+                        $mesasProcesadas[] = $mesa;
+                    }
+
+                    $response = ['success' => true, 'data' => $mesasProcesadas];
                 }
                 break;
 
@@ -96,7 +116,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 if (empty($listaAlumnos) || !$idFechaExamen) {
                     $response = ['success' => false, 'message' => 'Datos incompletos.'];
                 } else {
-                    // Llama a la función en consultas.php que devuelve el array 'detalles'
+                    // Llama a la función en consultas.php (Actualizada en el paso anterior)
+                    // Esta función ya devuelve 'nombre' (texto) en el array 'detalles'
                     $resultado = inscribirAlumnosMasivo($conn, $listaAlumnos, $idFechaExamen, $condicionTexto);
                     $response = $resultado;
                 }
@@ -138,28 +159,15 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
-        /* Estilos específicos para esta página manteniendo la línea gráfica */
+        /* Estilos alineados con inscripcionExamenAlumno.php */
         #loader { 
             display: none; 
             position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.85); 
-            z-index: 9999; 
-            justify-content: center; 
-            align-items: center; 
-            flex-direction: column;
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            z-index: 1050; 
         }
-        
-        .step-section { 
-            background-color: #f8f9fa; 
-            border-left: 5px solid #2fa4e7; /* Color primario Materia */
-            padding: 20px; 
-            margin-bottom: 25px; 
-            border-radius: 4px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
+
         .mesa-card { 
             transition: all 0.2s ease-in-out; 
             border: 1px solid #dee2e6; 
@@ -167,9 +175,9 @@ try {
             background-color: #fff;
         }
         .mesa-card:hover { 
-            background-color: #e9ecef; 
+            background-color: #f8f9fa; 
             transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .mesa-card.active { 
             background-color: #e7f1ff; 
@@ -181,18 +189,19 @@ try {
             max-height: 450px; 
             overflow-y: auto;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 4px;
+            margin-top: 15px;
         }
         
-        /* Ajuste para modal de resultados */
         .resultado-icon { font-size: 1.2rem; margin-right: 8px; vertical-align: middle; }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
-        <h5 class="mt-3 text-primary fw-bold">Procesando solicitud...</h5>
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Procesando...</span>
+        </div>
     </div>
 
     <?php include '../funciones/menu_secretaria.php'; ?>
@@ -201,122 +210,126 @@ try {
         <br>
         <div class="container">
             
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-                    <li class="breadcrumb-item active">Inscripción Masiva</li>
-                </ol>
-            </nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
+                <li class="breadcrumb-item active">Inscripción Masiva</li>
+            </ol>
 
             <div id="alertContainer"></div>
 
-            <div class="card shadow-sm mb-5">
-                <div class="card-header bg-white border-bottom">
-                    <h3 class="text-primary mb-0">
-                        <i class="bi bi-people-fill"></i> Inscripción Masiva a Exámenes
-                    </h3>
-                </div>
+            <div class="card p-4 mb-4 shadow-sm">
+                <h5 class="mb-3 text-primary">
+                    <i class="bi bi-people-fill"></i> Inscripción Masiva a Exámenes
+                </h5>
+                <hr>
                 
-                <div class="card-body">
+                <div class="card-body p-0">
                     
-                    <div class="step-section">
-                        <h5 class="text-primary mb-3"><i class="bi bi-1-circle"></i> Seleccionar Filtros</h5>
-                        <form id="formFiltros">
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Ciclo Lectivo</label>
-                                    <select class="form-select" id="idCiclo">
-                                        <option value="">Seleccione...</option>
-                                        <?php foreach ($ciclos as $c): echo "<option value='{$c['idCicloLectivo']}'>{$c['anio']}</option>"; endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Turno Examen</label>
-                                    <select class="form-select" id="idTurno">
-                                        <option value="">Seleccione...</option>
-                                        <?php foreach ($turnos as $t): echo "<option value='{$t['idTurno']}'>{$t['nombre']}</option>"; endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Plan de Estudio</label>
-                                    <select class="form-select" id="idPlan">
-                                        <option value="">Seleccione...</option>
-                                        <?php foreach ($planes as $p): echo "<option value='{$p['idPlan']}'>{$p['nombre']}</option>"; endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Condición Inscripción</label>
-                                    <select class="form-select" id="idCondicion">
-                                        <option value="">Seleccione...</option>
-                                        <?php foreach ($condicionesExamen as $ce): echo "<option value='{$ce['idCondicion']}'>{$ce['condicion']}</option>"; endforeach; ?>
-                                    </select>
-                                </div>
+                    <form id="formFiltros">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
+                                <select class="form-select" id="idCiclo">
+                                    <option value="">Seleccione...</option>
+                                    <?php foreach ($ciclos as $c): echo "<option value='{$c['idCicloLectivo']}'>{$c['anio']}</option>"; endforeach; ?>
+                                </select>
                             </div>
-                            <div class="row g-3 mt-2">
-                                <div class="col-md-5">
-                                    <label class="form-label fw-bold">Curso</label>
-                                    <select class="form-select" id="idCurso" disabled><option value="">(Seleccione Plan y Ciclo)</option></select>
-                                </div>
-                                <div class="col-md-5">
-                                    <label class="form-label fw-bold">Materia</label>
-                                    <select class="form-select" id="idMateria" disabled><option value="">(Seleccione Curso)</option></select>
-                                    <input type="hidden" id="idUnicoMateria"> 
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <button type="button" class="btn btn-primary w-100 shadow-sm" id="btnBuscar" disabled>
-                                        <i class="bi bi-search"></i> BUSCAR
-                                    </button>
-                                </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Turno Examen <span class="text-danger">*</span></label>
+                                <select class="form-select" id="idTurno">
+                                    <option value="">Seleccione...</option>
+                                    <?php foreach ($turnos as $t): echo "<option value='{$t['idTurno']}'>{$t['nombre']}</option>"; endforeach; ?>
+                                </select>
                             </div>
-                        </form>
-                    </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
+                                <select class="form-select" id="idPlan">
+                                    <option value="">Seleccione...</option>
+                                    <?php foreach ($planes as $p): echo "<option value='{$p['idPlan']}'>{$p['nombre']}</option>"; endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
 
-                    <div id="seccionMesas" style="display:none;" class="step-section">
-                        <h5 class="text-primary mb-3"><i class="bi bi-2-circle"></i> Seleccionar Mesa de Destino</h5>
-                        <p class="text-muted small">Haga clic sobre la mesa correspondiente para seleccionarla.</p>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Curso <span class="text-danger">*</span></label>
+                                <select class="form-select" id="idCurso" disabled><option value="">(Seleccione Plan y Ciclo)</option></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Materia <span class="text-danger">*</span></label>
+                                <select class="form-select" id="idMateria" disabled><option value="">(Seleccione Curso)</option></select>
+                                <input type="hidden" id="idUnicoMateria"> 
+                            </div>
+                        </div>
+
+                         <div class="row g-3 align-items-end mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Condición Inscripción <span class="text-danger">*</span></label>
+                                <select class="form-select" id="idCondicion">
+                                    <option value="">Seleccione...</option>
+                                    <?php foreach ($condicionesExamen as $ce): echo "<option value='{$ce['idCondicion']}'>{$ce['condicion']}</option>"; endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-primary w-100" id="btnBuscar" disabled>
+                                    <i class="bi bi-search"></i> BUSCAR MESAS Y ALUMNOS
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <div id="seccionMesas" style="display:none;" class="mt-4">
+                        <h6 class="text-primary"><i class="bi bi-calendar-event"></i> Mesas de Examen Disponibles</h6>
+                        <p class="text-muted small">Seleccione la mesa haciendo clic en la tarjeta correspondiente.</p>
                         
                         <div id="contenedorMesas" class="row g-3"></div>
                         
-                        <div id="msgNoMesas" class="alert alert-warning mt-2 shadow-sm" style="display:none;">
+                        <div id="msgNoMesas" class="alert alert-warning mt-2" style="display:none;">
                             <i class="bi bi-exclamation-triangle-fill"></i> No existen mesas configuradas para esta materia en el turno y ciclo seleccionados.
                         </div>
                     </div>
 
-                    <div id="seccionAlumnos" style="display:none;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="text-primary mb-0"><i class="bi bi-3-circle"></i> Alumnos Aptos para Inscribir</h5>
-                            <span class="badge bg-secondary fs-6">Total: <span id="badgeCount">0</span></span>
+                    <hr>
+
+                    <div id="seccionAlumnos" style="display:none;" class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-primary mb-0"><i class="bi bi-person-lines-fill"></i> Alumnos Aptos para Inscribir</h6>
+                            <span class="badge bg-secondary">Total: <span id="badgeCount">0</span></span>
                         </div>
                         
-                        <div class="table-container-custom">
+                        <div class="table-container-custom table-responsive">
                             <table class="table table-striped table-hover mb-0" id="tablaAlumnos">
-                                <thead class="table-dark sticky-top">
+                                <thead class="table-light sticky-top">
                                     <tr>
                                         <th>DNI</th>
                                         <th>Apellido y Nombre</th>
                                         <th>Estado Cursado</th>
-                                        <th class="text-center" style="width: 100px;">Acción</th>
+                                        <th class="text-center" style="width: 100px;">Quitar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    </tbody>
+                                </tbody>
                             </table>
                         </div>
                         
                         <div class="d-grid gap-2 mt-4">
-                            <button class="btn btn-success btn-lg shadow" id="btnProcesar" disabled>
+                            <button class="btn btn-success" id="btnProcesar" disabled>
                                 <i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA
                             </button>
                         </div>
                     </div>
 
-                </div> </div> </div>
+                </div> 
+            </div> 
+        </div>
     </div>
 
     <div class="modal fade" id="modalResultados" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="bi bi-card-checklist"></i> Resultado del Proceso</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -345,18 +358,17 @@ try {
         // --- FUNCIONES UI ---
         function showAlert(msg, type='danger') {
             $('#alertContainer').html(`
-                <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
                     ${msg}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             `);
-            // Auto-cerrar alertas de éxito
             if(type === 'success') {
                 setTimeout(() => { $('.alert').alert('close'); }, 5000);
             }
         }
 
-        // --- COMBOS ENCADENADOS ---
+        // --- COMBOS ENCADENADOS (Igual lógica que antes) ---
         $('#idPlan, #idCiclo').change(function() {
             const plan = $('#idPlan').val();
             const ciclo = $('#idCiclo').val();
@@ -417,7 +429,7 @@ try {
 
             if(!idUnico) { showAlert("Error: Identificador de materia no válido."); return; }
 
-            loader.css("display", "flex");
+            loader.fadeIn();
             $('#seccionMesas, #seccionAlumnos').hide();
             $('#contenedorMesas').empty();
             $('#tablaAlumnos tbody').empty();
@@ -430,18 +442,20 @@ try {
                 if(resMesas.success && resMesas.data.length > 0) {
                     let htmlMesas = '';
                     resMesas.data.forEach(m => {
+                        // AQUÍ MODIFICAMOS PARA MOSTRAR NOMBRE DEL PRESIDENTE (P1)
+                        // m.nombrePresidente viene del backend
                         htmlMesas += `
                         <div class="col-md-6 col-lg-4">
                             <div class="card p-3 mesa-card h-100" data-id="${m.idFechaExamen}">
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="bi bi-calendar-check fs-3 text-primary me-3"></i>
                                     <div>
-                                        <h6 class="mb-0 fw-bold text-primary">Fecha: ${m.fecha}</h6>
+                                        <h6 class="mb-0 fw-bold text-primary">${m.fecha}</h6>
                                         <span class="text-muted small">Hora: ${m.hora}</span>
                                     </div>
                                 </div>
                                 <div class="small text-secondary mt-2 border-top pt-2">
-                                    Tribunal (P1): ${m.p1 || 'Sin asignar'}
+                                    <strong>Tribunal:</strong> ${m.nombrePresidente}
                                 </div>
                             </div>
                         </div>`;
@@ -457,7 +471,7 @@ try {
                         idCurso: idCurso,
                         condicionTexto: condicionTexto
                     }, function(resAlu) {
-                        loader.hide();
+                        loader.fadeOut();
                         if(resAlu.success) {
                             const lista = resAlu.data;
                             $('#badgeCount').text(lista.length);
@@ -488,11 +502,11 @@ try {
                     }, 'json');
 
                 } else {
-                    loader.hide();
+                    loader.fadeOut();
                     $('#msgNoMesas').show();
                     $('#seccionMesas').fadeIn();
                 }
-            }, 'json').fail(function(){ loader.hide(); showAlert("Error de conexión."); });
+            }, 'json').fail(function(){ loader.fadeOut(); showAlert("Error de conexión."); });
         });
 
         // Selección de Mesa
@@ -526,7 +540,7 @@ try {
 
             // UI Cargando
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Procesando...');
-            loader.css("display", "flex");
+            loader.fadeIn();
 
             // Envío AJAX
             $.post('inscripcionExamenMasivo.php', {
@@ -536,7 +550,7 @@ try {
                 condicionTexto: condTexto
             }, function(response) {
                 
-                loader.hide();
+                loader.fadeOut();
                 btn.prop('disabled', false).html('<i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA');
 
                 if (response.success && response.detalles) {
@@ -549,6 +563,7 @@ try {
                         let icono = '';
                         let bg = '';
                         
+                        // Iconos y colores
                         if (item.estado === 'success') {
                             claseColor = 'text-success'; 
                             icono = '<i class="bi bi-check-circle-fill resultado-icon"></i>';
@@ -561,6 +576,7 @@ try {
                             bg = 'style="background-color: #fff5f5"';
                         }
 
+                        // AQUÍ MOSTRAMOS NOMBRE Y APELLIDO (item.nombre viene de PHP consultas.php)
                         htmlReporte += `<tr ${bg}>
                             <td class="fw-bold">${item.nombre}</td>
                             <td class="${claseColor}">${icono} ${item.mensaje}</td>
@@ -575,6 +591,7 @@ try {
                     // Limpiar tabla tras éxito
                     $('#tablaAlumnos tbody').empty();
                     $('#badgeCount').text('0');
+                    $('.mesa-card').removeClass('active');
                     $('#btnProcesar').prop('disabled', true);
 
                 } else {
@@ -582,7 +599,7 @@ try {
                 }
 
             }, 'json').fail(function() {
-                loader.hide();
+                loader.fadeOut();
                 btn.prop('disabled', false).html('<i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA');
                 alert("Error de conexión con el servidor.");
             });

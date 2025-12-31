@@ -3500,8 +3500,8 @@ function actualizarDatoActa($conn, $idInscripcion, $campo, $valor) {
 }
 function inscribirAlumnosMasivo($conn, $listaAlumnos, $idFechaExamen, $condicionTexto) {
     
-    // 1. Obtener datos faltantes de la mesa
-    $sqlDatos = "SELECT f.idMateria, m.idCicloLectivo 
+    // 1. Obtener datos de la mesa
+    $sqlDatos = "SELECT f.idMateria, f.idCicloLectivo, m.idUnicoMateria 
                  FROM fechasexamenes f
                  INNER JOIN materiaterciario m ON f.idMateria = m.idMateria
                  WHERE f.idFechaExamen = ?";
@@ -3513,84 +3513,104 @@ function inscribirAlumnosMasivo($conn, $listaAlumnos, $idFechaExamen, $condicion
     if ($fila = $resDatos->fetch_assoc()) {
         $idMateria = $fila['idMateria'];
         $idCicloLectivo = $fila['idCicloLectivo'];
+        $idUnicoMateria = $fila['idUnicoMateria'];
     } else {
         $stmtDatos->close();
         return ['success' => false, 'message' => 'No se encontró la fecha de examen.'];
     }
     $stmtDatos->close();
 
-    // 2. Definir ID de Condición
+    // 2. Definir ID Condición
     $idCondicion = 1; 
-    if (stripos($condicionTexto, 'Libre') !== false) {
-        $idCondicion = 2;
-    }
+    if (stripos($condicionTexto, 'Libre') !== false) $idCondicion = 2;
 
-    // Preparar consultas REUTILIZABLES
-    // A) Para insertar
-    $sqlInsert = "INSERT INTO inscripcionexamenes 
-                  (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion) 
-                  VALUES (?, ?, ?, ?, ?)";
+    // 3. Preparar consultas
+    $sqlInsert = "INSERT INTO inscripcionexamenes (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion) VALUES (?, ?, ?, ?, ?)";
     $stmtInsert = $conn->prepare($sqlInsert);
 
-    // B) Para obtener nombre del alumno (Estética del reporte)
+    // CONSULTA NOMBRE ALUMNO (Verificada con tu esquema bd2.sql)
     $sqlNombre = "SELECT p.apellido, p.nombre 
-                  FROM alumno a 
+                  FROM alumnosterciario a 
                   INNER JOIN persona p ON a.idPersona = p.idPersona 
                   WHERE a.idAlumno = ?";
     $stmtNombre = $conn->prepare($sqlNombre);
 
-    $detalles = []; // Aquí guardaremos el reporte individual
-    $globalSuccess = true; // Asumimos éxito, si falla uno cambiamos a false parcial si se desea
+    $sqlExiste = "SELECT idInscripcion FROM inscripcionexamenes WHERE idAlumno = ? AND idFechaExamen = ?";
+    $stmtExiste = $conn->prepare($sqlExiste);
+
+    $detalles = []; 
 
     foreach ($listaAlumnos as $idAlumno) {
         $idAlumno = (int)$idAlumno;
-        $nombreCompleto = "Alumno ID: $idAlumno"; // Default por si falla la búsqueda de nombre
+        $nombreCompleto = "Alumno ID: $idAlumno"; // Fallback por defecto
 
-        // Obtener nombre
+        // Ejecutar búsqueda de nombre
         $stmtNombre->bind_param("i", $idAlumno);
-        $stmtNombre->execute();
-        $resNom = $stmtNombre->get_result();
-        if ($filaNom = $resNom->fetch_assoc()) {
-            $nombreCompleto = $filaNom['apellido'] . ", " . $filaNom['nombre'];
+        if ($stmtNombre->execute()) {
+            $resNom = $stmtNombre->get_result();
+            if ($filaNom = $resNom->fetch_assoc()) {
+                $nombreCompleto = $filaNom['apellido'] . ", " . $filaNom['nombre'];
+            }
         }
 
         // Verificar existencia
-        if (verificarInscripcionExistente($conn, $idAlumno, $idFechaExamen)) {
-            $detalles[] = [
-                'nombre' => $nombreCompleto,
-                'estado' => 'warning', // Para color amarillo en frontend
-                'mensaje' => 'Ya se encuentra inscripto.'
-            ];
+        $stmtExiste->bind_param("ii", $idAlumno, $idFechaExamen);
+        $stmtExiste->execute();
+        $stmtExiste->store_result();
+        
+        if ($stmtExiste->num_rows > 0) {
+            $detalles[] = ['nombre' => $nombreCompleto, 'estado' => 'warning', 'mensaje' => 'Ya inscripto.'];
             continue; 
         }
 
-        // Intentar Insertar
-        $stmtInsert->bind_param("iiiii", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $idCondicion);
-        
-        if ($stmtInsert->execute()) {
-            $detalles[] = [
-                'nombre' => $nombreCompleto,
-                'estado' => 'success', // Para color verde
-                'mensaje' => 'Inscripción Correcta.'
-            ];
+        // Control Correlatividad
+        $resultadoControl = inscripcionExamenControl($conn, $idAlumno, $idUnicoMateria, $condicionTexto, true);
+
+        if ($resultadoControl === true) {
+            $stmtInsert->bind_param("iiiii", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $idCondicion);
+            if ($stmtInsert->execute()) {
+                $detalles[] = ['nombre' => $nombreCompleto, 'estado' => 'success', 'mensaje' => 'Inscripción Exitosa.'];
+            } else {
+                $detalles[] = ['nombre' => $nombreCompleto, 'estado' => 'danger', 'mensaje' => 'Error BD.'];
+            }
         } else {
-            $detalles[] = [
-                'nombre' => $nombreCompleto,
-                'estado' => 'danger', // Para color rojo
-                'mensaje' => 'Error: ' . $stmtInsert->error
-            ];
-            $globalSuccess = false;
+            // Aseguramos que el mensaje sea UTF-8
+            $msg = mb_convert_encoding('No habilitado: ' . $resultadoControl, 'UTF-8', 'UTF-8');
+            $detalles[] = ['nombre' => $nombreCompleto, 'estado' => 'danger', 'mensaje' => $msg];
         }
     }
     
     $stmtInsert->close();
     $stmtNombre->close();
+    $stmtExiste->close();
 
-    return [
-        'success' => true, // La operación general terminó (aunque haya errores individuales)
-        'message' => 'Proceso finalizado.',
-        'detalles' => $detalles // Array con la info para el modal
-    ];
+    return ['success' => true, 'message' => 'Proceso finalizado.', 'detalles' => $detalles];
+}
+
+function obtenerNombreDocente($conn, $legajo) {
+    if (empty($legajo)) return 'Sin Asignar';
+    
+    $sql = "SELECT p.apellido, p.nombre 
+            FROM persona p
+            WHERE p.idPersona = ?";//UTILIZA EL IDPERSONA DE LOS DOCENTES EN LA TABLA FECHAEXAMENES
+
+            /* si utilizara legajo sería
+            $sql = "SELECT p.apellido, p.nombre 
+            FROM persona p inner join personal pe on p.idPersona = pe.idPersona
+            WHERE pe.legajo = ?";*/
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $legajo);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    
+    if ($fila = $res->fetch_assoc()) {
+        $stmt->close();
+        return $fila['apellido'] . ', ' . $fila['nombre'];
+    }
+    
+    $stmt->close();
+    return 'Docente no encontrado (' . $legajo . ')';
 }
 
 /**
