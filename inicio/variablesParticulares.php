@@ -65,6 +65,7 @@ $req20 = " "; // Vacio
             13. Aprueba S/Asist
             14. Promocional
             15. Promocional S/Asist
+            .
             */
 
 ?>
