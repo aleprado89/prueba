@@ -48,13 +48,24 @@ $req19 = " "; // Vacio
 $req20 = " "; // Vacio
 
 
-
-/*[16:38, 27/8/2025] Ale: Banfield:
-$req17 = "Falta Documentación";
-[16:39, 27/8/2025] Ale: Mercedarias:
-$req17 = "Cert. Int. Sexual";
-$req18 = "Pase Sanitario";
-$req19 = "Apto Psicofísico";*/
+/*Resultados
+            0. Libre 
+            1. Regular
+            2. Coloquio
+            3. Libre S/Asist
+            4. Regular S/Asist
+            5. Coloquio S/Asist
+            6. Sin Calificaciones            
+            7. Asistencia Requerida     
+            8. Asistencia Insuficiente  
+            9. Sin Asistencia
+            10. Recursa
+            11. Aprueba
+            12. Recursa S/Asist
+            13. Aprueba S/Asist
+            14. Promocional
+            15. Promocional S/Asist
+            */
 
 ?>
 
