@@ -50,7 +50,12 @@
                         <li><a class="dropdown-item" href="actas.php">Actas</a></li>
                     </ul>
                 </li>
-
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Inscripciones Web</a>
+    <div class="dropdown-menu">
+        <a class="dropdown-item" href="solicitudesExamen.php">Examen</a>
+        </div>
+</li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownListados" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Listados
@@ -65,7 +70,7 @@
 
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownColegio" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-building"></i> Colegio
+                        <i class="bi bi-building"></i> Instituto
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownColegio">
                         <li><a class="dropdown-item" href="../secretaria/editParametrosWeb.php">Parámetros Web</a></li>

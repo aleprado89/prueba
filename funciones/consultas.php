@@ -3371,7 +3371,6 @@ function getMateriasPorCurso($conn, $idCurso) {
  * Esta función es para el pre-llenado de la tabla visual.
  */
 function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condicionInscripcion) {
-    // Definimos los IDs de estado según la condición (Replicando la lógica de tu controlCorrelatividad)
     $estadosPermitidos = [];
     
     if ($condicionInscripcion == 'Regular' || $condicionInscripcion == 'Aprobó Cursada') {
@@ -3816,4 +3815,142 @@ function obtenerDocentesActivos($conn) {
         $docentes[] = $row;
     }
     return $docentes;
+}
+
+/* -------------------------------------------------------------------------- */
+/* NUEVAS FUNCIONES PARA SOLICITUDES DE EXAMEN (ADMINISTRACIÓN)              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Busca las solicitudes de examen web filtrando por parámetros.
+ */
+function buscarSolicitudesExamenWeb($conn, $idCicloLectivo, $idTurno, $idPlan, $idCurso = null, $idMateria = null, $estados = [1]) {
+    $solicitudes = [];
+    
+    // 1. Protección de estados
+    if (empty($estados)) { $estados = [1]; }
+    $listaEstados = implode(',', array_map('intval', $estados));
+
+    // 2. Construcción SQL
+    $sql = "SELECT 
+                iew.id_Inscripcion_web,
+                iew.idAlumno,
+                iew.fechhora_inscri,
+                iew.estado,
+                p.apellido, 
+                p.nombre,
+                p.dni,
+                m.nombre as nombreMateria,
+                m.idMateria,
+                m.idUnicoMateria,
+                fe.fecha as fechaExamen,
+                fe.hora as horaExamen,
+                fe.idFechaExamen,
+                c.nombre as nombreCurso
+            FROM inscripcionexamenes_web iew
+            JOIN alumnosterciario a ON iew.idAlumno = a.idAlumno
+            JOIN persona p ON a.idPersona = p.idPersona
+            JOIN fechasexamenes fe ON iew.idFechaExamen = fe.idFechaExamen
+            JOIN materiaterciario m ON fe.idMateria = m.idMateria
+            JOIN curso c ON m.idCurso = c.idCurso
+            WHERE fe.idCicloLectivo = ? 
+              AND fe.idTurno = ? 
+              AND m.idPlan = ?
+              AND iew.estado IN ($listaEstados)";
+
+    // 3. Preparación de parámetros
+    $types = "iii";
+    $params = [];
+    // IMPORTANTE: bind_param con operador spread (...) requiere array indexado, no asociativo.
+    $params[] = (int)$idCicloLectivo;
+    $params[] = (int)$idTurno;
+    $params[] = (int)$idPlan;
+
+    // Filtros opcionales
+    // Nota: Verificamos con > 0 para evitar que el string "0" de 'Todos' active el filtro
+    if ($idCurso && (int)$idCurso > 0) {
+        $sql .= " AND m.idCurso = ?";
+        $types .= "i";
+        $params[] = (int)$idCurso;
+    }
+
+    if ($idMateria && (int)$idMateria > 0) {
+        $sql .= " AND m.idMateria = ?";
+        $types .= "i";
+        $params[] = (int)$idMateria;
+    }
+
+    $sql .= " ORDER BY iew.fechhora_inscri ASC, p.apellido ASC";
+
+    // 4. Ejecución con Captura de Errores
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        // ERROR AL PREPARAR: Suele ser nombre de columna incorrecto o error de sintaxis SQL
+        throw new Exception("Error SQL Prepare: " . $conn->error . " | SQL: " . $sql);
+    }
+
+    // Vinculación dinámica
+    $stmt->bind_param($types, ...$params);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Error SQL Execute: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $solicitudes[] = $row;
+    }
+    $stmt->close();
+    
+    return $solicitudes;
+}
+
+/**
+ * Obtiene fechas de examen alternativas (otras mesas) para la misma materia/ciclo/turno.
+ */
+function obtenerFechasAlternativas($conn, $idMateria, $idCicloLectivo, $idTurno) {
+    $fechas = [];
+    $sql = "SELECT idFechaExamen, fecha, hora 
+            FROM fechasexamenes 
+            WHERE idMateria = ? AND idCicloLectivo = ? AND idTurno = ?
+            ORDER BY fecha ASC";
+    
+    $stmt = $conn->prepare($sql);
+    if ($stmt) {
+        $stmt->bind_param("iii", $idMateria, $idCicloLectivo, $idTurno);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $fechas[] = $row;
+        }
+        $stmt->close();
+    }
+    return $fechas;
+}
+/**
+ * Obtiene el texto del estado de cursado (Regular, Libre, etc.) de un alumno en una materia.
+ * Se busca por idUnicoMateria para abarcar cualquier plan vinculado.
+ */
+function obtenerCondicionCursado($conn, $idAlumno, $idUnicoMateria) {
+    // Buscamos el último registro de calificación para esa materia
+    $sql = "SELECT c.estadoCursado 
+            FROM calificacionesterciario c
+            INNER JOIN materiaterciario m ON c.idMateria = m.idMateria
+            WHERE c.idAlumno = ? AND m.idUnicoMateria = ?
+            ORDER BY c.idCalificacion DESC LIMIT 1";
+
+    $stmt = $conn->prepare($sql);
+    $estado = "Libre"; // Valor por defecto si no tiene cursada previa (asume Libre)
+
+    if ($stmt) {
+        $stmt->bind_param("ii", $idAlumno, $idUnicoMateria);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $estado = $row['estadoCursado'];
+        }
+        $stmt->close();
+    }
+    return $estado;
 }

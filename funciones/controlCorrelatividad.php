@@ -525,6 +525,7 @@ function inscripcionExamenEstado($inscripcion, $estadoNumero, $nombreMateria) {
 
 function inscripcionExamenControl($conexion, $idAlumno, $idUnicoMateria, $inscripcion, $masivo) {
     global $materiasAdeuda;
+    $materiasAdeuda="";
     $habilitacionInscripcion = false;
     $existeCursado = false; 
     $materiaAprobada = false;   

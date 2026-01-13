@@ -62,12 +62,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
 
                     foreach ($mesas as $mesa) {
                         // Verificamos si existe la clave 'p1' (Presidente de mesa)
-                        $legajoDocente = isset($mesa['p1']) ? $mesa['p1'] : '';
+                        // IMPORTANTE: p1 contiene el IDPERSONAL, no el legajo.
+                        $idPersonalDocente = isset($mesa['p1']) ? $mesa['p1'] : '';
                         
-                        // Buscamos el nombre explícitamente
-                        $nombreDocente = obtenerNombreDocente($conn, $legajoDocente);
+                        // Buscamos el nombre explícitamente usando la función corregida en consultas.php
+                        $nombreDocente = obtenerNombreDocente($conn, $idPersonalDocente);
                         
-                        // Agregamos el campo nuevo
+                        // Agregamos el campo nuevo para mostrar en la tarjeta
                         $mesa['nombrePresidente'] = $nombreDocente;
                         
                         $mesasProcesadas[] = $mesa;
@@ -116,8 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 if (empty($listaAlumnos) || !$idFechaExamen) {
                     $response = ['success' => false, 'message' => 'Datos incompletos.'];
                 } else {
-                    // Llama a la función en consultas.php (Actualizada en el paso anterior)
-                    // Esta función ya devuelve 'nombre' (texto) en el array 'detalles'
+                    // Llama a la función en consultas.php
                     $resultado = inscribirAlumnosMasivo($conn, $listaAlumnos, $idFechaExamen, $condicionTexto);
                     $response = $resultado;
                 }
@@ -218,7 +218,7 @@ try {
             <div id="alertContainer"></div>
 
             <div class="card p-4 mb-4 shadow-sm">
-                <h5 class="mb-3 text-primary">
+                <h5 class="mb-3 text-dark">
                     <i class="bi bi-people-fill"></i> Inscripción Masiva a Exámenes
                 </h5>
                 <hr>
@@ -271,7 +271,7 @@ try {
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <button type="button" class="btn btn-primary w-100" id="btnBuscar" disabled>
+                                <button type="button" class="btn btn-primary" id="btnBuscar" disabled>
                                     <i class="bi bi-search"></i> BUSCAR MESAS Y ALUMNOS
                                 </button>
                             </div>
@@ -281,7 +281,7 @@ try {
                     <hr>
 
                     <div id="seccionMesas" style="display:none;" class="mt-4">
-                        <h6 class="text-primary"><i class="bi bi-calendar-event"></i> Mesas de Examen Disponibles</h6>
+                        <h6 class="text-dark"><i class="bi bi-calendar-event"></i> Mesas de Examen Disponibles</h6>
                         <p class="text-muted small">Seleccione la mesa haciendo clic en la tarjeta correspondiente.</p>
                         
                         <div id="contenedorMesas" class="row g-3"></div>
@@ -295,7 +295,7 @@ try {
 
                     <div id="seccionAlumnos" style="display:none;" class="mt-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="text-primary mb-0"><i class="bi bi-person-lines-fill"></i> Alumnos Aptos para Inscribir</h6>
+                            <h6 class="text-dark mb-0"><i class="bi bi-person-lines-fill"></i> Alumnos Aptos para Inscribir</h6>
                             <span class="badge bg-secondary">Total: <span id="badgeCount">0</span></span>
                         </div>
                         
@@ -314,8 +314,8 @@ try {
                             </table>
                         </div>
                         
-                        <div class="d-grid gap-2 mt-4">
-                            <button class="btn btn-success" id="btnProcesar" disabled>
+                        <div class="mt-4 text-end">
+                            <button class="btn btn-primary" id="btnProcesar" disabled>
                                 <i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA
                             </button>
                         </div>
@@ -368,7 +368,7 @@ try {
             }
         }
 
-        // --- COMBOS ENCADENADOS (Igual lógica que antes) ---
+        // --- COMBOS ENCADENADOS ---
         $('#idPlan, #idCiclo').change(function() {
             const plan = $('#idPlan').val();
             const ciclo = $('#idCiclo').val();
@@ -442,15 +442,14 @@ try {
                 if(resMesas.success && resMesas.data.length > 0) {
                     let htmlMesas = '';
                     resMesas.data.forEach(m => {
-                        // AQUÍ MODIFICAMOS PARA MOSTRAR NOMBRE DEL PRESIDENTE (P1)
-                        // m.nombrePresidente viene del backend
+                        // AQUÍ MODIFICAMOS LOS COLORES A TEXT-DARK (NEGRO)
                         htmlMesas += `
                         <div class="col-md-6 col-lg-4">
                             <div class="card p-3 mesa-card h-100" data-id="${m.idFechaExamen}">
                                 <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-calendar-check fs-3 text-primary me-3"></i>
+                                    <i class="bi bi-calendar-check fs-3 text-dark me-3"></i>
                                     <div>
-                                        <h6 class="mb-0 fw-bold text-primary">${m.fecha}</h6>
+                                        <h6 class="mb-0 fw-bold text-dark">${m.fecha}</h6>
                                         <span class="text-muted small">Hora: ${m.hora}</span>
                                     </div>
                                 </div>
@@ -485,7 +484,7 @@ try {
                                     <tr data-id="${a.idAlumno}" data-nombre="${a.nombreCompleto}">
                                         <td class="align-middle">${a.dni}</td>
                                         <td class="align-middle fw-bold">${a.nombreCompleto}</td>
-                                        <td class="align-middle"><span class="badge bg-info text-dark">${a.estado}</span></td>
+                                        <td class="align-middle"><span class="badge bg-secondary text-dark">${a.estado}</span></td>
                                         <td class="text-center align-middle">
                                             <button class="btn btn-outline-danger btn-sm btn-borrar" title="Quitar de la lista">
                                                 <i class="bi bi-trash"></i>
@@ -576,7 +575,7 @@ try {
                             bg = 'style="background-color: #fff5f5"';
                         }
 
-                        // AQUÍ MOSTRAMOS NOMBRE Y APELLIDO (item.nombre viene de PHP consultas.php)
+                        // AQUÍ MOSTRAMOS NOMBRE Y APELLIDO
                         htmlReporte += `<tr ${bg}>
                             <td class="fw-bold">${item.nombre}</td>
                             <td class="${claseColor}">${icono} ${item.mensaje}</td>
