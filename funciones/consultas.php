@@ -3375,8 +3375,8 @@ function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condi
     
     if ($condicionInscripcion == 'Regular' || $condicionInscripcion == 'Aprobó Cursada') {
         $estadosPermitidos = [1,4]; // Agrega aquí los IDs que consideras "Regular" (Regular, Aprobado, etc si aplica)
-    } elseif ($condicionInscripcion == 'Libre') {
-        $estadosPermitidos = [ 3, 5, 10, 12]; // Libre, Abandono, etc.
+    } elseif ($condicionInscripcion == 'Libre' || $condicionInscripcion == 'No Regular') {
+        $estadosPermitidos = [ 3, 0, 10, 12]; // Libre, Abandono, etc.
         // Nota: Si los "Sin cursar" (null) pueden rendir libre, la lógica cambia, 
         // pero por SQL necesitamos registros existentes. Para masivos, asumimos que tienen legajo.
     } else {
@@ -3880,7 +3880,7 @@ function buscarSolicitudesExamenWeb($conn, $idCicloLectivo, $idTurno, $idPlan, $
         $params[] = (int)$idMateria;
     }
 
-    $sql .= " ORDER BY iew.fechhora_inscri ASC, p.apellido ASC";
+    $sql .= " ORDER BY iew.fechhora_inscri , p.apellido ASC";
 
     // 4. Ejecución con Captura de Errores
     $stmt = $conn->prepare($sql);
@@ -3929,28 +3929,249 @@ function obtenerFechasAlternativas($conn, $idMateria, $idCicloLectivo, $idTurno)
     return $fechas;
 }
 /**
- * Obtiene el texto del estado de cursado (Regular, Libre, etc.) de un alumno en una materia.
- * Se busca por idUnicoMateria para abarcar cualquier plan vinculado.
+ * Determina la condición de examen (id y texto) basada en el estado de cursado.
+ * Retorna un array con: status (ok/error), text (para mostrar), id (idCondicion para guardar).
  */
-function obtenerCondicionCursado($conn, $idAlumno, $idUnicoMateria) {
-    // Buscamos el último registro de calificación para esa materia
-    $sql = "SELECT c.estadoCursado 
+function obtenerCondicionExamen($conn, $idAlumno, $idUnicoMateria) {
+    // 1. Buscar estado de cursado del alumno
+    $sql = "SELECT c.idCalificacion, c.estadoCursadoNumero 
             FROM calificacionesterciario c
             INNER JOIN materiaterciario m ON c.idMateria = m.idMateria
             WHERE c.idAlumno = ? AND m.idUnicoMateria = ?
             ORDER BY c.idCalificacion DESC LIMIT 1";
 
     $stmt = $conn->prepare($sql);
-    $estado = "Libre"; // Valor por defecto si no tiene cursada previa (asume Libre)
+    $stmt->bind_param("ii", $idAlumno, $idUnicoMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
 
-    if ($stmt) {
-        $stmt->bind_param("ii", $idAlumno, $idUnicoMateria);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($row = $result->fetch_assoc()) {
-            $estado = $row['estadoCursado'];
-        }
-        $stmt->close();
+    // CASO A: No hay registros de cursado
+    if (!$row) {
+        return [
+            'status' => 'error', 
+            'text' => 'Sin Cursado', 
+            'observacion' => 'Revisar registros de cursado',
+            'idCondicion' => null
+        ];
     }
-    return $estado;
+
+    // CASO B: Registro existe pero estado es nulo
+    if (is_null($row['estadoCursadoNumero'])) {
+        return [
+            'status' => 'error', 
+            'text' => 'Sin Calificaciones', 
+            'observacion' => 'Revisar registros de cursado',
+            'idCondicion' => null
+        ];
+    }
+
+    $estadoNum = (int)$row['estadoCursadoNumero'];
+    $nombresBusqueda = [];
+
+    // --- MAPEO DE ESTADOS ---
+
+    // 1. REGULAR (1, 4)
+    if (in_array($estadoNum, [1, 4])) {
+        $nombresBusqueda = ["'Aprobó Cursada'", "'Regular'"]; 
+    } 
+    // 2. LIBRE / NO REGULAR (0, 3, 10, 12)
+    elseif (in_array($estadoNum, [0, 3, 10, 12])) {
+        $nombresBusqueda = ["'Libre'", "'No Regular'"];
+    }
+    // 3. COLOQUIO (2, 5)
+    elseif (in_array($estadoNum, [2, 5])) {
+        $nombresBusqueda = ["'Coloquio'"];
+    }
+    // 4. PROMOCIÓN (Agregados 11, 13 junto a 14, 15)
+    elseif (in_array($estadoNum, [11, 13, 14, 15])) {
+        $nombresBusqueda = ["'Promoción'", "'Promocion'"];
+    }
+    // 5. ESTADOS DE ERROR / RECHAZO (6, 7, 8, 9)
+    elseif (in_array($estadoNum, [6, 7, 8, 9])) {
+        $mensajeError = "";
+        switch ($estadoNum) {
+            case 6: $mensajeError = "Sin calificaciones"; break;
+            case 7: $mensajeError = "Asistencia Requerida"; break;
+            case 8: $mensajeError = "Asistencia Insuficiente"; break;
+            case 9: $mensajeError = "Sin Asistencia"; break;
+        }
+
+        // Comportamiento "Caso A": Devolver Error, Texto y Observación
+        return [
+            'status' => 'error', 
+            'text' => $mensajeError,        // Columna Condición
+            'observacion' => $mensajeError, // Columna Observación
+            'idCondicion' => null
+        ];
+    }
+    else {
+        // Estado desconocido (Cualquier otro número)
+        return [
+            'status' => 'error', 
+            'text' => "Estado ($estadoNum) desconocido", 
+            'observacion' => 'Estado de cursado no mapeado',
+            'idCondicion' => null
+        ];
+    }
+
+    // 3. Buscar coincidencia en la tabla 'condicion' de la BD
+    // (Solo llega aquí si NO entró en el elseif de estados de error 6-9)
+    $listaNombres = implode(',', $nombresBusqueda);
+    
+    $sqlCond = "SELECT idCondicion, condicion 
+                FROM condicion 
+                WHERE condicion IN ($listaNombres) 
+                LIMIT 1";
+    
+    $resultCond = $conn->query($sqlCond);
+
+    if ($rowCond = $resultCond->fetch_assoc()) {
+        return [
+            'status' => 'ok', 
+            'text' => $rowCond['condicion'], 
+            'observacion' => '',
+            'idCondicion' => $rowCond['idCondicion']
+        ];
+    } else {
+        return [
+            'status' => 'error', 
+            'text' => 'Condición BD faltante', 
+            'observacion' => 'Falta parametrizar tabla condiciones',
+            'idCondicion' => null
+        ];
+    }
+}
+/**
+ * Obtiene los datos necesarios de una solicitud web para procesar la inscripción.
+ * Recupera Alumno, Materia y Turno (vía fechasexamenes).
+ */
+function obtenerDatosSolicitudWeb($conn, $idInscripcionWeb) {
+    $sql = "SELECT iew.idAlumno, fe.idMateria, fe.idTurno
+            FROM inscripcionexamenes_web iew
+            JOIN fechasexamenes fe ON iew.idFechaExamen = fe.idFechaExamen
+            WHERE iew.id_Inscripcion_web = ?";
+    
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return null;
+    
+    $stmt->bind_param("i", $idInscripcionWeb);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $datos = $result->fetch_assoc();
+    $stmt->close();
+    
+    return $datos;
+}
+
+/**
+ * Actualiza el estado de la solicitud WEB (Aceptada/Rechazada).
+ */
+function actualizarEstadoSolicitudWeb($conn, $idInscripcionWeb, $estado, $idCondicion, $observacion) {
+    $fechaHora = date('Y-m-d H:i:s');
+    // Si idCondicion es 0 o null, lo guardamos como tal.
+    if (!$idCondicion) $idCondicion = 0;
+
+    $sql = "UPDATE inscripcionexamenes_web 
+            SET estado = ?, 
+                idCondicion = ?, 
+                observaciones = ?, 
+                fechhora_proces = ? 
+            WHERE id_Inscripcion_web = ?";
+    
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return false;
+
+    $stmt->bind_param("iissi", $estado, $idCondicion, $observacion, $fechaHora, $idInscripcionWeb);
+    $resultado = $stmt->execute();
+    $stmt->close();
+    
+    return $resultado;
+}
+/**
+ * CORREGIDA: Busca solicitudes de inscripción a CURSADO (Web).
+ * Se agrega JOIN con tabla PERSONA para obtener nombre y apellido.
+ */
+function buscarSolicitudesCursadoWeb($conn, $idCiclo, $idMateria = null, $estado = 1) {
+    $params = [];
+    $types = "";
+
+    // NOTA: Se agrego el JOIN con persona (p) porque alumno (a) no tiene los campos de nombre
+    $sql = "SELECT mw.id_matriculacion_web, mw.idAlumno, mw.idMateria, mw.idCicloLectivo, 
+                   mw.condicion, mw.estado, mw.observaciones, mw.fechhora_inscri,
+                   p.apellido, p.nombre, p.dni, a.idAlumno,
+                   m.nombre as nombreMateria, m.idUnicoMateria,
+                   c.nombre as nombreCurso
+            FROM matriculacionmateria_web mw
+            JOIN alumnosterciario a ON mw.idAlumno = a.idAlumno
+            JOIN persona p ON a.idPersona = p.idPersona
+            JOIN materiaterciario m ON mw.idMateria = m.idMateria
+            LEFT JOIN curso c ON m.idCurso = c.idCurso
+            WHERE mw.idCicloLectivo = ? AND mw.estado = ?";
+    
+    $params[] = $idCiclo;
+    $params[] = $estado;
+    $types .= "ii";
+
+    if ($idMateria && $idMateria != 'all') {
+        $sql .= " AND mw.idMateria = ?";
+        $params[] = $idMateria;
+        $types .= "i";
+    }
+
+    $sql .= " ORDER BY mw.fechhora_inscri ASC, p.apellido ASC";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("Error prepare buscarSolicitudesCursadoWeb: " . $conn->error);
+        return [];
+    }
+    
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    $stmt->close();
+    return $data;
+}
+
+/**
+ * Obtiene una solicitud especifica por ID (para procesar individualmente).
+ * También corregido el JOIN con persona por si se necesita mostrar datos.
+ */
+function obtenerSolicitudCursadoWebPorId($conn, $idMatriculacionWeb) {
+    $sql = "SELECT mw.*, m.nombre as nombreMateria, m.idUnicoMateria, 
+                   p.apellido, p.nombre
+            FROM matriculacionmateria_web mw
+            JOIN alumno a ON mw.idAlumno = a.idAlumno
+            JOIN persona p ON a.idPersona = p.idPersona
+            JOIN materiaterciario m ON mw.idMateria = m.idMateria
+            WHERE mw.id_matriculacion_web = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idMatriculacionWeb);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $data = $res->fetch_assoc();
+    $stmt->close();
+    return $data;
+}
+
+/**
+ * Actualiza el estado de la solicitud WEB de cursado.
+ */
+function actualizarEstadoSolicitudCursadoWeb($conn, $idMatriculacionWeb, $estado, $observacion = '') {
+    $fechaHora = date('Y-m-d H:i:s');
+    $sql = "UPDATE matriculacionmateria_web 
+            SET estado = ?, observaciones = ?, fechhora_proces = ? 
+            WHERE id_matriculacion_web = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("issi", $estado, $observacion, $fechaHora, $idMatriculacionWeb);
+    $res = $stmt->execute();
+    $stmt->close();
+    return $res;
 }

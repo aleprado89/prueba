@@ -6,7 +6,6 @@
  */
 
 // --- LIMPIEZA DE SALIDA ---
-// Iniciamos buffer para atrapar cualquier error o eco indeseado antes del JSON
 ob_start();
 
 include_once '../funciones/verificarSesion.php';
@@ -23,7 +22,6 @@ include_once '../funciones/controlCorrelatividad.php';
 
 // --- AJAX HANDLER ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Limpiamos cualquier salida previa (warnings de includes, espacios en blanco)
     ob_clean(); 
     header('Content-Type: application/json');
     
@@ -54,7 +52,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $idPlan = filter_input(INPUT_POST, 'idPlan', FILTER_VALIDATE_INT);
                 $idCurso = filter_input(INPUT_POST, 'idCurso', FILTER_VALIDATE_INT); 
                 $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT);
-                // Nuevo parámetro: Ver Histórico
                 $verHistorico = filter_input(INPUT_POST, 'verHistorico', FILTER_VALIDATE_INT);
 
                 if (!$idCiclo || !$idTurno || !$idPlan) {
@@ -62,10 +59,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     exit;
                 }
 
-                // 1: Pendiente | 2: Correcta | 3: Rechazada | 4: Cancelada
                 $estadosBuscar = ($verHistorico == 1) ? [2, 3, 4] : [1];
 
-                // Verificamos si la función existe antes de llamar (evita Error 500)
                 if (!function_exists('buscarSolicitudesExamenWeb')) {
                     throw new Exception("La función buscarSolicitudesExamenWeb no existe en consultas.php");
                 }
@@ -75,17 +70,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 foreach ($solicitudes as $sol) {
                     $fechasAlt = [];
-                    // Optimizamos: Solo buscamos fechas si NO es histórico
                     if ($verHistorico != 1) {
                          if(function_exists('obtenerFechasAlternativas')) {
                             $fechasAlt = obtenerFechasAlternativas($conn, $sol['idMateria'], $idCiclo, $idTurno);
                          }
                     }
                     
-                    // Aseguramos ID (Fallback por si cambia el nombre de columna)
                     $idInscripcion = $sol['id_Inscripcion_web'] ?? $sol['idInscripcionWeb'] ?? $sol['id'] ?? 0;
 
-                    // Texto de Estado (Solo histórico)
                     $estadoTexto = "";
                     if ($verHistorico == 1) {
                         switch($sol['estado']) {
@@ -99,6 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $dataProcessed[] = [
                         'idInscripcionWeb' => $idInscripcion,
                         'idAlumno' => $sol['idAlumno'],
+                        'idMateria' => $sol['idMateria'],
                         'idUnicoMateria' => $sol['idUnicoMateria'],
                         'alumno' => $sol['apellido'] . ', ' . $sol['nombre'] . ' (' . $sol['dni'] . ')',
                         'materia' => $sol['nombreMateria'],
@@ -121,39 +114,153 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $idAlumno = filter_input(INPUT_POST, 'idAlumno', FILTER_VALIDATE_INT);
 
                 if(!$idUnicoMateria || !$idAlumno){
-                     $response = ['success' => false, 'message' => 'Datos insuficientes para validar.'];
+                     $response = ['success' => false, 'message' => 'Datos insuficientes.'];
                 } else {
-                    $esValida = false;
-                    $observacion = "Error verificación";
+                    $esValidaCorrelativas = false;
+                    $esValidaCondicion = false;
+                    $observacion = "Verificando...";
                     $condicionTexto = "S/D";
+                    $idCondicionBD = null; 
                     
+                    global $materiasAdeuda;
+                    $materiasAdeuda = ''; 
+
                     if (function_exists('controlCorrelatividades')) {
-                        $esValida = controlCorrelatividades((int)$idUnicoMateria, (int)$idAlumno, 1);
+                        $esValidaCorrelativas = controlCorrelatividades((int)$idUnicoMateria, (int)$idAlumno, 1);
                     } else {
-                        $observacion = "Fn controlCorrelatividades no existe";
+                        $observacion = "Error: Fn correlatividades no existe";
                     }
 
-                    if (function_exists('obtenerCondicionCursado')) {
-                        $condicionTexto = obtenerCondicionCursado($conn, (int)$idAlumno, (int)$idUnicoMateria);
+                    if (function_exists('obtenerCondicionExamen')) {
+                        $infoCondicion = obtenerCondicionExamen($conn, (int)$idAlumno, (int)$idUnicoMateria);
+                        
+                        if ($infoCondicion['status'] === 'ok') {
+                            $condicionTexto = $infoCondicion['text']; 
+                            $idCondicionBD = $infoCondicion['idCondicion'];
+                            
+                            if (stripos($condicionTexto, 'Promoc') !== false) {
+                                $esValidaCondicion = false;
+                                $observacion = "Los promocionales se deben inscribir desde Insc. Examen Masiva";
+                            } else {
+                                $esValidaCondicion = true;
+                            }
+                        } else {
+                            $esValidaCondicion = false;
+                            $condicionTexto = $infoCondicion['text']; 
+                            $observacion = $infoCondicion['observacion']; 
+                        }
+                    } else {
+                         $condicionTexto = "Error Fn Condicion";
                     }
 
+                    $esAptaTotal = ($esValidaCorrelativas && $esValidaCondicion);
                     $accionSugerida = "ACEPTAR";
 
-                    if ($esValida) {
+                    if ($esAptaTotal) {
                         $observacion = ""; 
                         $accionSugerida = "ACEPTAR";
                     } else {
-                        $observacion = "No cumple correlativas/Requisitos.";
                         $accionSugerida = "RECHAZAR";
+                        
+                        if (stripos($condicionTexto, 'Promoc') !== false) {
+                             // Obs seteada
+                        } elseif (!$esValidaCondicion) {
+                             // Obs seteada
+                        } elseif (!$esValidaCorrelativas) {
+                            $observacion = !empty($materiasAdeuda) ? $materiasAdeuda : "No cumple correlativas.";
+                        }
                     }
 
                     $response = [
                         'success' => true, 
-                        'esValida' => $esValida, 
+                        'esValida' => $esAptaTotal, 
                         'observacion' => $observacion,
-                        'condicionSugerida' => $condicionTexto,
+                        'condicionTexto' => $condicionTexto,
+                        'idCondicionBD' => $idCondicionBD,
                         'accionSugerida' => $accionSugerida
                     ];
+                }
+                break;
+
+            case 'procesar_lote_final':
+                $lista = json_decode($_POST['lista'], true); 
+                $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
+                
+                if (!$lista || !is_array($lista) || !$idCiclo) {
+                    echo json_encode(['success'=>false, 'message'=>'Datos de inscripción inválidos.']);
+                    exit;
+                }
+
+                $procesadosExito = 0;
+                $detallesError = []; 
+                $conn->autocommit(FALSE); 
+
+                try {
+                    foreach ($lista as $item) {
+                        $idWeb = $item['idWeb'];
+                        $accion = $item['accion']; // ACEPTAR o RECHAZAR
+                        $idCondicion = $item['idCondicion']; 
+                        $idFechaExamen = $item['idFechaExamen'];
+                        $observacionUI = $item['observacionUI']; 
+                        $nombreAlumno = $item['alumno'] ?? 'Alumno';
+
+                        // Obtenemos los datos originales de la solicitud
+                        $datosOrig = obtenerDatosSolicitudWeb($conn, $idWeb);
+
+                        if (!$datosOrig) { continue; } 
+
+                        // --- LÓGICA DE AUTORIDAD ---
+                        if ($accion === 'ACEPTAR') {
+                            // IMPORTANTE: Aquí NO validamos controlCorrelatividades.
+                            // Si llegó "ACEPTAR", es porque el usuario (Secretaría) decidió inscribirlo
+                            // ignorando la sugerencia del sistema (Rojo/Verde).
+                            
+                            if (!$idFechaExamen || !$idCondicion) {
+                                $idCondicion = ($idCondicion) ? $idCondicion : 0; 
+                            }
+
+                            // Llamamos a la función que compartiste (que solo chequea duplicados)
+                            $resultadoInscripcion = inscribirAlumnoExamen(
+                                $conn, 
+                                $datosOrig['idAlumno'], 
+                                $datosOrig['idMateria'], 
+                                $idCiclo, 
+                                $idFechaExamen, 
+                                $idCondicion, 
+                                $datosOrig['idTurno']
+                            );
+
+                            if ($resultadoInscripcion['success']) {
+                                // Éxito: marcamos solicitud como Aceptada (2)
+                                actualizarEstadoSolicitudWeb($conn, $idWeb, 2, $idCondicion, "Inscripción Correcta (Manual)");
+                                $procesadosExito++;
+                            } else {
+                                // Error (ej: ya estaba inscripto en el turno)
+                                $motivoError = "Error BD: " . $resultadoInscripcion['message'];
+                                actualizarEstadoSolicitudWeb($conn, $idWeb, 3, 0, $motivoError);
+                                $detallesError[] = "<b>$nombreAlumno:</b> " . $resultadoInscripcion['message'];
+                            }
+
+                        } else {
+                            // ACCIÓN: RECHAZAR
+                            // Rechazamos directamente, aunque el sistema hubiera sugerido verde.
+                            $motivoRechazo = "Rechazo manual: " . $observacionUI;
+                            actualizarEstadoSolicitudWeb($conn, $idWeb, 3, 0, $motivoRechazo);
+                            $procesadosExito++; 
+                        }
+                    }
+
+                    $conn->commit();
+                    
+                    $response = [
+                        'success' => true, 
+                        'procesados' => $procesadosExito,
+                        'errores' => $detallesError
+                    ];
+
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $response = ['success' => false, 'message' => 'Error en transacción: ' . $e->getMessage()];
                 }
                 break;
         }
@@ -167,7 +274,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo json_encode($response);
     exit;
 }
-// Vaciamos el buffer y salimos si no es POST para mostrar el HTML
 ob_end_flush();
 ?>
 
@@ -205,10 +311,6 @@ ob_end_flush();
             border-bottom: 1px solid #eee;
             padding: 1rem 1.25rem;
         }
-        
-        .btn-primary i, .btn-primary .fas, .btn-primary .bi, .btn-primary .fa {
-            color: #ffffff !important;
-        }
 
         tr.table-success-custom, tr.table-success-custom > td { 
             background-color: #d1e7dd !important; color: #0f5132 !important;
@@ -223,6 +325,20 @@ ob_end_flush();
         .filtro-rapido-container { position: relative; }
         .filtro-rapido-icon { position: absolute; top: 10px; left: 10px; color: #aaa; }
         .filtro-rapido-input { padding-left: 35px; }
+
+        .nav-tabs .nav-link { color: #666; font-weight: 500; }
+        
+        /* Grupo de Acciones */
+        .btn-accion-group .btn-outline-success, .btn-accion-group .btn-outline-danger {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.9rem;
+        }
+        .btn-accion-group .btn-check:checked + .btn-outline-success {
+            background-color: #198754; color: white;
+        }
+        .btn-accion-group .btn-check:checked + .btn-outline-danger {
+            background-color: #dc3545; color: white;
+        }
     </style>
 </head>
 <body>
@@ -248,8 +364,7 @@ ob_end_flush();
             </div>
             
             <div class="card-body">
-                <form id="formFiltros" class="row g-3 align-items-end">
-                    
+                <form id="formFiltros" class="row g-3 align-items-end mb-4">
                     <div class="col-md-2">
                         <label class="form-label">Ciclo Lectivo</label>
                         <select class="form-select" id="selectCiclo" required>
@@ -305,15 +420,6 @@ ob_end_flush();
                             <option value="0">Todas</option>
                         </select>
                     </div>
-                    
-                    <div class="col-md-11 text-end">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" id="checkHistorico" value="1">
-                            <label class="form-check-label text-muted small" for="checkHistorico">
-                                Buscar aceptadas, rechazadas o canceladas
-                            </label>
-                        </div>
-                    </div>
 
                     <div class="col-md-1">
                         <button type="submit" class="w-100 btn btn-primary"><i class="bi bi-search"></i></button>
@@ -321,30 +427,105 @@ ob_end_flush();
                 </form>
 
                 <hr>
-
+                
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <div class="filtro-rapido-container">
                             <i class="bi bi-search filtro-rapido-icon"></i>
-                            <input type="text" class="form-control filtro-rapido-input" id="inputBusquedaRapida" placeholder="Filtrar por nombre...">
+                            <input type="text" class="form-control filtro-rapido-input" id="inputBusquedaRapida" placeholder="Filtrar por nombre en la tabla...">
                         </div>
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle" id="tablaSolicitudes">
-                        <thead class="table-light"></thead>
-                        <tbody>
-                            <tr><td colspan="100%" class="text-center text-muted">Use los filtros para buscar.</td></tr>
-                        </tbody>
-                    </table>
+                <ul class="nav nav-tabs mb-3" id="tabSolicitudes" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="pendientes-tab" data-bs-toggle="tab" data-bs-target="#pendientes-pane" type="button" role="tab" aria-controls="pendientes-pane" aria-selected="true">
+                            <i class="bi bi-clock-history me-2"></i>Pendientes
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="resueltas-tab" data-bs-toggle="tab" data-bs-target="#resueltas-pane" type="button" role="tab" aria-controls="resueltas-pane" aria-selected="false">
+                            <i class="bi bi-archive me-2"></i>Resueltas (Histórico)
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="tabSolicitudesContent">
+                    
+                    <div class="tab-pane fade show active" id="pendientes-pane" role="tabpanel" aria-labelledby="pendientes-tab">
+                        
+                        <div class="bg-light p-2 mb-2 border rounded d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-muted small fw-bold me-2"><i class="bi bi-check2-square"></i> Selección Rápida:</span>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-primary px-3" id="btnSelCorrectos">
+                                <i class="bi bi-check-all"></i> Tildar Correctos
+                            </button>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-primary px-3" id="btnSelIncorrectos">
+                                <i class="bi bi-x-square"></i> Tildar Incorrectos
+                            </button>
+                            
+                            <div class="vr mx-2"></div>
+                            
+                            <div class="d-flex align-items-center">
+                                <span>Condición</span>
+                                <select class="form-select form-select-sm mx-2" id="selFiltroCondicion" style="max-width: 150px;">
+                                    <option value="">(Esperando datos...)</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline-primary px-3 rounded" type="button" id="btnSelCondicion">Tildar</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="tablaPendientes">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center"><input type="checkbox" id="checkAll"></th>
+                                        <th>Alumno</th>
+                                        <th class="text-center" style="width: 50px;">Calif.</th>
+                                        <th>Materia</th>
+                                        <th>Fecha de Mesa</th>
+                                        <th>Hora</th>
+                                        <th>Fecha de Solicitud</th>
+                                        <th>Condición</th>
+                                        <th>Observación</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="10" class="text-center text-muted">Use los filtros y presione buscar.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button class="btn btn-primary" id="btnEjecutar" disabled>
+                                <i class="bi bi-check-circle me-2"></i>Ejecutar Inscripción Seleccionados
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="resueltas-pane" role="tabpanel" aria-labelledby="resueltas-tab">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="tablaResueltas">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Alumno</th>
+                                        <th class="text-center" style="width: 50px;">Calif.</th>
+                                        <th>Materia</th>
+                                        <th>Fecha Mesa</th>
+                                        <th>Hora</th>
+                                        <th>Fecha Solicitud</th>
+                                        <th>Estado Final</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="7" class="text-center text-muted">Seleccione los filtros para cargar el historial.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-end mt-3">
-                    <button class="btn btn-primary" id="btnProcesar" style="display:none;" disabled>
-                        <i class="bi bi-check-double me-2"></i>Procesar Seleccionados
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -366,11 +547,53 @@ ob_end_flush();
         </div>
     </div>
 
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="modalConfirmacionLabel"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Confirmar Inscripción</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Está a punto de procesar las inscripciones seleccionadas.</p>
+                    <div class="alert alert-info py-2 mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Se procesarán: <strong id="lblCantidadConfirmar">0</strong> solicitudes.
+                    </div>
+                    <p class="mt-3 small text-muted">Esta acción registrará las inscripciones aceptadas en la base de datos oficial y marcará las rechazadas en el sistema web.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarEjecucion">
+                        <i class="bi bi-save me-1"></i> Confirmar y Ejecutar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAlerta" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAlertaTitulo">Mensaje</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalAlertaMensaje" class="mb-0"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/bootstrap.bundle.min.js"></script>
     
     <script>
         $(document).ready(function() {
+            // Variables y Selectores
             const $selCiclo = $('#selectCiclo');
             const $selTurno = $('#selectTurno');
             const $selPlan = $('#selectPlan');
@@ -378,14 +601,27 @@ ob_end_flush();
             const $selMateria = $('#selectMateria');
             
             const modalProgreso = new bootstrap.Modal(document.getElementById('modalProgreso'));
+            const modalConfirmacion = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+            const modalAlerta = new bootstrap.Modal(document.getElementById('modalAlerta'));
+            
             const $barra = $('#barraProgreso');
             const $textoProgreso = $('#progresoTexto');
             const $detalleProgreso = $('#progresoDetalle');
             
+            // Helper para mostrar alertas HTML
+            function mostrarAlerta(mensajeHTML, titulo = "Atención") {
+                $('#modalAlertaTitulo').text(titulo);
+                $('#modalAlertaMensaje').html(mensajeHTML); // Usamos HTML para permitir listas
+                modalAlerta.show();
+            }
+
+            // Variable global para almacenar datos a enviar
+            let listaParaEnviar = [];
+
+            // --- COMBOS ---
             function checkAndLoadCursos() {
                 const idPlan = $selPlan.val();
                 const idCiclo = $selCiclo.val();
-                
                 $selCurso.html('<option value="0">Todos</option>').prop('disabled', true);
                 $selMateria.html('<option value="0">Todas</option>').prop('disabled', true);
 
@@ -420,25 +656,25 @@ ob_end_flush();
                 }
             });
 
+            // --- FILTRO RÁPIDO ---
             $('#inputBusquedaRapida').on('keyup', function() {
                 var value = $(this).val().toLowerCase();
-                $("#tablaSolicitudes tbody tr").filter(function() {
+                $(".tab-pane.active table tbody tr").filter(function() {
                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
                 });
             });
 
+            // --- BÚSQUEDA ---
             $('#formFiltros').on('submit', function(e) {
                 e.preventDefault();
+                const esHistorico = $('#resueltas-tab').hasClass('active');
                 if(!$selCiclo.val() || !$selTurno.val() || !$selPlan.val()){
-                    alert("Complete los filtros requeridos.");
+                    mostrarAlerta("Complete los filtros requeridos (Ciclo, Turno, Plan).", "Faltan Datos");
                     return;
                 }
-
-                const esHistorico = $('#checkHistorico').is(':checked');
-
+                
                 $barra.css('width', '0%').text('0%');
                 $textoProgreso.text('Buscando solicitudes...');
-                $detalleProgreso.text('Espere un momento...');
                 modalProgreso.show();
 
                 const data = {
@@ -452,75 +688,46 @@ ob_end_flush();
                 };
 
                 $.post('solicitudesExamen.php', data, function(res) {
-                    const $thead = $('#tablaSolicitudes thead');
-                    const $tbody = $('#tablaSolicitudes tbody');
-                    $thead.empty();
+                    const $tbody = esHistorico ? $('#tablaResueltas tbody') : $('#tablaPendientes tbody');
                     $tbody.empty();
-
-                    let headerHtml = '';
-                    if (esHistorico) {
-                        headerHtml = `
-                            <tr>
-                                <th>Alumno</th>
-                                <th>Materia</th>
-                                <th>Fecha Mesa</th>
-                                <th>Hora</th>
-                                <th>Fecha Solicitud</th>
-                                <th>Condición</th>
-                                <th>Observación (Estado)</th>
-                            </tr>`;
-                        $('#btnProcesar').hide();
-                    } else {
-                        headerHtml = `
-                            <tr>
-                                <th class="text-center"><input type="checkbox" id="checkAll"></th>
-                                <th>Alumno</th>
-                                <th>Materia</th>
-                                <th>Fecha Mesa</th>
-                                <th>Hora</th>
-                                <th>Fecha Solicitud</th>
-                                <th>Condición</th>
-                                <th>Observación</th>
-                                <th>Acción</th>
-                            </tr>`;
-                        $('#btnProcesar').show();
-                    }
-                    $thead.html(headerHtml);
+                    const colCount = esHistorico ? 7 : 10;
+                    $('#selFiltroCondicion').html('<option value="">Seleccione...</option>');
 
                     if (!res.success || !res.data || res.data.length === 0) {
                         $barra.css('width', '100%');
                         setTimeout(() => { modalProgreso.hide(); }, 500); 
-                        $tbody.html('<tr><td colspan="100%" class="text-center text-muted fw-bold py-3">No hay solicitudes con los filtros seleccionados.</td></tr>');
-                        if(!res.success && res.message) {
-                             alert("Error servidor: " + res.message); // Mostrar el error real capturado
-                        }
+                        $tbody.html(`<tr><td colspan="${colCount}" class="text-center text-muted fw-bold py-3">No se encontraron solicitudes.</td></tr>`);
                         return;
                     }
 
                     const solicitudes = res.data;
-                    const total = solicitudes.length;
-                    $textoProgreso.text(`Se encontraron ${total} solicitudes.`);
+                    $textoProgreso.text(`Se encontraron ${solicitudes.length} solicitudes.`);
                     
-                    solicitudes.forEach((row, index) => {
+                    solicitudes.forEach((row) => {
                         let tr = '';
                         const trId = `fila-${row.idInscripcionWeb}`;
+                        
+                        const celdaCalif = `
+                            <td class="text-center">
+                                <a href="carga_califxalumno_secretaria.php?idAlumno=${row.idAlumno}" target="_blank" class="btn btn-primary btn-sm text-white" title="Ver Calificaciones">
+                                    <i class="bi bi-journal-text"></i>
+                                </a>
+                            </td>
+                        `;
 
                         if (esHistorico) {
                             tr = `
                                 <tr class="bg-white">
                                     <td>${row.alumno}</td>
+                                    ${celdaCalif}
                                     <td>${row.materia}<br><small class="text-muted">${row.curso}</small></td>
                                     <td>${row.fechaActualTexto}</td>
                                     <td>${row.horaExamen}</td>
                                     <td>${row.fechaSolicitud}</td>
-                                    <td>N/A</td>
                                     <td class="fw-bold text-secondary">${row.estadoTexto}</td>
-                                </tr>
-                            `;
-                            $tbody.append(tr);
-                        } 
-                        else {
-                            let fechaDisplay = '';
+                                </tr>`;
+                        } else {
+                            let fechaDisplay = row.fechaActualTexto;
                             if (row.fechasAlternativas && row.fechasAlternativas.length > 0) {
                                 fechaDisplay = `<select class="form-select select-fecha-tabla" name="fecha_${row.idInscripcionWeb}">`;
                                 row.fechasAlternativas.forEach(f => {
@@ -530,30 +737,35 @@ ob_end_flush();
                                 });
                                 fechaDisplay += `</select>`;
                             } else {
-                                fechaDisplay = row.fechaActualTexto;
                                 fechaDisplay += `<input type="hidden" name="fecha_${row.idInscripcionWeb}" value="${row.fechaActualId}">`;
                             }
+
+                            const radioGroup = `
+                                <div class="btn-group btn-group-sm btn-accion-group" role="group">
+                                    <input type="radio" class="btn-check btn-accion-radio" name="radio_accion_${row.idInscripcionWeb}" id="btnAceptar_${row.idInscripcionWeb}" value="ACEPTAR" autocomplete="off">
+                                    <label class="btn btn-outline-success" for="btnAceptar_${row.idInscripcionWeb}" title="Aceptar"><i class="bi bi-check-lg"></i></label>
+
+                                    <input type="radio" class="btn-check btn-accion-radio" name="radio_accion_${row.idInscripcionWeb}" id="btnRechazar_${row.idInscripcionWeb}" value="RECHAZAR" autocomplete="off">
+                                    <label class="btn btn-outline-danger" for="btnRechazar_${row.idInscripcionWeb}" title="Rechazar"><i class="bi bi-x-lg"></i></label>
+                                </div>
+                                <input type="hidden" name="idCondicionBD_${row.idInscripcionWeb}" class="id-condicion-bd">
+                            `;
 
                             tr = `
                                 <tr id="${trId}" class="table-loading" data-id="${row.idInscripcionWeb}">
                                     <td class="text-center"><input type="checkbox" class="solicitud-check" value="${row.idInscripcionWeb}"></td>
-                                    <td>${row.alumno}</td>
+                                    <td class="td-alumno">${row.alumno}</td>
+                                    ${celdaCalif}
                                     <td>${row.materia}<br><small class="text-muted">${row.curso}</small></td>
                                     <td>${fechaDisplay}</td>
                                     <td>${row.horaExamen}</td>
                                     <td>${row.fechaSolicitud}</td>
                                     <td class="celda-condicion"><i class="fas fa-spinner fa-spin"></i></td>
                                     <td class="celda-observacion">Verificando...</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="accion_${row.idInscripcionWeb}">
-                                            <option value="ACEPTAR">Aceptar</option>
-                                            <option value="RECHAZAR">Rechazar</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            `;
-                            $tbody.append(tr);
+                                    <td class="text-center">${radioGroup}</td>
+                                </tr>`;
                         }
+                        $tbody.append(tr);
                     });
 
                     if (esHistorico) {
@@ -563,26 +775,27 @@ ob_end_flush();
                         procesarLote(solicitudes, 0);
                     }
 
-                }, 'json').fail((jqXHR, textStatus, errorThrown) => {
+                }, 'json').fail(() => {
                     setTimeout(() => { modalProgreso.hide(); }, 500);
-                    console.error("AJAX Fail:", jqXHR.responseText);
-                    alert("Error de conexión al buscar. Verifica la consola para más detalles.");
+                    mostrarAlerta("Error de conexión al buscar.", "Error");
                 });
             });
 
+            // --- PROCESAMIENTO RECURSIVO ---
             function procesarLote(lista, index) {
                 const total = lista.length;
-                const porcentaje = Math.round((index / total) * 100);
-                $barra.css('width', porcentaje + '%').text(porcentaje + '%');
-                $textoProgreso.text(`Procesando solicitud ${index + 1} de ${total}`);
-
                 if (index >= total) {
                     setTimeout(() => {
                         modalProgreso.hide();
-                        $('#btnProcesar').prop('disabled', false);
+                        $('#btnEjecutar').prop('disabled', false); 
+                        actualizarFiltroCondiciones();
                     }, 500);
                     return;
                 }
+
+                const porcentaje = Math.round((index / total) * 100);
+                $barra.css('width', porcentaje + '%').text(porcentaje + '%');
+                $textoProgreso.text(`Procesando solicitud ${index + 1} de ${total}`);
 
                 const item = lista[index];
                 $detalleProgreso.text(`Validando: ${item.alumno}`);
@@ -599,26 +812,157 @@ ob_end_flush();
                     
                     if (esValida) {
                         $fila.addClass('table-success-custom').css('background-color', '#d1e7dd');
+                        $fila.find(`input[value="ACEPTAR"]`).prop('checked', true);
                     } else {
                         $fila.addClass('table-danger-custom').css('background-color', '#f8d7da');
+                        $fila.find(`input[value="RECHAZAR"]`).prop('checked', true);
                     }
                     
-                    $fila.find('.celda-condicion').html(res.condicionSugerida || 'S/D');
+                    $fila.find('.celda-condicion').html(res.condicionTexto || 'S/D');
                     $fila.find('.celda-observacion').html(`<small>${res.observacion}</small>`);
                     
-                    if (res.accionSugerida) {
-                        $fila.find(`select[name="accion_${item.idInscripcionWeb}"]`).val(res.accionSugerida);
+                    if (res.idCondicionBD) {
+                        $fila.find(`input[name="idCondicionBD_${item.idInscripcionWeb}"]`).val(res.idCondicionBD);
                     }
 
                     procesarLote(lista, index + 1);
 
                 }, 'json').fail(function() {
-                    const $fila = $(`#fila-${item.idInscripcionWeb}`);
-                    $fila.addClass('table-warning').css('background-color', '#fff3cd');
-                    $fila.find('.celda-observacion').text('Error de conexión.');
+                    $(`#fila-${item.idInscripcionWeb}`).addClass('table-warning');
                     procesarLote(lista, index + 1);
                 });
             }
+
+            function actualizarFiltroCondiciones() {
+                let condiciones = new Set();
+                $('#tablaPendientes tbody tr').each(function() {
+                    let cond = $(this).find('.celda-condicion').text().trim();
+                    if (cond && cond !== 'S/D') condiciones.add(cond);
+                });
+                let $sel = $('#selFiltroCondicion');
+                $sel.empty().append('<option value="">Seleccione...</option>');
+                condiciones.forEach(c => $sel.append(`<option value="${c}">${c}</option>`));
+            }
+
+            // --- BOTONES SELECCIÓN RÁPIDA ---
+            $('#btnSelCorrectos').click(function() {
+                $('.solicitud-check').prop('checked', false);
+                $('#tablaPendientes tbody tr.table-success-custom .solicitud-check').prop('checked', true);
+            });
+            $('#btnSelIncorrectos').click(function() {
+                 $('.solicitud-check').prop('checked', false);
+                $('#tablaPendientes tbody tr.table-danger-custom .solicitud-check').prop('checked', true);
+            });
+            $('#btnSelCondicion').click(function() {
+                let val = $('#selFiltroCondicion').val();
+                if(!val) return;
+                $('.solicitud-check').prop('checked', false);
+                $('#tablaPendientes tbody tr').each(function() {
+                    if($(this).find('.celda-condicion').text().trim() === val) {
+                        $(this).find('.solicitud-check').prop('checked', true);
+                    }
+                });
+            });
+
+            // --- CAMBIO DE COLOR DINÁMICO ---
+            $(document).on('change', '.btn-accion-radio', function() {
+                const idWeb = $(this).attr('name').split('_')[2];
+                const $fila = $(`#fila-${idWeb}`);
+                const valor = $(this).val();
+
+                $fila.removeClass('table-success-custom table-danger-custom').css('background-color', '');
+                if (valor === 'ACEPTAR') {
+                    $fila.addClass('table-success-custom').css('background-color', '#d1e7dd');
+                } else {
+                    $fila.addClass('table-danger-custom').css('background-color', '#f8d7da');
+                }
+            });
+
+            // --- PREPARAR EJECUCIÓN (MODAL) ---
+            $('#btnEjecutar').on('click', function() {
+                const checked = $('.solicitud-check:checked');
+                if (checked.length === 0) {
+                    mostrarAlerta("Seleccione al menos una solicitud.");
+                    return;
+                }
+
+                listaParaEnviar = [];
+                checked.each(function() {
+                    const idWeb = $(this).val();
+                    const $fila = $(`#fila-${idWeb}`);
+                    const accion = $fila.find(`input[name="radio_accion_${idWeb}"]:checked`).val();
+                    
+                    let idFecha = $fila.find(`select[name="fecha_${idWeb}"]`).val() || $fila.find(`input[name="fecha_${idWeb}"]`).val();
+                    const idCondicion = $fila.find(`input[name="idCondicionBD_${idWeb}"]`).val();
+                    const obsTexto = $fila.find('.celda-observacion').text().trim();
+                    const nombreAlumno = $fila.find('.td-alumno').text().trim(); // Capturamos nombre
+
+                    if(accion) {
+                        listaParaEnviar.push({
+                            idWeb: idWeb, accion: accion, idCondicion: idCondicion,
+                            idFechaExamen: idFecha, observacionUI: obsTexto, alumno: nombreAlumno
+                        });
+                    }
+                });
+
+                if (listaParaEnviar.length === 0) {
+                    mostrarAlerta("No hay acciones definidas (Aceptar/Rechazar) para las filas seleccionadas.", "Error");
+                    return;
+                }
+
+                $('#lblCantidadConfirmar').text(listaParaEnviar.length);
+                modalConfirmacion.show();
+            });
+
+            // --- CONFIRMAR EJECUCIÓN (Lógica modificada para reporte detallado) ---
+            $('#btnConfirmarEjecucion').on('click', function() {
+                modalConfirmacion.hide();
+                $barra.css('width', '100%').addClass('progress-bar-striped progress-bar-animated');
+                $textoProgreso.text('Guardando inscripciones...');
+                $detalleProgreso.text('Esto puede tardar unos segundos...');
+                modalProgreso.show();
+
+                $.post('solicitudesExamen.php', {
+                    action: 'procesar_lote_final',
+                    lista: JSON.stringify(listaParaEnviar),
+                    idCiclo: $selCiclo.val()
+                }, function(res) {
+                    setTimeout(() => { modalProgreso.hide(); }, 500);
+                    
+                    if (res.success) {
+                        // Construir mensaje detallado
+                        let mensajeFinal = `<p class="text-success fw-bold"><i class="bi bi-check-circle"></i> Se procesaron ${res.procesados} solicitudes correctamente.</p>`;
+                        
+                        // Si hubo excepciones (alumnos aceptados pero rebotados por la BD)
+                        if (res.errores && res.errores.length > 0) {
+                            mensajeFinal += `<hr><p class="text-danger fw-bold mb-2"><i class="bi bi-exclamation-triangle"></i> Hubo ${res.errores.length} excepciones:</p>`;
+                            mensajeFinal += `<ul class="list-group list-group-flush small">`;
+                            res.errores.forEach(err => {
+                                mensajeFinal += `<li class="list-group-item list-group-item-danger">${err}</li>`;
+                            });
+                            mensajeFinal += `</ul>`;
+                            
+                            mostrarAlerta(mensajeFinal, "Proceso Finalizado con Excepciones");
+                        } else {
+                            mostrarAlerta(mensajeFinal, "Operación Exitosa");
+                        }
+
+                        // Eliminar filas visualmente
+                        listaParaEnviar.forEach(function(item) {
+                            $(`#fila-${item.idWeb}`).fadeOut(300, function() { $(this).remove(); });
+                        });
+                        
+                        $('.solicitud-check').prop('checked', false);
+                        $('#checkAll').prop('checked', false);
+                        
+                    } else {
+                        mostrarAlerta("Error: " + res.message, "Hubo un problema");
+                    }
+                }, 'json').fail(function() {
+                    setTimeout(() => { modalProgreso.hide(); }, 500);
+                    mostrarAlerta("Error crítico de servidor al procesar.", "Error Fatal");
+                });
+            });
 
             $(document).on('change', '#checkAll', function() {
                 $('.solicitud-check').prop('checked', $(this).is(':checked'));
