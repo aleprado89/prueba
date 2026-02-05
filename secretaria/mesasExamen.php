@@ -205,7 +205,7 @@ $mesas_examen = filtrarMesasExamen(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mesas de Examen - Secretaría</title>
+  <title>Mesas de examen - Secretaría</title>
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
@@ -246,7 +246,7 @@ $mesas_examen = filtrarMesasExamen(
   <div class="container">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-      <li class="breadcrumb-item active">Mesas de Examen</li>
+      <li class="breadcrumb-item active">Mesas de examen</li>
     </ol>
 
     <?php if ($message): ?>
@@ -257,14 +257,14 @@ $mesas_examen = filtrarMesasExamen(
     <?php endif; ?>
 
     <div class="card p-4 mb-4">
-      <h5>Gestión de Mesas de Examen</h5>
+      <h5>Gestión de mesas de examen</h5>
       
       <form id="filtroForm" method="GET" action="mesasExamen.php">
         <fieldset class="mb-3 p-3 border rounded">
           <legend class="float-none w-auto px-2">Filtros</legend>
           <div class="row">
             <div class="col-md-3">
-              <label for="filtroCicloLectivo" class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
+              <label for="filtroCicloLectivo" class="form-label">Ciclo lectivo <span class="text-danger">*</span></label>
               <select class="form-select filtro-auto-submit" id="filtroCicloLectivo" name="idCicloLectivo" required>
                 <option value="">Seleccione...</option>
                 <?php foreach ($ciclos as $ciclo): ?>
@@ -323,7 +323,7 @@ $mesas_examen = filtrarMesasExamen(
         <input type="hidden" id="createMateria" name="idMateria">
 
         <fieldset class="mb-3 p-3 border rounded" style="background-color: #f8f9fa;">
-          <legend class="float-none w-auto px-2">Agregar Nueva Mesa</legend>
+          <legend class="float-none w-auto px-2">Agregar nueva mesa</legend>
           <p class="form-text">Complete los filtros (Ciclo, Turno, Plan, Curso y Materia) para habilitar esta sección.</p>
           <div class="row">
             <div class="col-md-6">
@@ -335,13 +335,13 @@ $mesas_examen = filtrarMesasExamen(
               <input type="time" class="form-control" id="hora" name="hora" required disabled>
             </div>
           </div>
-          <button type="submit" id="btnCrearMesa" class="btn btn-primary mt-3" disabled>Agregar Fecha</button>
+          <button type="submit" id="btnCrearMesa" class="btn btn-primary mt-3" disabled>Agregar fecha</button>
         </fieldset>
       </form>
     </div>
 
     <div class="card p-4">
-      <h5>Mesas de Examen Existentes</h5>
+      <h5>Mesas de examen existentes</h5>
       <div class="table-responsive">
         <table class="table table-striped table-hover mt-3" id="tablaMesas">
           <thead>

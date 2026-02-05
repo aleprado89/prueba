@@ -282,7 +282,7 @@ ob_end_flush();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistemas Escolares - Solicitudes Examen</title>
+    <title>Sistemas Escolares - Solicitudes de examen</title>
     
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css"> 
@@ -352,21 +352,21 @@ ob_end_flush();
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="../inicio/inicio.php">Inicio</a></li>
-                <li class="breadcrumb-item active">Solicitudes de Examen Web</li>
+                <li class="breadcrumb-item active">Solicitudes de examen web</li>
             </ol>
         </nav>
 
         <div class="card custom-card">
             <div class="card-header card-header-custom">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-clipboard-list me-2"></i>Administrar Solicitudes de Examen
+                    <i class="fas fa-clipboard-list me-2"></i>Administrar solicitudes de examen
                 </h5>
             </div>
             
             <div class="card-body">
                 <form id="formFiltros" class="row g-3 align-items-end mb-4">
                     <div class="col-md-2">
-                        <label class="form-label">Ciclo Lectivo</label>
+                        <label class="form-label">Ciclo lectivo</label>
                         <select class="form-select" id="selectCiclo" required>
                             <option value="">Seleccione...</option>
                             <?php
@@ -380,7 +380,7 @@ ob_end_flush();
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label">Turno Examen</label>
+                        <label class="form-label">Turno de examen</label>
                         <select class="form-select" id="selectTurno" required>
                             <option value="">Seleccione...</option>
                             <?php
@@ -394,7 +394,7 @@ ob_end_flush();
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Plan de Estudio</label>
+                        <label class="form-label">Plan de estudio</label>
                         <select class="form-select" id="selectPlan" required>
                             <option value="">Seleccione...</option>
                             <?php
@@ -458,11 +458,11 @@ ob_end_flush();
                             <span class="text-muted small fw-bold me-2"><i class="bi bi-check2-square"></i> Selección Rápida:</span>
                             
                             <button type="button" class="btn btn-sm btn-outline-primary px-3" id="btnSelCorrectos">
-                                <i class="bi bi-check-all"></i> Tildar Correctos
+                                <i class="bi bi-check-all"></i> Tildar correctos
                             </button>
                             
                             <button type="button" class="btn btn-sm btn-outline-primary px-3" id="btnSelIncorrectos">
-                                <i class="bi bi-x-square"></i> Tildar Incorrectos
+                                <i class="bi bi-x-square"></i> Tildar incorrectos
                             </button>
                             
                             <div class="vr mx-2"></div>
@@ -484,9 +484,9 @@ ob_end_flush();
                                         <th>Alumno</th>
                                         <th class="text-center" style="width: 50px;">Calif.</th>
                                         <th>Materia</th>
-                                        <th>Fecha de Mesa</th>
+                                        <th>Fecha de mesa</th>
                                         <th>Hora</th>
-                                        <th>Fecha de Solicitud</th>
+                                        <th>Fecha de solicitud</th>
                                         <th>Condición</th>
                                         <th>Observación</th>
                                         <th class="text-center">Acción</th>
@@ -499,7 +499,7 @@ ob_end_flush();
                         </div>
                         <div class="d-flex justify-content-end mt-3">
                             <button class="btn btn-primary" id="btnEjecutar" disabled>
-                                <i class="bi bi-check-circle me-2"></i>Ejecutar Inscripción Seleccionados
+                                <i class="bi bi-check-circle me-2"></i>Ejecutar inscripción seleccionados
                             </button>
                         </div>
                     </div>
@@ -512,10 +512,10 @@ ob_end_flush();
                                         <th>Alumno</th>
                                         <th class="text-center" style="width: 50px;">Calif.</th>
                                         <th>Materia</th>
-                                        <th>Fecha Mesa</th>
+                                        <th>Fecha mesa</th>
                                         <th>Hora</th>
-                                        <th>Fecha Solicitud</th>
-                                        <th>Estado Final</th>
+                                        <th>Fecha solicitud</th>
+                                        <th>Estado final</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -534,7 +534,7 @@ ob_end_flush();
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Procesando Solicitudes</h5>
+                    <h5 class="modal-title">Procesando solicitudes</h5>
                 </div>
                 <div class="modal-body text-center">
                     <p id="progresoTexto" class="mb-2">Iniciando...</p>
@@ -564,7 +564,7 @@ ob_end_flush();
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btnConfirmarEjecucion">
-                        <i class="bi bi-save me-1"></i> Confirmar y Ejecutar
+                        <i class="bi bi-save me-1"></i> Confirmar y ejecutar
                     </button>
                 </div>
             </div>

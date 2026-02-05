@@ -88,7 +88,7 @@ $turnos = obtenerTodosTurnos($conn);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Actas de Examen - Secretaría</title>
+  <title>Actas de examen - Secretaría</title>
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
@@ -130,20 +130,20 @@ $turnos = obtenerTodosTurnos($conn);
   <div class="container">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-      <li class="breadcrumb-item active">Actas de Examen</li>
+      <li class="breadcrumb-item active">Actas de examen</li>
     </ol>
 
     <div class="card padding col-12">
-      <h5>Gestión de Actas Volantes</h5>
+      <h5>Gestión de actas volantes</h5>
       <br>
 
       <fieldset class="mb-4 p-3 border rounded">
-        <legend class="float-none w-auto px-2">Selección de Mesa</legend>
+        <legend class="float-none w-auto px-2">Selección de mesa</legend>
         
         <form id="formFiltrosActas">
             <div class="row mb-3">
                 <div class="col-md-2">
-                  <label for="idCiclo" class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
+                  <label for="idCiclo" class="form-label">Ciclo lectivo <span class="text-danger">*</span></label>
                   <select class="form-select" id="idCiclo" name="idCiclo">
                     <option value="">Seleccione...</option>
                     <?php foreach ($ciclos as $c): ?>
@@ -163,7 +163,7 @@ $turnos = obtenerTodosTurnos($conn);
                 </div>
 
                 <div class="col-md-4">
-                  <label for="idPlan" class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
+                  <label for="idPlan" class="form-label">Plan de estudio <span class="text-danger">*</span></label>
                   <select class="form-select" id="idPlan" name="idPlan" disabled>
                     <option value="">Seleccione...</option>
                     <?php foreach ($planes as $p): ?>
@@ -189,7 +189,7 @@ $turnos = obtenerTodosTurnos($conn);
                 </div>
 
                 <div class="col-md-6">
-                  <label for="idMesa" class="form-label">Mesa de Examen <span class="text-danger">*</span></label>
+                  <label for="idMesa" class="form-label">Mesa de examen <span class="text-danger">*</span></label>
                   <select class="form-select" id="idMesa" name="idMesa" disabled>
                     <option value="">Seleccione...</option>
                   </select>

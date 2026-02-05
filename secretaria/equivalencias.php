@@ -130,7 +130,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Equivalencias - Secretaría</title>
+    <title>Gestión de equivalencias - Secretaría</title>
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
@@ -142,11 +142,11 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
     <div class="container mt-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=equivalencias">Buscar Alumno</a></li>
+            <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=equivalencias">Buscar alumno</a></li>
             <li class="breadcrumb-item active">Equivalencias</li>
         </ol>
 
-        <h3 class="mb-3">Gestión de Equivalencias</h3>
+        <h3 class="mb-3">Gestión de equivalencias</h3>
         <h4>Alumno: <?php echo $nombreCompletoAlumno; ?> (ID: <?php echo $idAlumno; ?>)</h4>
 
         <?php if ($message): ?>
@@ -157,15 +157,15 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
         <?php endif; ?>
 
         <div class="card p-4 mb-4 shadow-sm">
-            <h5 class="mb-3">Registrar Nueva Equivalencia</h5>
+            <h5 class="mb-3">Registrar nueva equivalencia</h5>
             <form id="addForm" method="POST" action="equivalencias.php?idAlumno=<?php echo $idAlumno; ?>">
                 <input type="hidden" name="action" value="add">
                 
                 <div class="row g-3 mb-3">
                     <div class="col-md-3">
-                        <label for="add_idCiclo" class="form-label">Ciclo Lectivo</label>
+                        <label for="add_idCiclo" class="form-label">Ciclo lectivo</label>
                         <select class="form-select" id="add_idCiclo" name="idCiclo" required>
-                            <option value="" selected>Seleccione un Ciclo...</option>
+                            <option value="" selected>Seleccione un ciclo...</option>
                             <?php 
                             $anioActual = date('Y');
                             // 🔹 Usamos la variable $ciclos cargada con levantarCiclosLectivos()
@@ -177,9 +177,9 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="add_idPlan" class="form-label">Plan de Estudio</label>
+                        <label for="add_idPlan" class="form-label">Plan de estudio</label>
                         <select class="form-select" id="add_idPlan" name="idPlan" required>
-                            <option value="" selected>Seleccione un Plan...</option>
+                            <option value="" selected>Seleccione un plan...</option>
                             <?php foreach ($planes as $plan): ?>
                                 <option value="<?php echo $plan['idPlan']; ?>"><?php echo htmlspecialchars($plan['nombre']); ?></option>
                             <?php endforeach; ?>
@@ -188,13 +188,13 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                     <div class="col-md-3">
                         <label for="add_idCurso" class="form-label">Curso</label>
                         <select class="form-select" id="add_idCurso" name="idCurso" required disabled>
-                            <option value="" selected>Seleccione Ciclo y Plan...</option>
+                            <option value="" selected>Seleccione Ciclo y plan...</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label for="add_idMateria" class="form-label">Materia</label>
                         <select class="form-select" id="add_idMateria" name="idMateria" required disabled>
-                            <option value="" selected>Seleccione un Curso...</option>
+                            <option value="" selected>Seleccione un curso...</option>
                         </select>
                     </div>
                 </div>
@@ -207,8 +207,8 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                     <div class="col-md-3">
                         <label for="add_tipo" class="form-label">Tipo</label>
                         <select class="form-select" id="add_tipo" name="tipo" required>
-                            <option value="Aprobación por Equivalencia" selected>Aprobación por Equivalencia</option>
-                            <option value="Aprobación por Pase">Aprobación por Pase</option>
+                            <option value="Aprobación por Equivalencia" selected>Aprobación por equivalencia</option>
+                            <option value="Aprobación por Pase">Aprobación por pase</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -229,13 +229,13 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                 </div>
                 
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Registrar Equivalencia
+                    <i class="bi bi-plus-circle"></i> Registrar equivalencia
                 </button>
             </form>
         </div>
 
         <div class="card p-4 mb-4 shadow-sm">
-            <h5 class="mb-3">Historial de Equivalencias</h5>
+            <h5 class="mb-3">Historial de equivalencias</h5>
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead>
@@ -306,7 +306,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                    <h5 class="modal-title" id="deleteModalLabel">Confirmar eliminación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -330,7 +330,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Editar Equivalencia</h5>
+                    <h5 class="modal-title" id="editModalLabel">Editar equivalencia</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -342,9 +342,9 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                         
                         <div class="row g-3 mb-3">
                             <div class="col-md-3">
-                                <label for="edit_idCiclo" class="form-label">Ciclo Lectivo</label>
+                                <label for="edit_idCiclo" class="form-label">Ciclo lectivo</label>
                                 <select class="form-select" id="edit_idCiclo" name="idCiclo" required>
-                                    <option value="">Seleccione un Ciclo...</option>
+                                    <option value="">Seleccione un ciclo...</option>
                                     <?php foreach ($ciclos as $ciclo): ?>
                                         <option value="<?php echo $ciclo['idCicloLectivo']; ?>">
                                             <?php echo htmlspecialchars($ciclo['anio']); ?>
@@ -354,9 +354,9 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                                 <small class="form-text text-muted">Ciclo solo para filtrar (no se guarda)</small>
                             </div>
                             <div class="col-md-3">
-                                <label for="edit_idPlan" class="form-label">Plan de Estudio</label>
+                                <label for="edit_idPlan" class="form-label">Plan de estudio</label>
                                 <select class="form-select" id="edit_idPlan" name="idPlan" required>
-                                    <option value="" selected>Seleccione un Plan...</option>
+                                    <option value="" selected>Seleccione un plan...</option>
                                     <?php foreach ($planes as $plan): ?>
                                         <option value="<?php echo $plan['idPlan']; ?>"><?php echo htmlspecialchars($plan['nombre']); ?></option>
                                     <?php endforeach; ?>
@@ -384,8 +384,8 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                             <div class="col-md-3">
                                 <label for="edit_tipo" class="form-label">Tipo</label>
                                 <select class="form-select" id="edit_tipo" name="tipo" required>
-                                    <option value="Aprobación por Equivalencia">Aprobación por Equivalencia</option>
-                                    <option value="Aprobación por Pase">Aprobación por Pase</option>
+                                    <option value="Aprobación por Equivalencia">Aprobación por equivalencia</option>
+                                    <option value="Aprobación por Pase">Aprobación por pase</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -408,7 +408,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="editForm" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="submit" form="editForm" class="btn btn-primary">Guardar cambios</button>
                 </div>
             </div>
         </div>
@@ -438,7 +438,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
             $(selectCurso).prop('disabled', true).html('<option value="">Cargando...</option>');
             
             $.getJSON(url, function(data) {
-                $(selectCurso).prop('disabled', false).html('<option value="">Seleccione un Curso...</option>');
+                $(selectCurso).prop('disabled', false).html('<option value="">Seleccione un curso...</option>');
                 if (data.length === 0) {
                      $(selectCurso).html('<option value="">No hay cursos para ese Ciclo/Plan</option>');
                 }
@@ -450,7 +450,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                     $(selectCurso).val(idCursoSeleccionado);
                 }
             }).fail(function() {
-                alert('Error al cargar cursos. Verifique que el Ciclo y Plan tengan cursos asociados.');
+                alert('Error al cargar cursos. Verifique que el ciclo y plan tengan cursos asociados.');
                 $(selectCurso).prop('disabled', false).html('<option value="">Error</option>');
             });
         }
@@ -463,7 +463,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
             
             // 🔹 MODIFICACIÓN: Requiere idCurso y idPlan
             if (!idCurso || !idPlan) {
-                $(selectMateria).prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
+                $(selectMateria).prop('disabled', true).html('<option value="">Seleccione un curso...</option>');
                 return;
             }
             
@@ -472,9 +472,9 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
             $(selectMateria).prop('disabled', true).html('<option value="">Cargando...</option>');
             
             $.getJSON(url, function(data) {
-                $(selectMateria).prop('disabled', false).html('<option value="">Seleccione una Materia...</option>');
+                $(selectMateria).prop('disabled', false).html('<option value="">Seleccione una materia...</option>');
                  if (data.length === 0) {
-                     $(selectMateria).html('<option value="">No hay materias para ese Curso</option>');
+                     $(selectMateria).html('<option value="">No hay materias para ese curso</option>');
                 }
                 $.each(data, function(key, entry) {
                     // 🔹 MODIFICACIÓN: materiasPlanCurso devuelve 'idMateria' y 'nombreMateria'
@@ -497,7 +497,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                 var idCiclo = $('#add_idCiclo').val();
                 var idPlan = $('#add_idPlan').val();
                 cargarCursos(idCiclo, idPlan, '#add_idCurso');
-                $('#add_idMateria').prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
+                $('#add_idMateria').prop('disabled', true).html('<option value="">Seleccione un curso...</option>');
             });
 
             $('#add_idCurso').on('change', function() {
@@ -517,7 +517,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
                 var idCiclo = $('#edit_idCiclo').val();
                 var idPlan = $('#edit_idPlan').val();
                 cargarCursos(idCiclo, idPlan, '#edit_idCurso'); 
-                $('#edit_idMateria').prop('disabled', true).html('<option value="">Seleccione un Curso...</option>');
+                $('#edit_idMateria').prop('disabled', true).html('<option value="">Seleccione un cmmmurso...</option>');
             });
 
             $('#edit_idCurso').on('change', function() {

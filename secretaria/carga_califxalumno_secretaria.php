@@ -87,7 +87,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calificaciones por Alumno - Secretaría</title>
+    <title>Calificaciones por alumno - Secretaría</title>
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
@@ -134,8 +134,8 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         <div class="container">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-                <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=califxalumno">Buscar Alumno</a></li>
-                <li class="breadcrumb-item active">Calificaciones por Alumno</li>
+                <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=califxalumno">Buscar alumno</a></li>
+                <li class="breadcrumb-item active">Calificaciones por alumno</li>
             </ol>
 
             <div class="card p-4 mb-4">
@@ -145,7 +145,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                 <?php if (!empty($planesDelAlumno)): ?>
                     <div class="row mt-3">
                         <div class="col-md-6">
-                            <label for="filtroPlan" class="form-label"><strong>Filtrar por Plan de Estudio:</strong></label>
+                            <label for="filtroPlan" class="form-label"><strong>Filtrar por plan de estudio:</strong></label>
                             <select class="form-select" id="filtroPlan">
                                 <?php foreach ($planesDelAlumno as $plan): ?>
                                     <option value="<?php echo htmlspecialchars($plan['idPlan']); ?>">
@@ -168,7 +168,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             <?php else: ?>
                 <div class="mb-3 text-center">
                     <a href="#" id="btnImprimirCalificaciones" class="btn btn-primary" target="_blank">
-                        <i class="bi bi-printer-fill"></i> Imprimir Calificaciones
+                        <i class="bi bi-printer-fill"></i> Imprimir calificaciones
                     </a>
                 </div>
                 <div class="d-flex justify-content-end mb-2">
@@ -186,7 +186,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                             <tr class="table-primary">
                                 <th>Materia</th>
                                 <th class="col-extra">Curso</th>
-                                <th class="col-extra">Ciclo Lectivo</th>
+                                <th class="col-extra">Ciclo lectivo</th>
                                 <th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th><th>P6</th><th>P7</th><th>P8</th>
                                 <th>R1</th><th>R2</th><th>R3</th><th>R4</th><th>R5</th><th>R6</th><th>R7</th><th>R8</th>
                                 <th class="col-extra text-center"><div class="prom-header-content"><span>Prom</span></div></th>
@@ -199,7 +199,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                         <tbody id="tabla-calificaciones-body">
                             <?php foreach ($materiasDelAlumno as $materia): 
                                 $esAprobada = ($materia['materiaAprobada'] == 1);
-                                $esAbandono = ($materia['estadoInscripcion'] === 'Abandonó Cursado');
+                                $esAbandono = ($materia['estadoInscripcion'] === 'Abandonó cursado');
                                 $classFila = '';
                                 if ($esAprobada) {
                                     $classFila = 'fila-aprobada';
@@ -238,7 +238,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                                         <span class="estado-cursado-display">
                                             <?php
                                             if ($esAprobada) {
-                                                echo 'Materia Aprobada';
+                                                echo 'Materia aprobada';
                                             } else {
                                                 echo htmlspecialchars($materia['estadoCursado'] ?: 'Sin definir');
                                             }
@@ -275,11 +275,11 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                 <div class="modal-body">
                     <p><strong class="primary-link">Materia:</strong> <span id="modalMateriaNombre"></span></p>
                     <p><strong class="primary-link">Curso:</strong> <span id="modalMateriaCurso"></span></p>
-                    <p><strong class="primary-link">Estado de Inscripción:</strong> <span id="modalEstadoInscripcion"></span></p>
-                    <p><strong class="primary-link">Estado General:</strong> <span id="modalEstadoGeneral"></span></p>
+                    <p><strong class="primary-link">Estado de inscripción:</strong> <span id="modalEstadoInscripcion"></span></p>
+                    <p><strong class="primary-link">Estado general:</strong> <span id="modalEstadoGeneral"></span></p>
                     <p><strong class="primary-link">Asistencia:</strong> <span id="modalAsistencia"></span></p>
                     <hr>
-                    <h6 class="primary-link">Calificaciones de Cursado</h6>
+                    <h6 class="primary-link">Calificaciones de cursado</h6>
                     <table class="table table-bordered table-sm">
                         <tbody>
                             <tr><td>P1</td><td id="modalN1"></td><td>R1</td><td id="modalR1"></td></tr>
@@ -290,11 +290,11 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                             <tr><td>P6</td><td id="modalN6"></td><td>R6</td><td id="modalR6"></td></tr>
                             <tr><td>P7</td><td id="modalN7"></td><td>R7</td><td id="modalR7"></td></tr>
                             <tr><td>P8</td><td id="modalN8"></td><td>R8</td><td id="modalR8"></td></tr>
-                            <tr><td colspan="2">Calificación Promoción (Prom)</td><td colspan="2" id="modalExamenIntegrador"></td></tr>
+                            <tr><td colspan="2">Calificación promoción (Prom)</td><td colspan="2" id="modalExamenIntegrador"></td></tr>
                         </tbody>
                     </table>
                     <hr>
-                    <h6 class="primary-link">Calificaciones de Exámenes</h6>
+                    <h6 class="primary-link">Calificaciones de exámenes</h6>
                     <div id="examenes-container">
                         <table class="table table-sm table-striped">
                             <thead><tr><th>Fecha</th><th>Calificación</th></tr></thead>
@@ -311,7 +311,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
     <div class="modal fade" id="modalConfirmAbandono" tabindex="-1" aria-labelledby="modalConfirmAbandonoLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title" id="modalConfirmAbandonoLabel">Confirmar Abandono de Materia</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-header"><h5 class="modal-title" id="modalConfirmAbandonoLabel">Confirmar abandono de materia</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
                 <div class="modal-body">
                     <p>Al marcar esta casilla, se bloqueará la edición de calificaciones para esta materia.</p>
                     <p>¿Desea continuar?</p>
@@ -326,7 +326,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
     <div class="modal fade" id="modalRevertAbandono" tabindex="-1" aria-labelledby="modalRevertAbandonoLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title" id="modalRevertAbandonoLabel">Revertir Abandono de Materia</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-header"><h5 class="modal-title" id="modalRevertAbandonoLabel">Revertir abandono de materia</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
                 <div class="modal-body">
                     <p>Por favor, seleccione el nuevo estado de cursado para el alumno:</p>
                     <div class="mb-3">
@@ -460,8 +460,8 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             enviarAjax('update_abandono', data, function(response) {
                 if (response && response.respuesta === 'actualizado') {
                     fila.addClass('fila-abandonada');
-                    fila.find('.estado-cursado-display').text('Abandonó Cursado');
-                    actualizarInfoFila(fila, 'Abandonó Cursado', 'Abandonó Cursado');
+                    fila.find('.estado-cursado-display').text('Abandonó cursado');
+                    actualizarInfoFila(fila, 'Abandonó cursado', 'Abandonó cursado');
                 } else {
                     alert("Error al actualizar.");
                     currentCheckbox.prop('checked', false);
@@ -508,7 +508,7 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             modal.find('#modalEstadoInscripcion').text(info.estadoInscripcion || 'N/A');
             modal.find('#modalAsistencia').text(info.asistencia || 'N/A');
             let estadoGeneral = `Cursando: ${info.estadoCursado || 'Sin definir'}`;
-            if (info.materiaAprobada == 1) estadoGeneral = "Materia Aprobada";
+            if (info.materiaAprobada == 1) estadoGeneral = "Materia aprobada";
             modal.find('#modalEstadoGeneral').text(estadoGeneral);
             modal.find('#modalN1').text(info.n1 || '-'); modal.find('#modalR1').text(info.r1 || '-');
             modal.find('#modalN2').text(info.n2 || '-'); modal.find('#modalR2').text(info.r2 || '-');

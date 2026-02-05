@@ -55,7 +55,7 @@ if (isset($_POST['is_ajax_courses']) && $_POST['is_ajax_courses'] == '1') {
             $output .= '<option value="' . htmlspecialchars($curso['idCurso']) . '" ' . $selected . '>' . htmlspecialchars($curso['nombre']) . '</option>';
         }
     } else {
-        $output .= '<option value="">Sin Cursos</option>'; // Opción si no hay cursos para ese plan/ciclo
+        $output .= '<option value="">Sin cursos</option>'; // Opción si no hay cursos para ese plan/ciclo
     }
     echo $output;
     exit; // Terminar la ejecución para la llamada AJAX
@@ -145,7 +145,7 @@ if ($primerCicloLectivoId && $primerPlanId) {
       <!-- Filtros -->
       <div class="row">
         <div class="col-12 col-md-4 form-group-filter">
-          <label for="ciclolectivo_select">Ciclo Lectivo:</label>
+          <label for="ciclolectivo_select">Ciclo lectivo:</label>
           <select name="ciclolectivo_select" class="form-select" id="ciclolectivo_select">
              <?php
                 $ciclolectivos = levantarCiclosLectivos($conn); // Obtiene todos los ciclos
@@ -178,7 +178,7 @@ if ($primerCicloLectivoId && $primerPlanId) {
                         echo '<option value="' . htmlspecialchars($curso['idCurso']) . '" ' . $selected . '>' . htmlspecialchars($curso['nombre']) . '</option>';
                     }
                 } else {
-                    echo '<option value="">Sin Cursos</option>'; // Opción si no hay cursos
+                    echo '<option value="">Sin cursos</option>'; // Opción si no hay cursos
                 }
             ?>
           </select>
@@ -241,14 +241,14 @@ if ($primerCicloLectivoId && $primerPlanId) {
             success: function(data) {
                 $('#curso_select').html(data);
                 // Si la respuesta no está vacía, seleccionar la primera opción
-                if (data.trim() !== '<option value="">Sin Cursos</option>') { // Verifica si hay cursos reales
+                if (data.trim() !== '<option value="">Sin cursos</option>') { // Verifica si hay cursos reales
                     $('#curso_select option:first').prop('selected', true);
                 }
                 cargarMaterias(); // Una vez que los cursos se han cargado, cargar las materias
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error('Error al cargar cursos:', textStatus, errorThrown);
-                $('#curso_select').html('<option value="">Error al cargar Cursos</option>');
+                $('#curso_select').html('<option value="">Error al cargar cursos</option>');
                 $('#tablaMaterias tbody').html('<tr><td colspan="3" class="text-danger">Error al cargar las materias. Inténtelo de nuevo.</td></tr>');
             }
         });

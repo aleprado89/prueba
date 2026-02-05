@@ -256,7 +256,7 @@ ob_end_flush();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistemas Escolares - Solicitudes Cursado</title>
+    <title>Sistemas Escolares - Solicitudes de cursado</title>
     
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css"> 
@@ -293,19 +293,19 @@ ob_end_flush();
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="../inicio/inicio.php">Inicio</a></li>
-                <li class="breadcrumb-item active">Solicitudes de Cursado</li>
+                <li class="breadcrumb-item active">Solicitudes de cursado</li>
             </ol>
         </nav>
 
         <div class="card custom-card">
             <div class="card-header card-header-custom">
-                <h5 class="card-title mb-0"><i class="fas fa-book-reader me-2"></i>Administrar Solicitudes de Cursado</h5>
+                <h5 class="card-title mb-0"><i class="fas fa-book-reader me-2"></i>Administrar solicitudes de cursado</h5>
             </div>
             
             <div class="card-body">
                 <form id="formFiltros" class="row g-3 align-items-end mb-4">
                     <div class="col-md-2">
-                        <label class="form-label">Ciclo Lectivo</label>
+                        <label class="form-label">Ciclo lectivo</label>
                         <select class="form-select" id="selectCiclo" required>
                             <option value="">Seleccione...</option>
                             <?php
@@ -371,7 +371,7 @@ ob_end_flush();
                                         <th>Alumno</th>
                                         <th>Materia</th>
                                         <th>Curso</th>
-                                        <th>Fecha Solicitud</th>
+                                        <th>Fecha solicitud</th>
                                         <th>Condición</th>
                                         <th>Observación</th>
                                         <th class="text-center">Acción</th>
@@ -383,7 +383,7 @@ ob_end_flush();
                             </table>
                         </div>
                         <div class="d-flex justify-content-end mt-3">
-                            <button class="btn btn-primary" id="btnEjecutar" disabled>Ejecutar Inscripción Seleccionados</button>
+                            <button class="btn btn-primary" id="btnEjecutar" disabled>Ejecutar inscripción seleccionados</button>
                         </div>
                     </div>
 

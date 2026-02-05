@@ -150,7 +150,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscripción Masiva - Secretaría</title>
+    <title>Inscripción masiva - Secretaría</title>
     
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css"> 
@@ -212,14 +212,14 @@ try {
             
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-                <li class="breadcrumb-item active">Inscripción Masiva</li>
+                <li class="breadcrumb-item active">Inscripción masiva</li>
             </ol>
 
             <div id="alertContainer"></div>
 
             <div class="card p-4 mb-4 shadow-sm">
                 <h5 class="mb-3 text-dark">
-                    <i class="bi bi-people-fill"></i> Inscripción Masiva a Exámenes
+                    <i class="bi bi-people-fill"></i> Inscripción masiva a exámenes
                 </h5>
                 <hr>
                 
@@ -228,21 +228,21 @@ try {
                     <form id="formFiltros">
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
+                                <label class="form-label">Ciclo lectivo <span class="text-danger">*</span></label>
                                 <select class="form-select" id="idCiclo">
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($ciclos as $c): echo "<option value='{$c['idCicloLectivo']}'>{$c['anio']}</option>"; endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Turno Examen <span class="text-danger">*</span></label>
+                                <label class="form-label">Turno de examen <span class="text-danger">*</span></label>
                                 <select class="form-select" id="idTurno">
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($turnos as $t): echo "<option value='{$t['idTurno']}'>{$t['nombre']}</option>"; endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
+                                <label class="form-label">Plan de estudio <span class="text-danger">*</span></label>
                                 <select class="form-select" id="idPlan">
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($planes as $p): echo "<option value='{$p['idPlan']}'>{$p['nombre']}</option>"; endforeach; ?>
@@ -264,7 +264,7 @@ try {
 
                          <div class="row g-3 align-items-end mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Condición Inscripción <span class="text-danger">*</span></label>
+                                <label class="form-label">Condición de inscripción <span class="text-danger">*</span></label>
                                 <select class="form-select" id="idCondicion">
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($condicionesExamen as $ce): echo "<option value='{$ce['idCondicion']}'>{$ce['condicion']}</option>"; endforeach; ?>
@@ -272,7 +272,7 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <button type="button" class="btn btn-primary" id="btnBuscar" disabled>
-                                    <i class="bi bi-search"></i> BUSCAR MESAS Y ALUMNOS
+                                    <i class="bi bi-search"></i> Buscar mesas y alumnos
                                 </button>
                             </div>
                         </div>
@@ -281,7 +281,7 @@ try {
                     <hr>
 
                     <div id="seccionMesas" style="display:none;" class="mt-4">
-                        <h6 class="text-dark"><i class="bi bi-calendar-event"></i> Mesas de Examen Disponibles</h6>
+                        <h6 class="text-dark"><i class="bi bi-calendar-event"></i> Mesas de examen disponibles</h6>
                         <p class="text-muted small">Seleccione la mesa haciendo clic en la tarjeta correspondiente.</p>
                         
                         <div id="contenedorMesas" class="row g-3"></div>
@@ -304,8 +304,8 @@ try {
                                 <thead class="table-light sticky-top">
                                     <tr>
                                         <th>DNI</th>
-                                        <th>Apellido y Nombre</th>
-                                        <th>Estado Cursado</th>
+                                        <th>Apellido y nombre</th>
+                                        <th>Estado cursado</th>
                                         <th class="text-center" style="width: 100px;">Quitar</th>
                                     </tr>
                                 </thead>
@@ -316,7 +316,7 @@ try {
                         
                         <div class="mt-4 text-end">
                             <button class="btn btn-primary" id="btnProcesar" disabled>
-                                <i class="bi bi-check-circle-fill"></i> CONFIRMAR INSCRIPCIÓN MASIVA
+                                <i class="bi bi-check-circle-fill"></i> Confirmar inscripción masiva
                             </button>
                         </div>
                     </div>
