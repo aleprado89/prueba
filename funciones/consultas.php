@@ -1904,48 +1904,62 @@ function dniExiste($conexion, $dni, $excludeIdPersona = null) {
 function insertarMatriculacionPlan($conexion, $data) {
     $sql = "INSERT INTO matriculacion (idNivel, idCurso, idAlumno, fechaMatriculacion, anio, estado, tarde, idPlanDeEstudio, pagoMatricula, pagoMonto, certificadoSalud, fechaBajaMatriculacion, certificadoTrabajo)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
     $stmt = $conexion->prepare($sql);
     if (!$stmt) {
         error_log("Error en preparar insertarMatriculacionPlan: " . $conexion->error);
         return false;
     }
 
-    // Convertir fechas vacías a NULL
+    // 1. SANEAMIENTO DE FECHAS
+    // Convertir fechas vacías a NULL para evitar errores de '0000-00-00' o strings vacíos en campos DATE
     $fechaMatriculacion = !empty($data['fechaMatriculacion']) ? $data['fechaMatriculacion'] : null;
     $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacion']) ? $data['fechaBajaMatriculacion'] : null;
 
+    // 2. LÓGICA DE NEGOCIO
     // Convertir pagoMonto a NULL si es 0 o vacío y pagoMatricula es 0
     $pagoMonto = ($data['pagoMatricula'] == 0 || empty($data['pagoMonto'])) ? null : $data['pagoMonto'];
-    $estado = empty($fechaBajaMatriculacion) ? 'Activo' : 'De Baja'; // Determina el estado
     
-    $idNivel = 6; // Siempre 6 según la especificación
-    $anio = date('Y'); // Año actual
+    // Determinar estado basado en la fecha de baja
+    $estado = empty($fechaBajaMatriculacion) ? 'Activo' : 'De Baja'; 
+    
+    $idNivel = 6; // Valor fijo según especificación del sistema
 
-    // Tipos de datos: i (int), s (string), d (double), b (blob)
-    // Parámetros: idNivel(i), idCurso(i), idAlumno(i), fechaMatriculacion(s), anio(i), estado(s), tarde(i), idPlanDeEstudio(i), pagoMatricula(i), pagoMonto(s), certificadoSalud(i), fechaBajaMatriculacion(s), certificadoTrabajo(i)
-    // Total: 6 ints, 4 strings
-    $stmt->bind_param("iiisisiiisisi", // String de tipos corregida: 6i, 4s, 3i = 13 (idCurso, idAlumno, anio, tarde, pagoMatricula, certificadoSalud, certificadoTrabajo)
-        $idNivel,
-        $data['idCurso'],
-        $data['idAlumno'],
-        $fechaMatriculacion,
-        $anio,
-        $estado,
-        $data['tarde'],
-        $data['idPlanDeEstudio'],
-        $data['pagoMatricula'], // 0 o 1
-        $pagoMonto, // Puede ser null
-        $data['certificadoSalud'], // Asumimos que viene como 0 si no hay campo específico o si es el checkbox, será 1 o 0
-        $fechaBajaMatriculacion, // Puede ser null
-        $data['certificadoTrabajo'] // 0 o 1
+    // --- CORRECCIÓN CRÍTICA ---
+    // Si viene el año en $data, lo usamos. Si no, usamos el actual por defecto.
+    $anio = !empty($data['anio']) ? (int)$data['anio'] : (int)date('Y'); 
+
+    // 3. VINCULACIÓN DE PARÁMETROS
+    // String de tipos: "iiisisiiisisi"
+    // i=int, s=string, d=double (usamos s para monto si viene como string formateado, o d si es float puro)
+    $stmt->bind_param("iiisisiiisisi", 
+        $idNivel,                   // i
+        $data['idCurso'],           // i
+        $data['idAlumno'],          // i
+        $fechaMatriculacion,        // s
+        $anio,                      // i (Variable corregida)
+        $estado,                    // s
+        $data['tarde'],             // i
+        $data['idPlanDeEstudio'],   // i
+        $data['pagoMatricula'],     // i
+        $pagoMonto,                 // s (o d)
+        $data['certificadoSalud'],  // i
+        $fechaBajaMatriculacion,    // s
+        $data['certificadoTrabajo'] // i
     );
+
     $success = $stmt->execute();
+    
+    if (!$success) {
+        error_log("Error al ejecutar insertarMatriculacionPlan: " . $stmt->error);
+    }
+
     $stmt->close();
     return $success;
 }
 
 function obtenerMatriculacionesPlanAlumno($conexion, $idAlumno) {
-    $sql = "SELECT m.idMatriculacion, pe.nombre AS nombrePlan, c.nombre AS nombreCurso, m.fechaMatriculacion, m.estado, m.pagoMatricula, m.pagoMonto, m.fechaBajaMatriculacion, m.certificadoTrabajo, m.idPlanDeEstudio, m.idCurso
+    $sql = "SELECT m.idMatriculacion, pe.nombre AS nombrePlan, c.nombre AS nombreCurso, m.fechaMatriculacion, m.estado, m.pagoMatricula, m.pagoMonto, m.fechaBajaMatriculacion, m.certificadoTrabajo, m.idPlanDeEstudio, m.idCurso,m.anio
             FROM matriculacion m
             INNER JOIN plandeestudio pe ON m.idPlanDeEstudio = pe.idPlan
             INNER JOIN curso c ON m.idCurso = c.idCurso
@@ -2015,22 +2029,25 @@ function eliminarMatriculacionPlan($conexion, $idMatriculacion) {
 // --- NUEVAS FUNCIONES PARA MATRICULACIÓN DE MATERIAS ---
 
 function insertarMatriculacionMateria($conexion, $data) {
+    // 1. Preparar la consulta SQL
+    // Nota: Verifiqué los nombres de columnas según tu código: fechaMatriculacion, fechaBajaMatriculacion
     $sql = "INSERT INTO matriculacionmateria (idAlumno, idNivel, idMateria, fechaMatriculacion, fechaBajaMatriculacion, estado, idCicloLectivo)
             VALUES (?, ?, ?, ?, ?, ?, ?)";
+            
     $stmt = $conexion->prepare($sql);
     if (!$stmt) {
         error_log("Error en preparar insertarMatriculacionMateria: " . $conexion->error);
         return false;
     }
 
+    // 2. Saneamiento de Fechas
     $fechaMatriculacion = !empty($data['fechaMatriculacionMateria']) ? $data['fechaMatriculacionMateria'] : date('Y-m-d');
     $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacionMateria']) ? $data['fechaBajaMatriculacionMateria'] : null;
-    $idNivel = 6; // Siempre 6
+    $idNivel = 6; // Fijo
 
-    // **MODIFICACIÓN AQUÍ:** Necesitamos el nombre de la condición, no el ID.
-    // Obtenemos el nombre de la condición usando el ID recibido.
-    $idEstado = $data['estadoMatriculacionMateria'] ?? null; // Este es el idCondicion
-    $estadoNombre = 'Regular'; // Valor por defecto si algo falla o está vacío
+    // 3. Obtener nombre del estado (Lógica original mantenida)
+    $idEstado = $data['estadoMatriculacionMateria'] ?? null;
+    $estadoNombre = 'Regular'; 
 
     if ($idEstado !== null) {
         $sql_get_condicion = "SELECT condicion FROM condicionescursado WHERE idCondicion = ?";
@@ -2043,47 +2060,82 @@ function insertarMatriculacionMateria($conexion, $data) {
                 $estadoNombre = $fila_condicion['condicion'];
             }
             $stmt_condicion->close();
-        } else {
-            error_log("Error al preparar la consulta para obtener condición: " . $conexion->error);
         }
     }
 
-    $anio_matriculacion = date('Y', strtotime($fechaMatriculacion));
-    $idCicloLectivo = buscarIdCiclo($conexion, $anio_matriculacion);
-    if (is_null($idCicloLectivo)) {
-        error_log("No se encontró idCicloLectivo para el año: " . $anio_matriculacion);
-        return false;
+    // 4. DETERMINAR EL ID CICLO LECTIVO (CORRECCIÓN CLAVE)
+    // -----------------------------------------------------
+    $idCicloLectivo = null;
+
+    // A) Primero intentamos usar el año explícito enviado desde el formulario
+    if (!empty($data['anio'])) {
+        $idCicloLectivo = buscarIdCiclo($conexion, $data['anio']);
     }
 
-    // iiisssi (idAlumno, idNivel, idMateria, fechaMatriculacion (string), fechaBajaMatriculacion (string), estado (string), idCicloLectivo (int))
-    // Aquí, $estadoNombre es el que se guarda en la columna 'estado'.
+    // B) Si no se envió 'anio' o no se encontró el ciclo, usamos el año de la fecha como respaldo (fallback)
+    if (is_null($idCicloLectivo)) {
+        $anio_fecha = date('Y', strtotime($fechaMatriculacion));
+        $idCicloLectivo = buscarIdCiclo($conexion, $anio_fecha);
+    }
+
+    // Validación final
+    if (is_null($idCicloLectivo)) {
+        error_log("Error Crítico: No se pudo determinar el idCicloLectivo para inscribir la materia.");
+        return false; // No inscribimos si no hay ciclo lectivo válido
+    }
+    // -----------------------------------------------------
+
+    // 5. Ejecutar INSERT
     $stmt->bind_param("iiisssi",
         $data['idAlumno'],
         $idNivel,
         $data['idMateria'],
         $fechaMatriculacion,
         $fechaBajaMatriculacion,
-        $estadoNombre, // Guardamos el nombre de la condición
-        $idCicloLectivo
+        $estadoNombre,
+        $idCicloLectivo // <--- Ahora sí tiene el ID correcto (ej. el de 2024)
     );
+    
     $success = $stmt->execute();
+    
+    if (!$success) {
+        error_log("Error al ejecutar insertarMatriculacionMateria: " . $stmt->error);
+    }
+    
     $stmt->close();
     return $success;
 }
 
 
 function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter = null, $idCursoFilter = null) {
-    // La consulta original se usará para cargar la tabla completa al principio
-    // Esta nueva función será llamada por el AJAX cuando se apliquen los filtros.
-    $sql = "SELECT mm.idMatriculacionMateria, mt.nombre AS nombreMateria, c.nombre AS nombreCurso, pe.nombre AS nombrePlan,
-            mm.fechaMatriculacion, mm.estado, mm.fechaBajaMatriculacion, cl.anio AS anioCicloLectivo,
-            mm.idMateria, mm.idNivel, mm.idCicloLectivo, pe.idPlan AS idPlanFK, c.idCurso AS idCursoFK
-        FROM matriculacionmateria mm
-        INNER JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
-        INNER JOIN curso c ON mt.idCurso = c.idCurso
-        INNER JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
-        INNER JOIN ciclolectivo cl ON mm.idCicloLectivo = cl.idCiclolectivo
-        WHERE mm.idAlumno = ?";
+    // Consulta corregida con los nombres reales de la columnas (fechaMatriculacion, estado, etc.)
+    $sql = "SELECT 
+                mm.idMatriculacionMateria, 
+                mt.nombre AS nombreMateria, 
+                c.nombre AS nombreCurso, 
+                pe.nombre AS nombrePlan,
+                
+                /* CORRECCIÓN: Usamos los nombres de columna que coinciden con tu INSERT */
+                mm.fechaMatriculacion, 
+                mm.estado, 
+                mm.fechaBajaMatriculacion,
+                
+                /* Obtenemos el año directamente del ciclo guardado */
+                cl.anio AS anioCicloLectivo,
+                
+                mm.idMateria, 
+                mm.idCicloLectivo,
+                pe.idPlan AS idPlanFK, 
+                c.idCurso AS idCursoFK
+            FROM matriculacionmateria mm
+            INNER JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
+            INNER JOIN curso c ON mt.idCurso = c.idCurso
+            INNER JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
+            
+            /* JOIN con ciclolectivo para mostrar el año correcto */
+            INNER JOIN ciclolectivo cl ON mm.idCicloLectivo = cl.idCicloLectivo
+            
+            WHERE mm.idAlumno = ?";
 
     $params = [$idAlumno];
     $types = "i";
@@ -2099,29 +2151,28 @@ function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter
         $types .= "i";
     }
 
-    $sql .= " ORDER BY cl.anio DESC, mm.fechaMatriculacion DESC"; // Ordenar por año y luego por fecha
+    $sql .= " ORDER BY cl.anio DESC, mm.fechaMatriculacion DESC";
 
     $stmt = $conexion->prepare($sql);
+    
+    // Verificación de seguridad por si falla la preparación
     if (!$stmt) {
-        error_log("Error al preparar obtenerMatriculacionesMateriaAlumno con filtros: " . $conexion->error);
+        error_log("Error al preparar obtenerMatriculacionesMateriaAlumno: " . $conexion->error);
         return [];
     }
 
-    // Usar call_user_func_array para bind_param con un array de parámetros dinámico
-    $bind_params = [$types]; // El primer elemento es el string de tipos
-    foreach ($params as &$param) { // Usamos '&' para pasar por referencia
+    // Vinculación dinámica
+    $bind_params = [$types]; 
+    foreach ($params as &$param) { 
         $bind_params[] = &$param;
     }
     call_user_func_array([$stmt, 'bind_param'], $bind_params);
 
     $stmt->execute();
     $result = $stmt->get_result();
-    $matriculaciones_materia = [];
-    while ($row = $result->fetch_assoc()) {
-        $matriculaciones_materia[] = $row;
-    }
-    $stmt->close();
-    return $matriculaciones_materia;
+    
+    // Retornamos array asociativo
+    return $result->fetch_all(MYSQLI_ASSOC);
 }
 
 
@@ -2188,27 +2239,37 @@ function obtenerPlanesDeEstudio($conexion) {
 function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
     $sql = "UPDATE matriculacion SET idNivel=?, idCurso=?, idAlumno=?, fechaMatriculacion=?, anio=?, estado=?, tarde=?, idPlanDeEstudio=?, pagoMatricula=?, pagoMonto=?, certificadoSalud=?, fechaBajaMatriculacion=?, certificadoTrabajo=?
             WHERE idMatriculacion=?";
+            
     $stmt = $conexion->prepare($sql);
     if (!$stmt) {
         error_log("Error en preparar actualizarMatriculacionPlan: " . $conexion->error);
         return false;
     }
 
+    // 1. SANEAMIENTO DE FECHAS
     $fechaMatriculacion = !empty($data['fechaMatriculacion']) ? $data['fechaMatriculacion'] : null;
     $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacion']) ? $data['fechaBajaMatriculacion'] : null;
+    
+    // 2. LÓGICA DE NEGOCIO Y CAMPOS CALCULADOS
     $pagoMonto = ($data['pagoMatricula'] == 0 || empty($data['pagoMonto'])) ? null : $data['pagoMonto'];
     $estado = empty($fechaBajaMatriculacion) ? 'Activo' : 'De Baja';
 
-    $idNivel = 6; // Asumiendo que es fijo
-    $anio = date('Y'); // Año actual
+    $idNivel = 6; // Fijo según especificación
 
-    // Parámetros: (idNivel(i), idCurso(i), idAlumno(i), fechaMatriculacion(s), anio(i), estado(s), tarde(i), idPlanDeEstudio(i), pagoMatricula(i), pagoMonto(s), certificadoSalud(i), fechaBajaMatriculacion(s), certificadoTrabajo(i), idMatriculacion(i))
+    // --- CORRECCIÓN CRÍTICA ---
+    // Usamos el año que viene del formulario ($data['anio']). 
+    // Solo si está vacío usamos date('Y').
+    $anio = !empty($data['anio']) ? (int)$data['anio'] : (int)date('Y');
+
+    // 3. VINCULACIÓN DE PARÁMETROS
+    // Parámetros: idNivel(i), idCurso(i), idAlumno(i), fechaMatriculacion(s), anio(i), estado(s), tarde(i), idPlanDeEstudio(i), pagoMatricula(i), pagoMonto(s), certificadoSalud(i), fechaBajaMatriculacion(s), certificadoTrabajo(i), idMatriculacion(i)
+    // String tipos: "iiisisiiisisii" (14 variables)
     $stmt->bind_param("iiisisiiisisii",
         $idNivel,
         $data['idCurso'],
         $data['idAlumno'],
         $fechaMatriculacion,
-        $anio,
+        $anio,             // <--- Variable corregida
         $estado,
         $data['tarde'],
         $data['idPlanDeEstudio'],
@@ -2217,9 +2278,15 @@ function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
         $data['certificadoSalud'],
         $fechaBajaMatriculacion,
         $data['certificadoTrabajo'],
-        $idMatriculacion // El ID para el WHERE
+        $idMatriculacion   // WHERE
     );
+
     $success = $stmt->execute();
+    
+    if (!$success) {
+        error_log("Error al actualizarMatriculacionPlan: " . $stmt->error);
+    }
+
     $stmt->close();
     return $success;
 }
@@ -2230,38 +2297,65 @@ function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
  * Crea 12 registros, uno por cada mes.
  */
 function inicializarAsistenciaMateria($conexion, $idAlumno, $idMateria, $idCicloLectivo) {
-    $sql_asistencia = "INSERT INTO asistenciaterciario (idAlumno, idMateria, mes, idCicloLectivo) VALUES (?, ?, ?, ?)";
+    // 1. Construcción dinámica de la consulta SQL
+    // Generamos la lista de campos (d1, d2... d31) y los signos de pregunta (?, ?...)
+    $camposDias = [];
+    $placeholders = [];
+    $tipos = "iiii"; // idAlumno, idMateria, mes, idCicloLectivo (4 enteros)
+    
+    for ($i = 1; $i <= 31; $i++) {
+        $camposDias[] = "d$i";
+        $placeholders[] = "?";
+        $tipos .= "s"; // Cada día será un string vacío
+    }
+    
+    $sql_cols = implode(", ", $camposDias);
+    $sql_vals = implode(", ", $placeholders);
+    
+    $sql_asistencia = "INSERT INTO asistenciaterciario (idAlumno, idMateria, mes, idCicloLectivo, $sql_cols) 
+                       VALUES (?, ?, ?, ?, $sql_vals)";
+    
     $stmt_asistencia = $conexion->prepare($sql_asistencia);
     if (!$stmt_asistencia) {
         error_log("Error al preparar inicializarAsistenciaMateria: " . $conexion->error);
         return false;
     }
 
-    // Habilitar transacciones para asegurar la atomicidad de las operaciones
-    $conexion->begin_transaction();
+    // 2. Preparar los parámetros para bind_param
+    // Usamos call_user_func_array para manejar dinámicamente los 35 parámetros
+    $mes = 0; // Variable temporal para el bucle
+    $vacio = ""; // Valor por defecto para los días
+    
+    $params = [];
+    $params[] = & $tipos;           // 1. Tipos de datos
+    $params[] = & $idAlumno;        // 2. idAlumno
+    $params[] = & $idMateria;       // 3. idMateria
+    $params[] = & $mes;             // 4. mes (se actualiza en el bucle)
+    $params[] = & $idCicloLectivo;  // 5. idCicloLectivo
+    
+    // Agregamos la referencia a la variable vacía 31 veces
+    for ($i = 1; $i <= 31; $i++) {
+        $params[] = & $vacio;
+    }
 
+    // Vinculamos los parámetros
+    call_user_func_array(array($stmt_asistencia, 'bind_param'), $params);
+
+    // 3. Ejecución del bucle para los 12 meses
+    // NOTA: Se eliminó begin_transaction() y commit() internos para no romper 
+    // la transacción principal de inscripcionMateria.php
     $success = true;
-    for ($mes = 1; $mes <= 12; $mes++) {
-        if (!$stmt_asistencia->bind_param("iiii", $idAlumno, $idMateria, $mes, $idCicloLectivo)) {
-            error_log("Error al bind_param en inicializarAsistenciaMateria para mes {$mes}: " . $stmt_asistencia->error);
-            $success = false;
-            break;
-        }
+    for ($m = 1; $m <= 12; $m++) {
+        $mes = $m; // Actualizamos el valor de la referencia $mes
         if (!$stmt_asistencia->execute()) {
-            error_log("Error al ejecutar inicializarAsistenciaMateria para mes {$mes}: " . $stmt_asistencia->error);
+            error_log("Error al ejecutar inicializarAsistenciaMateria para mes {$m}: " . $stmt_asistencia->error);
             $success = false;
-            break;
+            break; // Salimos si falla un mes
         }
     }
-    $stmt_asistencia->close();
 
-    if ($success) {
-        $conexion->commit();
-        return true;
-    } else {
-        $conexion->rollback();
-        return false;
-    }
+    $stmt_asistencia->close();
+    return $success;
 }
 
 /**

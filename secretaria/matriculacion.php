@@ -271,6 +271,7 @@ $today = date('Y-m-d');
           <table class="table table-striped table-hover mt-3">
             <thead>
               <tr>
+                <th>Año</th>
                 <th>Plan</th>
                 <th>Curso</th>
                 <th>Fecha matr.</th>
@@ -284,6 +285,7 @@ $today = date('Y-m-d');
             <tbody>
               <?php foreach ($matriculaciones_plan as $mat_plan): ?>
               <tr>
+                <td><strong><?php echo htmlspecialchars($mat_plan['anio']); ?></strong></td>
                 <td><?php echo htmlspecialchars($mat_plan['nombrePlan']); ?></td>
                 <td><?php echo htmlspecialchars($mat_plan['nombreCurso']); ?></td>
                 <td><?php echo htmlspecialchars($mat_plan['fechaMatriculacion']); ?></td>
@@ -484,7 +486,7 @@ $today = date('Y-m-d');
   }
 
   // --- Funciones para el Modal de Edición de Matriculación de Plan ---
-  function showEditMatriculacionModal(matriculacionData) {
+function showEditMatriculacionModal(matriculacionData) {
     $('#edit_idMatriculacion').val(matriculacionData.idMatriculacion);
     $('#edit_fechaMatriculacion').val(matriculacionData.fechaMatriculacion);
     $('#edit_fechaBajaMatriculacion').val(matriculacionData.fechaBajaMatriculacion);
@@ -495,14 +497,17 @@ $today = date('Y-m-d');
 
     $('#edit_certificadoTrabajo').prop('checked', matriculacionData.certificadoTrabajo == 1);
 
-    // Cargar los planes y cursos para la edición
-    var anioMatriculacion = matriculacionData.fechaMatriculacion ? matriculacionData.fechaMatriculacion.split('-')[0] : new Date().getFullYear();
-    $('#edit_anioMatriculacion').val(anioMatriculacion); // Establecer el año en el select de edición
+    // Priorizamos el campo 'anio' (Ciclo Lectivo) que viene de la BD.
+    // Si no existe, recién ahí usamos la fecha de matriculación como respaldo.
+    var anioMatriculacion = matriculacionData.anio ? matriculacionData.anio : (matriculacionData.fechaMatriculacion ? matriculacionData.fechaMatriculacion.split('-')[0] : new Date().getFullYear());
+    
+    $('#edit_anioMatriculacion').val(anioMatriculacion); 
 
+    // Cargar los planes y cursos para la edición usando el año correcto
     loadPlanesParaEdicion(matriculacionData.idPlanDeEstudio, matriculacionData.idCurso);
 
     $('#editMatriculacionModal').modal('show');
-  }
+}
 
   // Función para cargar planes y luego cursos en el modal de edición
   function loadPlanesParaEdicion(selectedPlanId = null, selectedCursoId = null) {

@@ -127,19 +127,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $conn->begin_transaction();
         
         foreach ($materiasAInscribir as $materia) {
-            if (controlCorrelatividades($materia['idUnicoMateria'], $idAlumno, 0)) {
-                $matriculacion_materia_data = [
-                    'idAlumno' => $idAlumno,
-                    'idMateria' => $materia['idMateria'],
-                    'fechaMatriculacionMateria' => $fechaMatriculacionMateria,
-                    'fechaBajaMatriculacionMateria' => $_POST['fechaBajaMatriculacionMateriaMatriculacion'] ?? null,
-                    'estadoMatriculacionMateria' => $estadoMatriculacionMateria
-                ];
-                
-                if (insertarMatriculacionMateria($conn, $matriculacion_materia_data)) {
-                    $anio_inscripcion = date('Y', strtotime($fechaMatriculacionMateria));
-                    $idCicloLectivo = buscarIdCiclo($conn, $anio_inscripcion);
+           if (controlCorrelatividades($materia['idUnicoMateria'], $idAlumno, 0)) {
+    
+    // Capturamos el año seleccionado en el combo (NO la fecha actual)
+    $anioSeleccionado = $_POST['anioInscripcionMateria'] ?? date('Y');
 
+    $matriculacion_materia_data = [
+        'idAlumno' => $idAlumno,
+        'idMateria' => $materia['idMateria'],
+        'fechaMatriculacionMateria' => $fechaMatriculacionMateria,
+        'fechaBajaMatriculacionMateria' => $_POST['fechaBajaMatriculacionMateriaMatriculacion'] ?? null,
+        'estadoMatriculacionMateria' => $estadoMatriculacionMateria,
+        'anio' => $anioSeleccionado // <--- AGREGAMOS ESTE DATO IMPORTANTE
+    ];
+    
+    // Llamamos a la función corregida
+    if (insertarMatriculacionMateria($conn, $matriculacion_materia_data)) {
+        
+        // Ahora buscamos el ID de ciclo para inicializar asistencias
+        // Nota: buscarIdCiclo ya lo usará insertarMatriculacionMateria internamente,
+        // pero lo necesitamos aquí para la asistencia.
+        $idCicloLectivo = buscarIdCiclo($conn, $anioSeleccionado);
                     if ($idCicloLectivo) {
                         inicializarAsistenciaMateria($conn, $idAlumno, $materia['idMateria'], $idCicloLectivo);
                         inicializarCalificacionMateria($conn, $idAlumno, $materia['idMateria']);
