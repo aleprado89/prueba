@@ -104,7 +104,7 @@ if (isset($_GET['search_submitted'])) {
                 
                 <div class="card p-4 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5>Buscar Alumno</h5>                                     
+                        <h5>Buscar alumno</h5>                                     
                         <?php       if ($redirect_origin == 'legajo') { ?>
 
                         <a href="legajoAlu.php?mode=new" class="btn btn-primary">

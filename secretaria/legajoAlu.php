@@ -95,21 +95,21 @@ $documentacion_labels_final = [
     null,
     // pos 7 (req8 - no checkbox)
     null,
-    // pos 8 (req9 - "Primario Completo")
+    // pos 8 (req9 - "Primario completo")
     (!empty(trim($req9)) && !empty(trim($req7))) ? trim($req7) . " " . trim($req9) : ((!empty(trim($req9))) ? $req9 : null),
-    // pos 9 (req10 - "Primario Incompleto")
+    // pos 9 (req10 - "Primario incompleto")
     (!empty(trim($req10)) && !empty(trim($req7))) ? trim($req7) . " " . trim($req10) : ((!empty(trim($req10))) ? $req10 : null),
     // pos 10 (req11)
     (!empty(trim($req11))) ? trim($req11) : null,
-    // pos 11 (req12 - "Secundario Completo")
+    // pos 11 (req12 - "Secundario completo")
     (!empty(trim($req12)) && !empty(trim($req8))) ? trim($req8) . " " . trim($req12) : ((!empty(trim($req12))) ? $req12 : null),
-    // pos 12 (req13 - "Secundario Incompleto")
+    // pos 12 (req13 - "Secundario incompleto")
     (!empty(trim($req13)) && !empty(trim($req8))) ? trim($req8) . " " . trim($req13) : ((!empty(trim($req13))) ? $req13 : null),
     // pos 13 (req14 - no checkbox)
     null,
-    // pos 14 (req15 - "Nivel sup completo")
+    // pos 14 (req15 - "Nivel sup. completo")
     (!empty(trim($req15))) ? "Nivel sup completo" : null,
-    // pos 15 (req16 - "Nivel sup Incompleto")
+    // pos 15 (req16 - "Nivel sup. incompleto")
     (!empty(trim($req16))) ? "Nivel sup Incompleto" : null,
     // pos 16 (req17 - vacio)
     (!empty(trim($req17))) ? trim($req17) : null,
@@ -453,7 +453,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
         <input type="hidden" name="mode" value="<?php echo htmlspecialchars($mode); ?>">
 
         <fieldset class="mb-4 p-3 border rounded">
-          <legend class="float-none w-auto px-2">Datos Personales</legend>
+          <legend class="float-none w-auto px-2">Datos personales</legend>
 
           <div class="row mb-3">
             <div class="col-md-6">
@@ -484,7 +484,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
 
           <div class="row mb-3">
             <div class="col-md-6">
-                <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                <label for="fechaNacimiento" class="form-label">Fecha de nacimiento</label>
                 <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" value="<?php echo htmlspecialchars($alumnoData['fechaNacimiento'] ?? ''); ?>">
             </div>
             <div class="col-md-6">

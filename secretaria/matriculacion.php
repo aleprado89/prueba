@@ -187,8 +187,8 @@ $today = date('Y-m-d');
   <div class="container">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-      <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=matriculacion">Buscar Alumno</a></li>
-      <li class="breadcrumb-item active">Matriculación Alumno</li>
+      <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=matriculacion">Buscar alumno</a></li>
+      <li class="breadcrumb-item active">Matriculación alumno</li>
     </ol>
 
     <?php if ($message): ?>
@@ -210,7 +210,7 @@ $today = date('Y-m-d');
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="anioMatriculacion" class="form-label">Año de Matriculación <span class="text-danger">*</span></label>
+              <label for="anioMatriculacion" class="form-label">Año de matriculación <span class="text-danger">*</span></label>
               <select class="form-select" id="anioMatriculacion" name="anioMatriculacion" required onchange="loadPlanesPorAnio()">
                 <option value="">Seleccione el año</option>
                 <?php
@@ -221,7 +221,7 @@ $today = date('Y-m-d');
               </select>
             </div>
             <div class="col-md-6">
-              <label for="idPlanDeEstudio" class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
+              <label for="idPlanDeEstudio" class="form-label">Plan de estudio <span class="text-danger">*</span></label>
               <select class="form-select" id="idPlanDeEstudio" name="idPlanDeEstudio" required onchange="loadCursos()">
                 <option value="">Seleccione un plan de estudio </option>
               </select>
@@ -235,21 +235,21 @@ $today = date('Y-m-d');
               </select>
             </div>
             <div class="col-md-6">
-              <label for="fechaMatriculacion" class="form-label">Fecha de Matriculación <span class="text-danger">*</span></label>
+              <label for="fechaMatriculacion" class="form-label">Fecha de matriculación <span class="text-danger">*</span></label>
               <input type="date" class="form-control form-select" id="fechaMatriculacion" name="fechaMatriculacion" value="<?php echo $today; ?>" required>
             </div>
           </div>
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="fechaBajaMatriculacion" class="form-label">Fecha de Baja Matriculación (Opcional)</label>
+              <label for="fechaBajaMatriculacion" class="form-label">Fecha de baja matriculación (Opcional)</label>
               <input type="date" class="form-control" id="fechaBajaMatriculacion" name="fechaBajaMatriculacion">
               <div class="form-text">Si se carga, la matriculación se registrará como "De Baja"</div>
             </div>
             <div class="col-md-6">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="pagoMatricula" name="pagoMatricula" value="1" onchange="togglePagoMonto()">
-                <label class="form-check-label" for="pagoMatricula"> Pago Matrícula</label>
+                <label class="form-check-label" for="pagoMatricula"> Pago matrícula</label>
               </div>
               <input type="number" step="0.01" class="form-control mt-2" id="pagoMonto" name="pagoMonto" placeholder="Monto abonado" style="display: none;">
             </div>
@@ -262,10 +262,10 @@ $today = date('Y-m-d');
           <input type="hidden" name="tarde" value="0">
           <input type="hidden" name="certificadoSalud" value="0">
 
-          <button type="submit" class="btn btn-primary mt-3">Guardar Matriculación Plan</button>
+          <button type="submit" class="btn btn-primary mt-3">Guardar matriculación plan</button>
         </form>
 
-        <h6 class="mt-4">Matriculaciones de Plan Existentes:</h6>
+        <h6 class="mt-4">Matriculaciones de plan existentes:</h6>
         <?php if (!empty($matriculaciones_plan)): ?>
         <div class="table-responsive">
           <table class="table table-striped table-hover mt-3">
@@ -273,11 +273,11 @@ $today = date('Y-m-d');
               <tr>
                 <th>Plan</th>
                 <th>Curso</th>
-                <th>Fec. Matr.</th>
-                <th>Pago Matr.</th>
+                <th>Fecha matr.</th>
+                <th>Pago matr.</th>
                 <th>Monto</th>
-                <th>Fec. Baja</th>
-                <th>Asist. Red.</th>
+                <th>Fec. baja</th>
+                <th>Asist. red.</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -330,7 +330,7 @@ $today = date('Y-m-d');
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editMatriculacionModalLabel">Editar Matriculación de Plan</h5>
+        <h5 class="modal-title" id="editMatriculacionModalLabel">Editar matriculación de plan</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="editMatriculacionForm" method="POST" action="matriculacion.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>">
@@ -340,7 +340,7 @@ $today = date('Y-m-d');
 
         <div class="modal-body">
           <div class="mb-3">
-            <label for="edit_anioMatriculacion" class="form-label">Año de Matriculación</label>
+            <label for="edit_anioMatriculacion" class="form-label">Año de matriculación</label>
             <select class="form-select" id="edit_anioMatriculacion" name="anioMatriculacion" required onchange="loadCursosEditModal()">
               <option value="">Seleccione el año</option>
               <?php
@@ -351,7 +351,7 @@ $today = date('Y-m-d');
             </select>
           </div>
           <div class="mb-3">
-            <label for="edit_idPlanDeEstudio" class="form-label">Plan de Estudio</label>
+            <label for="edit_idPlanDeEstudio" class="form-label">Plan de estudio</label>
             <select class="form-select" id="edit_idPlanDeEstudio" name="idPlanDeEstudio" required onchange="loadCursosEditModal()">
               <option value="">Seleccione un plan</option>
             </select>
@@ -363,16 +363,16 @@ $today = date('Y-m-d');
             </select>
           </div>
           <div class="mb-3">
-            <label for="edit_fechaMatriculacion" class="form-label">Fecha de Matriculación</label>
+            <label for="edit_fechaMatriculacion" class="form-label">Fecha de matriculación</label>
             <input type="date" class="form-control" id="edit_fechaMatriculacion" name="fechaMatriculacion" required>
           </div>
           <div class="mb-3">
-            <label for="edit_fechaBajaMatriculacion" class="form-label">Fecha de Baja (Opcional)</label>
+            <label for="edit_fechaBajaMatriculacion" class="form-label">Fecha de baja (Opcional)</label>
             <input type="date" class="form-control" id="edit_fechaBajaMatriculacion" name="fechaBajaMatriculacion">
           </div>
           <div class="mb-3 form-check">
             <input type="checkbox" class="form-check-input" id="edit_pagoMatricula" name="pagoMatricula" value="1" onchange="togglePagoMontoEditModal()">
-            <label class="form-check-label" for="edit_pagoMatricula">Pago Matrícula</label>
+            <label class="form-check-label" for="edit_pagoMatricula">Pago matrícula</label>
           </div>
           <div class="mb-3">
             <input type="number" step="0.01" class="form-control" id="edit_pagoMonto" name="pagoMonto" placeholder="Monto abonado" style="display: none;">
@@ -386,7 +386,7 @@ $today = date('Y-m-d');
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
       </form>
     </div>
