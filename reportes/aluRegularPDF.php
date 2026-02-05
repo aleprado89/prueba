@@ -26,10 +26,18 @@ $carrera = !empty($planes) ? $planes[0]['Plan'] : 'Carrera no registrada';
 $institucion = $datosColegio[0]['nombreColegio'] ?? 'Institución Educativa';
 $localidad   = $datosColegio[0]['localidad'] ?? 'Localidad';
 
-// Fecha actual en formato formal
-setlocale(LC_TIME, 'es_ES.UTF-8');
+// Fecha actual con IntlDateFormatter
+$fmt = new IntlDateFormatter(
+    'es_ES',
+    IntlDateFormatter::LONG,
+    IntlDateFormatter::NONE,
+    'America/Argentina/Buenos_Aires', // Ajusta a tu zona horaria
+    IntlDateFormatter::GREGORIAN,
+    'MMMM' // Solo el nombre del mes
+);
+
 $dia  = date('j');
-$mes  = strftime('%B');
+$mes  = $fmt->format(new DateTime()); // Saldrá "febrero"
 $anio = date('Y');
 
 // Membrete (logo)

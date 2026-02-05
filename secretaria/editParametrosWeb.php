@@ -32,26 +32,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         switch ($_POST['form_action'] ?? '') {
-            case 'update_exam':
-                $anioautoweb = $_POST['anioautoweb_exam'] ?? null;
-                $iDturnoautoweb = $_POST['iDturnoautoweb'] ?? null;
-                $inscExamDesde = !empty($_POST['inscExamDesde']) ? date('Y-m-d H:i:s', strtotime($_POST['inscExamDesde'])) : null;
-                $inscExamLectDesde = !empty($_POST['inscExamLectDesde']) ? date('Y-m-d H:i:s', strtotime($_POST['inscExamLectDesde'])) : null;
-                $inscExamHasta = !empty($_POST['inscExamHasta']) ? date('Y-m-d H:i:s', strtotime($_POST['inscExamHasta'])) : null;
+           case 'update_exam':
+    $anioautoweb = $_POST['anioautoweb_exam'] ?? null;
+    $iDturnoautoweb = $_POST['iDturnoautoweb'] ?? null;
+    $inscExamDesde = !empty($_POST['inscExamDesde']) ? date('Y-m-d H:i:s', strtotime($_POST['inscExamDesde'])) : null;
+    $inscExamLectDesde = !empty($_POST['inscExamLectDesde']) ? date('Y-m-d H:i:s', strtotime($_POST['inscExamLectDesde'])) : null;
+    $inscExamHasta = !empty($_POST['inscExamHasta']) ? date('Y-m-d H:i:s', strtotime($_POST['inscExamHasta'])) : null;
 
-                // CAMBIO: Usamos WHERE codnivel = 6
-                $stmt = $conn->prepare("UPDATE colegio SET anioautoweb = ?, iDturnoautoweb = ?, inscExamDesde = ?, inscExamLectDesde = ?, inscExamHasta = ? WHERE codnivel = 6");
-                // CAMBIO: No pasamos $idColegio en bind_param
-                $stmt->bind_param("iisss", $anioautoweb, $iDturnoautoweb, $inscExamDesde, $inscExamLectDesde, $inscExamHasta);
+    // VALIDACIÓN CRÍTICA: El turno no puede ser vacío
+    if (empty($iDturnoautoweb)) {
+        throw new Exception("El campo 'Turno' es obligatorio para la inscripción a exámenes.");
+    }
 
-                if ($stmt->execute()) {
-                    $message = "Parámetros de inscripción a exámenes actualizados correctamente.";
-                    $message_type = 'success';
-                } else {
-                    throw new Exception("Error al actualizar inscripción a exámenes: " . $stmt->error);
-                }
-                $stmt->close();
-                break;
+    $stmt = $conn->prepare("UPDATE colegio SET anioautoweb = ?, iDturnoautoweb = ?, inscExamDesde = ?, inscExamLectDesde = ?, inscExamHasta = ? WHERE codnivel = 6");
+    $stmt->bind_param("iisss", $anioautoweb, $iDturnoautoweb, $inscExamDesde, $inscExamLectDesde, $inscExamHasta);
+
+    if ($stmt->execute()) {
+        $message = "Parámetros de inscripción a exámenes actualizados correctamente.";
+        $message_type = 'success';
+    } else {
+        throw new Exception("Error al actualizar inscripción a exámenes: " . $stmt->error);
+    }
+    $stmt->close();
+    break;
 
             case 'update_cursado':
                 $anioautoweb = $_POST['anioautoweb_cursado'] ?? null;
@@ -73,25 +76,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt->close();
                 break;
 
-            case 'update_actas': // Este case antes también contenía cargaActaVolTurno
-                $anio_carga_notas = $_POST['anio_carga_notas'] ?? null;
-                $cargaActaVolTurno = $_POST['cargaActaVolTurno'] ?? null;
-                $cargaActaVolDesde = !empty($_POST['cargaActaVolDesde']) ? date('Y-m-d H:i:s', strtotime($_POST['cargaActaVolDesde'])) : null;
-                $cargaActaVolHasta = !empty($_POST['cargaActaVolHasta']) ? date('Y-m-d H:i:s', strtotime($_POST['cargaActaVolHasta'])) : null;
+            case 'update_actas':
+    $anio_carga_notas = $_POST['anio_carga_notas'] ?? null;
+    $cargaActaVolTurno = $_POST['cargaActaVolTurno'] ?? null;
+    $cargaActaVolDesde = !empty($_POST['cargaActaVolDesde']) ? date('Y-m-d H:i:s', strtotime($_POST['cargaActaVolDesde'])) : null;
+    $cargaActaVolHasta = !empty($_POST['cargaActaVolHasta']) ? date('Y-m-d H:i:s', strtotime($_POST['cargaActaVolHasta'])) : null;
 
-                // CAMBIO: Usamos WHERE codnivel = 6
-                $stmt = $conn->prepare("UPDATE colegio SET anio_carga_notas = ?, cargaActaVolTurno = ?, cargaActaVolDesde = ?, cargaActaVolHasta = ? WHERE codnivel = 6");
-                // CAMBIO: No pasamos $idColegio en bind_param
-                $stmt->bind_param("iisss", $anio_carga_notas, $cargaActaVolTurno, $cargaActaVolDesde, $cargaActaVolHasta);
+    // CORRECCIÓN: La cadena de tipos debe ser "iiss" para 4 parámetros
+    $stmt = $conn->prepare("UPDATE colegio SET anio_carga_notas = ?, cargaActaVolTurno = ?, cargaActaVolDesde = ?, cargaActaVolHasta = ? WHERE codnivel = 6");
+    $stmt->bind_param("iiss", $anio_carga_notas, $cargaActaVolTurno, $cargaActaVolDesde, $cargaActaVolHasta);
 
-                if ($stmt->execute()) {
-                    $message = "Parámetros de carga de actas actualizados correctamente.";
-                    $message_type = 'success';
-                } else {
-                    throw new Exception("Error al actualizar carga de actas: " . $stmt->error);
-                }
-                $stmt->close();
-                break;
+    if ($stmt->execute()) {
+        $message = "Parámetros de carga de actas actualizados correctamente.";
+        $message_type = 'success';
+    } else {
+        throw new Exception("Error al actualizar carga de actas: " . $stmt->error);
+    }
+    $stmt->close();
+    break;
 
             case 'update_docente_perms': // NUEVO CASE para el switch de permisos docentes
                 $docenteModifica = isset($_POST['docenteModifica']) ? 1 : 0; // 1 si está marcado, 0 si no
@@ -250,17 +252,18 @@ function formatDateTimeForInput($dateTimeStr) {
               </select>
             </div>
 
-            <div class="mb-3">
-              <label for="iDturnoautoweb" class="form-label">Turno (Autogestión Alumnos)</label>
-              <select class="form-select" id="iDturnoautoweb" name="iDturnoautoweb">
-                <option value="">Seleccione un Turno</option>
-                <?php foreach ($turnosExamenes as $turno): ?>
-                  <option value="<?php echo htmlspecialchars($turno['idTurno']); ?>" <?php echo (isset($colegioParams['iDturnoautoweb']) && $colegioParams['iDturnoautoweb'] == $turno['idTurno']) ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($turno['nombre']); ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
+           <div class="mb-3">
+  <label for="iDturnoautoweb" class="form-label">Turno (Autogestión Alumnos) <span class="text-danger">*</span></label>
+  <select class="form-select" id="iDturnoautoweb" name="iDturnoautoweb" required>
+    <option value="">Seleccione un Turno</option>
+    <?php foreach ($turnosExamenes as $turno): ?>
+      <option value="<?php echo htmlspecialchars($turno['idTurno']); ?>" <?php echo (isset($colegioParams['iDturnoautoweb']) && $colegioParams['iDturnoautoweb'] == $turno['idTurno']) ? 'selected' : ''; ?>>
+        <?php echo htmlspecialchars($turno['nombre']); ?>
+      </option>
+    <?php endforeach; ?>
+  </select>
+  <div class="invalid-feedback">Por favor, seleccione un turno.</div>
+</div>
 
             <div class="mb-3">
               <label for="inscExamDesde" class="form-label">Inicio Inscripción</label>
