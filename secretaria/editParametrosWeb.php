@@ -202,7 +202,7 @@ function formatDateTimeForInput($dateTimeStr) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editar Parámetros Web - Secretaría</title>
+  <title>Editar parámetros web - Secretaría</title>
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -220,7 +220,7 @@ function formatDateTimeForInput($dateTimeStr) {
 <?php include '../funciones/menu_secretaria.php'; ?>
 
 <div class="container mt-4">
-  <h2 class="mb-4">Editar Parámetros de la Plataforma Web</h2>
+  <h2 class="mb-4">Editar parámetros de plataforma web</h2>
 
   <?php if ($message): ?>
     <div class="alert alert-<?php echo htmlspecialchars($message_type); ?> alert-dismissible fade show" role="alert">
@@ -234,7 +234,7 @@ function formatDateTimeForInput($dateTimeStr) {
     <div class="col-md-6 mb-4">
       <div class="card shadow-sm h-100">
         <div class="card-header card-header-custom d-flex align-items-center">
-          <i class="bi bi-calendar-check me-2"></i> Inscripción a Examen (Autogestión Alumnos)
+          <i class="bi bi-calendar-check me-2"></i> Inscripción a examen (Autogestión de alumnos)
         </div>
         <div class="card-body">
           <form method="POST" action="">
@@ -242,7 +242,7 @@ function formatDateTimeForInput($dateTimeStr) {
             <input type="hidden" name="form_action" value="update_exam">
 
             <div class="mb-3">
-              <label for="anioautoweb_exam" class="form-label">Año (Autogestión Alumnos)</label>
+              <label for="anioautoweb_exam" class="form-label">Año (Autogestión alumnos)</label>
               <select class="form-select" id="anioautoweb_exam" name="anioautoweb_exam" required>
                 <?php foreach ($anios as $año): ?>
                   <option value="<?php echo htmlspecialchars($año); ?>" <?php echo (isset($colegioParams['anioautoweb']) && $colegioParams['anioautoweb'] == $año) ? 'selected' : ''; ?>>
@@ -253,7 +253,7 @@ function formatDateTimeForInput($dateTimeStr) {
             </div>
 
            <div class="mb-3">
-  <label for="iDturnoautoweb" class="form-label">Turno (Autogestión Alumnos) <span class="text-danger">*</span></label>
+  <label for="iDturnoautoweb" class="form-label">Turno (Autogestión alumnos) <span class="text-danger">*</span></label>
   <select class="form-select" id="iDturnoautoweb" name="iDturnoautoweb" required>
     <option value="">Seleccione un Turno</option>
     <?php foreach ($turnosExamenes as $turno): ?>
@@ -266,21 +266,21 @@ function formatDateTimeForInput($dateTimeStr) {
 </div>
 
             <div class="mb-3">
-              <label for="inscExamDesde" class="form-label">Inicio Inscripción</label>
+              <label for="inscExamDesde" class="form-label">Inicio de inscripción</label>
               <input type="datetime-local" class="form-control" id="inscExamDesde" name="inscExamDesde" value="<?php echo formatDateTimeForInput($colegioParams['inscExamDesde'] ?? ''); ?>">
             </div>
 
             <div class="mb-3">
-              <label for="inscExamLectDesde" class="form-label">Solo Lectura Desde</label>
+              <label for="inscExamLectDesde" class="form-label">Solo lectura desde</label>
               <input type="datetime-local" class="form-control" id="inscExamLectDesde" name="inscExamLectDesde" value="<?php echo formatDateTimeForInput($colegioParams['inscExamLectDesde'] ?? ''); ?>">
             </div>
 
             <div class="mb-3">
-              <label for="inscExamHasta" class="form-label">Cierre Inscripción</label>
+              <label for="inscExamHasta" class="form-label">Cierre de inscripción</label>
               <input type="datetime-local" class="form-control" id="inscExamHasta" name="inscExamHasta" value="<?php echo formatDateTimeForInput($colegioParams['inscExamHasta'] ?? ''); ?>">
             </div>
 
-            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar Inscripción Examen</button>
+            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar inscripción a examen</button>
           </form>
         </div>
       </div>
@@ -290,7 +290,7 @@ function formatDateTimeForInput($dateTimeStr) {
     <div class="col-md-6 mb-4">
       <div class="card shadow-sm h-100">
         <div class="card-header card-header-custom d-flex align-items-center">
-          <i class="bi bi-person-lines-fill me-2"></i> Inscripción a Cursado (Autogestión Alumnos)
+          <i class="bi bi-person-lines-fill me-2"></i> Inscripción a cursado (Autogestión de alumnos)
         </div>
         <div class="card-body">
           <form method="POST" action="">
@@ -298,7 +298,7 @@ function formatDateTimeForInput($dateTimeStr) {
             <input type="hidden" name="form_action" value="update_cursado">
 
             <div class="mb-3">
-              <label for="anioautoweb_cursado" class="form-label">Año (Autogestión Alumnos)</label>
+              <label for="anioautoweb_cursado" class="form-label">Año (Autogestión alumnos)</label>
               <select class="form-select" id="anioautoweb_cursado" name="anioautoweb_cursado" required>
                 <?php foreach ($anios as $año): ?>
                   <option value="<?php echo htmlspecialchars($año); ?>" <?php echo (isset($colegioParams['anioautoweb']) && $colegioParams['anioautoweb'] == $año) ? 'selected' : ''; ?>>
@@ -309,21 +309,21 @@ function formatDateTimeForInput($dateTimeStr) {
             </div>
 
             <div class="mb-3">
-              <label for="inscCursDesde" class="form-label">Inicio Inscripción</label>
+              <label for="inscCursDesde" class="form-label">Inicio de inscripción</label>
               <input type="datetime-local" class="form-control" id="inscCursDesde" name="inscCursDesde" value="<?php echo formatDateTimeForInput($colegioParams['inscCursDesde'] ?? ''); ?>">
             </div>
 
             <div class="mb-3">
-              <label for="inscCursLectDesde" class="form-label">Solo Lectura Desde</label>
+              <label for="inscCursLectDesde" class="form-label">Solo lectura desde</label>
               <input type="datetime-local" class="form-control" id="inscCursLectDesde" name="inscCursLectDesde" value="<?php echo formatDateTimeForInput($colegioParams['inscCursLectDesde'] ?? ''); ?>">
             </div>
 
             <div class="mb-3">
-              <label for="inscCursHasta" class="form-label">Cierre Inscripción</label>
+              <label for="inscCursHasta" class="form-label">Cierre de inscripción</label>
               <input type="datetime-local" class="form-control" id="inscCursHasta" name="inscCursHasta" value="<?php echo formatDateTimeForInput($colegioParams['inscCursHasta'] ?? ''); ?>">
             </div>
 
-            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar Inscripción Cursado</button>
+            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar inscripción a cursado</button>
           </form>
         </div>
       </div>
@@ -335,7 +335,7 @@ function formatDateTimeForInput($dateTimeStr) {
     <div class="col-md-6 mb-4">
       <div class="card shadow-sm h-100">
         <div class="card-header card-header-custom d-flex align-items-center">
-          <i class="bi bi-pencil-square me-2"></i> Carga de Acta (Autogestión Docente)
+          <i class="bi bi-pencil-square me-2"></i> Carga de acta (Autogestión docente)
         </div>
         <div class="card-body">
           <form method="POST" action="">
@@ -343,7 +343,7 @@ function formatDateTimeForInput($dateTimeStr) {
             <input type="hidden" name="form_action" value="update_actas">
 
             <div class="mb-3">
-              <label for="anio_carga_notas" class="form-label">Año (Carga de Notas)</label>
+              <label for="anio_carga_notas" class="form-label">Año (Carga de notas)</label>
               <select class="form-select" id="anio_carga_notas" name="anio_carga_notas" required>
                 <?php foreach ($anios as $año): ?>
                   <option value="<?php echo htmlspecialchars($año); ?>" <?php echo (isset($colegioParams['anio_carga_notas']) && $colegioParams['anio_carga_notas'] == $año) ? 'selected' : ''; ?>>
@@ -354,7 +354,7 @@ function formatDateTimeForInput($dateTimeStr) {
             </div>
 
             <div class="mb-3">
-              <label for="cargaActaVolTurno" class="form-label">Turno (Carga de Actas)</label>
+              <label for="cargaActaVolTurno" class="form-label">Turno (Carga de actas)</label>
               <select class="form-select" id="cargaActaVolTurno" name="cargaActaVolTurno">
                 <option value="">Seleccione un Turno</option>
                 <?php foreach ($turnosExamenes as $turno): ?>
@@ -366,16 +366,16 @@ function formatDateTimeForInput($dateTimeStr) {
             </div>
 
             <div class="mb-3">
-              <label for="cargaActaVolDesde" class="form-label">Inicio Carga de Acta</label>
+              <label for="cargaActaVolDesde" class="form-label">Inicio carga de acta</label>
               <input type="datetime-local" class="form-control" id="cargaActaVolDesde" name="cargaActaVolDesde" value="<?php echo formatDateTimeForInput($colegioParams['cargaActaVolDesde'] ?? ''); ?>">
             </div>
 
             <div class="mb-3">
-              <label for="cargaActaVolHasta" class="form-label">Cierre Carga de Acta</label>
+              <label for="cargaActaVolHasta" class="form-label">Cierre carga de acta</label>
               <input type="datetime-local" class="form-control" id="cargaActaVolHasta" name="cargaActaVolHasta" value="<?php echo formatDateTimeForInput($colegioParams['cargaActaVolHasta'] ?? ''); ?>">
             </div>
 
-            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar Carga de Acta</button>
+            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar carga de acta</button>
           </form>
         </div>
       </div>
@@ -385,7 +385,7 @@ function formatDateTimeForInput($dateTimeStr) {
     <div class="col-md-6 mb-4">
       <div class="card shadow-sm h-100">
         <div class="card-header card-header-custom d-flex align-items-center">
-          <i class="bi bi-gear me-2"></i> Permisos de Docentes
+          <i class="bi bi-gear me-2"></i> Permisos de docentes
         </div>
         <div class="card-body">
           <form method="POST" action="">
@@ -396,7 +396,7 @@ function formatDateTimeForInput($dateTimeStr) {
               <label class="form-check-label" for="docenteModificaSwitch">Docentes pueden modificar calificaciones y asistencias</label>
             </div>
             
-            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar Permisos</button>
+            <button type="submit" class="btn btn-primary btn-navbar-color">Guardar permisos</button>
           </form>
         </div>
       </div>

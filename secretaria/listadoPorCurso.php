@@ -21,7 +21,7 @@ $planes = buscarTodosPlanes($conn);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listados por Curso - Secretaría</title>
+    <title>Listados por curso - Secretaría</title>
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
@@ -35,18 +35,18 @@ $planes = buscarTodosPlanes($conn);
         <div class="container">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-                <li class="breadcrumb-item active">Listados por Curso</li>
+                <li class="breadcrumb-item active">Listados por curso</li>
             </ol>
 
             <div class="card p-4">
-                <h5>Generar Listado de Alumnos por Curso</h5>
+                <h5>Generar listado de alumnos por curso</h5>
                 <p>Seleccione los filtros y el formato para generar el reporte.</p>
 
                 <!-- MODIFICACIÓN: El ID del formulario es ahora 'formListadoCurso' -->
                 <form id="formListadoCurso" method="GET" target="_blank">
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="cicloLectivo" class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
+                            <label for="cicloLectivo" class="form-label">Ciclo cectivo <span class="text-danger">*</span></label>
                             <select class="form-select" id="cicloLectivo" name="idCicloLectivo" required>
                                 <option value="">Seleccione un ciclo</option>
                                 <?php foreach ($ciclosLectivos as $ciclo): ?>
@@ -55,7 +55,7 @@ $planes = buscarTodosPlanes($conn);
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="planEstudio" class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
+                            <label for="planEstudio" class="form-label">Plan de estudio <span class="text-danger">*</span></label>
                             <select class="form-select" id="planEstudio" name="idPlan" required>
                                 <option value="">Seleccione un plan</option>
                                 <?php foreach ($planes as $plan): ?>
@@ -77,13 +77,13 @@ $planes = buscarTodosPlanes($conn);
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="formato" id="formatoRenglon" value="renglon" checked>
                             <label class="form-check-label" for="formatoRenglon">
-                                Con Renglón
+                                Con renglón
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="formato" id="formatoCuadriculado" value="cuadriculado">
                             <label class="form-check-label" for="formatoCuadriculado">
-                                Con Cuadriculado
+                                Con cuadriculado
                             </label>
                         </div>
                         <div class="form-check">
@@ -96,7 +96,7 @@ $planes = buscarTodosPlanes($conn);
 
                     <!-- MODIFICACIÓN: Un único botón de envío -->
                     <button type="submit" class="btn btn-primary mt-4">
-                        <i class="bi bi-printer"></i> Imprimir Listado
+                        <i class="bi bi-printer"></i> Imprimir 
                     </button>
                 </form>
             </div>

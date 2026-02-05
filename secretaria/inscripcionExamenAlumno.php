@@ -181,7 +181,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscribir Alumno a Examen - Secretaría</title>
+    <title>Inscribir alumno a examen - Secretaría</title>
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
@@ -207,14 +207,14 @@ try {
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
                 <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=inscribirExamen">Buscar Alumno</a></li>
-                <li class="breadcrumb-item active">Inscripción a Examen</li>
+                <li class="breadcrumb-item active">Inscripción a examen</li>
             </ol>
 
             <div id="messageContainer" class="mb-3" style="display: none;"></div>
 
             <div class="card p-4 mb-4">
                 <h5 class="mb-3">
-                    <i class="bi bi-person-check-fill"></i> Inscribir a Examen al Alumno:
+                    <i class="bi bi-person-check-fill"></i> Inscribir a examen al alumno:
                     <strong><?php echo htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']); ?></strong>
                     (DNI: <?php echo htmlspecialchars($alumno['dni']); ?>)
                 </h5>
@@ -225,7 +225,7 @@ try {
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="idCiclo" class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
+                            <label for="idCiclo" class="form-label">Ciclo lectivo <span class="text-danger">*</span></label>
                             <select class="form-select" id="idCiclo" name="idCiclo" required>
                                 <option value="">Seleccione un ciclo...</option>
                                 <?php foreach ($ciclos as $ciclo): ?>
@@ -236,7 +236,7 @@ try {
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="idTurno" class="form-label">Turno de Examen <span class="text-danger">*</span></label>
+                            <label for="idTurno" class="form-label">Turno de examen <span class="text-danger">*</span></label>
                             <select class="form-select" id="idTurno" name="idTurno" required>
                                 <option value="">Seleccione un turno...</option>
                                 <?php foreach ($turnos as $turno): ?>
@@ -247,7 +247,7 @@ try {
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="idPlan" class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
+                            <label for="idPlan" class="form-label">Plan de estudio <span class="text-danger">*</span></label>
                             <select class="form-select" id="idPlan" name="idPlan" required>
                                 <option value="">Seleccione un plan...</option>
                                 <?php foreach ($planes as $plan): ?>
@@ -276,8 +276,8 @@ try {
 
                     <div class="row mb-3">
                         <div class="col-12">
-                            <h6>Mesas de Examen Disponibles</h6>
-                            <p class="text-muted small">(Seleccione Ciclo, Turno y Materia para buscar mesas)</p>
+                            <h6>Mesas de examen disponibles</h6>
+                            <p class="text-muted small">(Seleccione ciclo, turno y materia para buscar mesas)</p>
                             <div id="spinnerMesas" style="display: none;" class="text-center">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                                     <span class="visually-hidden">Buscando...</span>
@@ -307,7 +307,7 @@ try {
 
                     <div class="row mb-3 align-items-end">
                         <div class="col-md-6">
-                            <label for="idCondicion" class="form-label">Condición de Inscripción <span class="text-danger">*</span></label>
+                            <label for="idCondicion" class="form-label">Condición de inscripción <span class="text-danger">*</span></label>
                             <select class="form-select" id="idCondicion" name="idCondicion" required>
                                 <option value="">Seleccione condición...</option>
                                 <?php foreach ($condicionesExamen as $condicion): ?>
@@ -319,7 +319,7 @@ try {
                         </div>
                         <div class="col-md-6 text-end">
                             <button type="button" class="btn btn-primary" id="btnInscribir" disabled>
-                                <i class="bi bi-check-circle-fill"></i> Inscribir Alumno
+                                <i class="bi bi-check-circle-fill"></i> Inscribir alumno
                             </button>
                         </div>
                     </div>
@@ -327,8 +327,8 @@ try {
                     <hr>
                     <div class="row mb-3">
                         <div class="col-12">
-                            <h6><i class="bi bi-list-task"></i> Inscripciones Previas en este Turno</h6>
-                            <p class="text-muted small">(Se actualiza al seleccionar Ciclo Lectivo y Turno)</p>
+                            <h6><i class="bi bi-list-task"></i> Inscripciones previas en este turno</h6>
+                            <p class="text-muted small">(Se actualiza al seleccionar ciclo lectivo y turno)</p>
                             <div id="spinnerInscripcionesTurno" style="display: none;" class="text-center">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                                     <span class="visually-hidden">Buscando...</span>
@@ -376,7 +376,7 @@ try {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnConfirmarInscripcion">Confirmar Inscripción</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarInscripcion">Confirmar inscripción</button>
                 </div>
             </div>
         </div>
@@ -410,7 +410,7 @@ try {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminacion">Eliminar Inscripción</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminacion">Eliminar inscripción</button>
                 </div>
             </div>
         </div>
