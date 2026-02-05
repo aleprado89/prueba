@@ -59,7 +59,7 @@ if (isset($_GET['search_submitted'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscar Alumno - Secretaría</title>
+    <title>Buscar alumno - Secretaría</title>
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
@@ -92,7 +92,7 @@ if (isset($_GET['search_submitted'])) {
             <div class="container">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-                    <li class="breadcrumb-item active">Buscar Alumno</li>
+                    <li class="breadcrumb-item active">Buscar alumno</li>
                 </ol>
                 
                 <?php if ($message): ?>
@@ -108,7 +108,7 @@ if (isset($_GET['search_submitted'])) {
                         <?php       if ($redirect_origin == 'legajo') { ?>
 
                         <a href="legajoAlu.php?mode=new" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Nuevo Alumno
+                            <i class="bi bi-plus-circle"></i> Nuevo alumno
                         </a> <?php } ?>
                     </div>
                     <form id="searchForm" method="GET" action="buscarAlumno.php">
@@ -156,19 +156,19 @@ if (isset($_GET['search_submitted'])) {
 
                                             if ($redirect_origin == 'legajo') {
                                                 $action_link = 'legajoAlu.php?idAlumno=' . $id_alumno_seguro . '&mode=edit';
-                                                $button_text = 'Ver Legajo';
+                                                $button_text = 'Ver legajo';
                                             } elseif ($redirect_origin == 'matriculacion') {
                                                 $action_link = 'matriculacion.php?idAlumno=' . $id_alumno_seguro;
                                                 $button_text = 'Matricular';
                                             } elseif ($redirect_origin == 'inscripcionMateria') {
                                                 $action_link = 'inscripcionMateria.php?idAlumno=' . $id_alumno_seguro;
-                                                $button_text = 'Inscribir Materia';
+                                                $button_text = 'Inscribir materia';
                                             } elseif ($redirect_origin == 'inscribirExamen') {
                                                 $action_link = 'inscripcionExamenAlumno.php?idAlumno=' . $id_alumno_seguro;
-                                                $button_text = 'Inscribir a Examen';
+                                                $button_text = 'Inscribir a examen';
                                             } elseif ($redirect_origin == 'califxalumno') {
                                                 $action_link = 'carga_califxalumno_secretaria.php?idAlumno=' . $id_alumno_seguro;
-                                                $button_text = 'Ver Calificaciones';
+                                                $button_text = 'Ver calificaciones';
                                             } elseif ($redirect_origin == 'certificadoRegular') {
                                                 $nombre   = rawurlencode(trim(htmlspecialchars($alumno['nombre'] ?? '', ENT_QUOTES, 'UTF-8')));
                                                 $apellido = rawurlencode(trim(htmlspecialchars($alumno['apellido'] ?? '', ENT_QUOTES, 'UTF-8')));
@@ -185,7 +185,7 @@ if (isset($_GET['search_submitted'])) {
                                                 $button_text = 'Registros Presistema';
                                             } else {
                                                 $action_link = 'legajoAlu.php?idAlumno=' . $id_alumno_seguro . '&mode=edit';
-                                                $button_text = 'Ver Detalle';
+                                                $button_text = 'Ver detalle';
                                             }
                                             ?>
                                             <a href="<?php echo $action_link; ?>"

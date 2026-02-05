@@ -406,7 +406,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Legajo Alumno - Secretaría</title>
+  <title>Legajo alumno - Secretaría</title>
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
@@ -432,8 +432,8 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
   <div class="container">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-      <li class="breadcrumb-item"><a href="buscarAlumno.php">Buscar Alumno</a></li>
-      <li class="breadcrumb-item active"><?php echo ($mode == 'edit' ? 'Editar' : 'Nuevo'); ?> Alumno</li>
+      <li class="breadcrumb-item"><a href="buscarAlumno.php">Buscar alumno</a></li>
+      <li class="breadcrumb-item active"><?php echo ($mode == 'edit' ? 'Editar' : 'Nuevo'); ?> alumno</li>
     </ol>
 
     <?php if ($message): ?>
@@ -444,7 +444,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
     <?php endif; ?>
 
     <div class="card padding col-12">
-      <h5><?php echo ($mode == 'edit' ? 'Editar Datos del Alumno' : 'Ingresar Nuevo Alumno'); ?></h5>
+      <h5><?php echo ($mode == 'edit' ? 'Editar datos del alumno' : 'Ingresar nuevo alumno'); ?></h5>
       <br>
 
       <form method="POST" action="legajoAlu.php<?php echo ($mode == 'edit' ? '?idAlumno=' . htmlspecialchars($idAlumno) : ''); ?>" enctype="multipart/form-data">
@@ -488,7 +488,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
                 <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" value="<?php echo htmlspecialchars($alumnoData['fechaNacimiento'] ?? ''); ?>">
             </div>
             <div class="col-md-6">
-                <label for="email" class="form-label">Email (recuperación clave)</label>
+                <label for="email" class="form-label">Email (recuperación de clave)</label>
                 <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($alumnoData['email'] ?? ''); ?>">
             </div>
           </div>
@@ -499,11 +499,11 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
                 <input type="text" class="form-control" id="nacionalidadNacimiento" name="nacionalidadNacimiento" value="<?php echo htmlspecialchars($alumnoData['nacionalidadNacimiento'] ?? ''); ?>">
             </div>
             <div class="col-md-4">
-                <label for="provinciaNacimiento" class="form-label">Provincia de Nacimiento</label>
+                <label for="provinciaNacimiento" class="form-label">Provincia de nacimiento</label>
                 <input type="text" class="form-control" id="provinciaNacimiento" name="provinciaNacimiento" value="<?php echo htmlspecialchars($alumnoData['provinciaNacimiento'] ?? ''); ?>">
             </div>
             <div class="col-md-4">
-                <label for="localidadNacimiento" class="form-label">Localidad de Nacimiento</label>
+                <label for="localidadNacimiento" class="form-label">Localidad de nacimiento</label>
                 <input type="text" class="form-control" id="localidadNacimiento" name="localidadNacimiento" value="<?php echo htmlspecialchars($alumnoData['localidadNacimiento'] ?? ''); ?>">
             </div>
           </div>
@@ -514,14 +514,14 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
                 <input type="text" class="form-control" id="domicilio" name="domicilio" value="<?php echo htmlspecialchars($alumnoData['domicilio'] ?? ''); ?>">
             </div>
             <div class="col-md-4">
-                <label for="cp" class="form-label">Código Postal</label>
+                <label for="cp" class="form-label">Código postal</label>
                 <input type="text" class="form-control" id="cp" name="cp" value="<?php echo htmlspecialchars($alumnoData['cp'] ?? ''); ?>">
             </div>
           </div>
 
           <div class="row mb-3">
              <div class="col-md-4">
-                <label for="telefono" class="form-label">Teléfono Fijo</label>
+                <label for="telefono" class="form-label">Teléfono fijo</label>
                 <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($alumnoData['telefono'] ?? ''); ?>">
             </div>
             <div class="col-md-4">
@@ -529,7 +529,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
                 <input type="text" class="form-control" id="celular" name="celular" value="<?php echo htmlspecialchars($alumnoData['celular'] ?? ''); ?>">
             </div>
             <div class="col-md-4">
-                 <label for="telefonoEmergencia" class="form-label">Teléfono de Emergencia</label>
+                 <label for="telefonoEmergencia" class="form-label">Teléfono de emergencia</label>
                  <input type="text" class="form-control" id="telefonoEmergencia" name="telefonoEmergencia" value="<?php echo htmlspecialchars($alumnoData['telefonoEmergencia'] ?? ''); ?>">
             </div>
           </div>
@@ -538,13 +538,13 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
             <div class="col-md-4">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="vivePadre" name="vivePadre" value="1" <?php echo (($alumnoData['vivePadre'] ?? 0) == 1 ? 'checked' : ''); ?>>
-                <label class="form-check-label" for="vivePadre">Vive Padre</label>
+                <label class="form-check-label" for="vivePadre">Vive padre</label>
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="viveMadre" name="viveMadre" value="1" <?php echo (($alumnoData['viveMadre'] ?? 0) == 1 ? 'checked' : ''); ?>>
-                <label class="form-check-label" for="viveMadre">Vive Madre</label>
+                <label class="form-check-label" for="viveMadre">Vive madre</label>
               </div>
             </div>
           </div>
@@ -566,12 +566,12 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="fotoCarnet" class="form-label">Foto Carnet:</label>
+              <label for="fotoCarnet" class="form-label">Foto carnet:</label>
               <input class="form-control" type="file" id="fotoCarnet" name="fotoCarnet" accept="image/jpeg, image/png">
             </div>
             <div class="col-md-6">
                 <?php if (!empty($fotoDisplayPath) && $fotoDisplayPath != '../img/placeholder.png'): // Solo muestra la imagen si hay una ruta válida y no es el placeholder ?>
-                    <img src="<?php echo htmlspecialchars($fotoDisplayPath); ?>" alt="Foto del Alumno" class="img-thumbnail mt-2" style="max-width: 150px; display: block;">
+                    <img src="<?php echo htmlspecialchars($fotoDisplayPath); ?>" alt="Foto del alumno" class="img-thumbnail mt-2" style="max-width: 150px; display: block;">
                 <?php else: ?>
                     <img src="../img/placeholder.png" alt="Sin Foto" class="img-thumbnail mt-2" style="max-width: 150px; display: block;">
                 <?php endif; ?>
@@ -581,7 +581,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
         </fieldset>
 
         <fieldset class="mb-4 p-3 border rounded">
-          <legend class="float-none w-auto px-2">Datos de Alumno</legend>
+          <legend class="float-none w-auto px-2">Datos de alumno</legend>
           <div class="row mb-3">
             <div class="col-md-6">
               <div class="form-check">
@@ -592,13 +592,13 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
             <div class="col-md-6">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="retiroBiblioteca" name="retiroBiblioteca" value="1" <?php echo (($alumnoData['retiroBiblioteca'] ?? 0) == 1 ? 'checked' : ''); ?>>
-                <label class="form-check-label" for="retiroBiblioteca">Retira Material de Biblioteca</label>
+                <label class="form-check-label" for="retiroBiblioteca">Retira material de biblioteca</label>
               </div>
             </div>
           </div>
 
            <div class="mb-3 col-md-3">
-              <label for="mailInstitucional" class="form-label">Mail Institucional</label>
+              <label for="mailInstitucional" class="form-label">Mail institucional</label>
               <input type="email" class="form-control" id="mailInstitucional" name="mailInstitucional" value="<?php echo htmlspecialchars($alumnoData['mailInstitucional'] ?? ''); ?>">
            </div>
 
@@ -631,7 +631,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
             ?>
            </div>
            <div class="mb-3">
-              <label for="materiasAdeuda" class="form-label">Materias Adeudadas (Opcional)</label>
+              <label for="materiasAdeuda" class="form-label">Materias adeudadas (Opcional)</label>
               <textarea class="form-control" id="materiasAdeuda" name="materiasAdeuda" rows="3"><?php echo htmlspecialchars($alumnoData['materiasAdeuda'] ?? ''); ?></textarea>
            </div>
 
@@ -646,7 +646,7 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
 
         </fieldset>
 
-        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
       </form>
 
     </div>
