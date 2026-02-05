@@ -182,7 +182,7 @@ if (isset($_GET['search_submitted'])) {
                                                 $button_text = 'Equivalencias';
                                             } elseif ($redirect_origin == 'presistema') {
                                                 $action_link = 'registrosPresistema.php?idAlumno=' . $id_alumno_seguro;
-                                                $button_text = 'Registros Presistema';
+                                                $button_text = 'Registros presistema';
                                             } else {
                                                 $action_link = 'legajoAlu.php?idAlumno=' . $id_alumno_seguro . '&mode=edit';
                                                 $button_text = 'Ver detalle';

@@ -266,7 +266,7 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registros Presistema - Secretaría</title>
+  <title>Registros presistema - Secretaría</title>
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
@@ -302,8 +302,8 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
   <div class="container">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-      <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=presistema">Buscar Alumno</a></li>
-      <li class="breadcrumb-item active">Registros Presistema</li>
+      <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=presistema">Buscar alumno</a></li>
+      <li class="breadcrumb-item active">Registros presistema</li>
     </ol>
 
     <?php if ($message): ?>
@@ -318,13 +318,13 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
       <br>
 
       <fieldset class="mb-4 p-3 border rounded">
-        <legend class="float-none w-auto px-2">Nuevo Registro Presistema</legend>
+        <legend class="float-none w-auto px-2">Nuevo registro presistema</legend>
         <form id="createPresistemaForm" method="POST" action="registrosPresistema.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>">
           <input type="hidden" name="action" value="create_presistema">
 
           <div class="row mb-3">
             <div class="col-md-4">
-              <label for="selectCiclo" class="form-label">Ciclo Lectivo <span class="text-danger">*</span></label>
+              <label for="selectCiclo" class="form-label">Ciclo lectivo <span class="text-danger">*</span></label>
               <select class="form-select" id="selectCiclo" name="idCiclo" required>
                 <option value="" selected disabled>Seleccione un ciclo</option>
                 <?php foreach ($ciclos as $ciclo): ?>
@@ -335,7 +335,7 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
               </select>
             </div>
             <div class="col-md-4">
-              <label for="selectPlan" class="form-label">Plan de Estudio <span class="text-danger">*</span></label>
+              <label for="selectPlan" class="form-label">Plan de estudio <span class="text-danger">*</span></label>
               <select class="form-select" id="selectPlan" name="idPlan" required>
                 <option value="">Seleccione un plan</option>
                 <?php foreach ($planes as $plan): ?>
@@ -373,14 +373,14 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
                 </div>
             </div>
             <div class="col-md-4">
-              <label for="fechaObtencion" class="form-label">Fecha Obtención <span class="text-danger">*</span></label>
+              <label for="fechaObtencion" class="form-label">Fecha de obtención <span class="text-danger">*</span></label>
               <input type="date" class="form-control" id="fechaObtencion" name="fechaObtencion" required>
             </div>
           </div>
 
           <div class="row mb-3 campo-aprobado">
             <div class="col-md-4">
-              <label for="condicionExamen" class="form-label">Condición Examen <span class="text-danger">*</span></label>
+              <label for="condicionExamen" class="form-label">Condición examen <span class="text-danger">*</span></label>
               <select class="form-select" id="condicionExamen" name="condicionExamen">
                 <option value="">Seleccione condición</option>
                 <?php foreach ($condicionesExamen as $cond): ?>
@@ -408,17 +408,17 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
 
           <div class="row mb-3 campo-regular">
             <div class="col-md-8">
-              <label for="turnosTranscurridos" class="form-label">Turnos de Examen Transcurridos (Opcional)</label>
+              <label for="turnosTranscurridos" class="form-label">Turnos de examen transcurridos (Opcional)</label>
               <input type="number" class="form-control" id="turnosTranscurridos" name="turnosTranscurridos" min="0" value="0">
               <div class="form-text">Para control de vencimiento de regularidad.</div>
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary mt-3">Registrar Presistema</button>
+          <button type="submit" class="btn btn-primary mt-3">Registrar presistema</button>
         </form>
       </fieldset>
 
-      <h6 class="mt-4">Registros Presistema Cargados:</h6>
+      <h6 class="mt-4">Registros presistema cargados:</h6>
       <div class="table-responsive">
           <table class="table table-striped table-hover mt-3" id="tablaPresistema">
             <thead>
@@ -556,14 +556,14 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
 
           <div class="row mb-3 edit-campo-regular">
             <div class="col-md-12">
-              <label for="editTurnosTranscurridos" class="form-label">Turnos de Examen Transcurridos (Opcional)</label>
+              <label for="editTurnosTranscurridos" class="form-label">Turnos de examen transcurridos (Opcional)</label>
               <input type="number" class="form-control" id="editTurnosTranscurridos" name="editTurnosTranscurridos" min="0">
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-primary" onclick="confirmEdit()">Guardar Cambios</button>
+          <button type="button" class="btn btn-primary" onclick="confirmEdit()">Guardar cambios</button>
         </div>
       </form>
     </div>
@@ -574,7 +574,7 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="confirmEditModalLabel">Confirmar Cambios</h5>
+        <h5 class="modal-title" id="confirmEditModalLabel">Confirmar cambios</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -592,7 +592,7 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar eliminación</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">

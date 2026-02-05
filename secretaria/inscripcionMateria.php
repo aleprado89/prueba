@@ -272,7 +272,7 @@ $today = date('Y-m-d');
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inscripción de Materias - Secretaría</title>
+  <title>Inscripción a materias - Secretaría</title>
   <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
@@ -291,8 +291,8 @@ $today = date('Y-m-d');
   <div class="container">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="menusecretaria.php">Inicio</a></li>
-      <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=inscripcionMateria">Buscar Alumno</a></li>
-      <li class="breadcrumb-item active">Inscripción de Materias</li>
+      <li class="breadcrumb-item"><a href="buscarAlumno.php?origin=inscripcionMateria">Buscar alumno</a></li>
+      <li class="breadcrumb-item active">Inscripción a materias</li>
     </ol>
 
     <?php if ($message): ?>
@@ -308,7 +308,7 @@ $today = date('Y-m-d');
 
       <!-- Bloque de Inscripción a Materias -->
       <fieldset class="mb-4 p-3 border rounded">
-        <legend class="float-none w-auto px-2">Inscripción a Materias</legend>
+        <legend class="float-none w-auto px-2">Inscripción a materias</legend>
         <form id="matriculacionMateriaForm" method="POST" action="inscripcionMateria.php?idAlumno=<?php echo htmlspecialchars($idAlumno); ?>">
           <input type="hidden" name="action" value="save_matriculacion_materia">
           <input type="hidden" id="hiddenPlanId" name="hiddenPlanId">
@@ -327,7 +327,7 @@ $today = date('Y-m-d');
               </select>
             </div>
             <div class="col-md-4">
-              <label for="planMatriculado" class="form-label">Plan de Estudio<span class="text-danger">*</span></label>
+              <label for="planMatriculado" class="form-label">Plan de estudio <span class="text-danger">*</span></label>
               <select class="form-select" id="planMatriculado" name="idPlanDeEstudio" required onchange="loadCursosMatriculacionMateria()">
                 <option value="">Seleccione un plan</option>
               </select>
@@ -347,29 +347,29 @@ $today = date('Y-m-d');
               </select>
             </div>
             <div class="col-md-4">
-              <label for="estadoMatriculacionMateria" class="form-label">Estado de Inscripción <span class="text-danger">*</span></label>
+              <label for="estadoMatriculacionMateria" class="form-label">Estado de inscripción <span class="text-danger">*</span></label>
               <select class="form-select" id="estadoMatriculacionMateria" name="estadoMatriculacionMateria" required>
                 <option value="">Seleccione un estado</option>
               </select>
             </div>
             <div class="col-md-3">
-              <label for="fechaMatriculacionMateria" class="form-label">Fecha de Inscripción <span class="text-danger">*</span></label>
+              <label for="fechaMatriculacionMateria" class="form-label">Fecha de inscripción <span class="text-danger">*</span></label>
               <input type="date" class="form-control form-select" id="fechaMatriculacionMateria" name="fechaMatriculacionMateria" value="<?php echo $today; ?>" required>
             </div>
           </div>
           <div class="mb-3">
-            <label for="fechaBajaMatriculacionMateriaMatriculacion" class="form-label">Fecha de Baja Inscripción (Opcional)</label>
+            <label for="fechaBajaMatriculacionMateriaMatriculacion" class="form-label">Fecha de baja inscripción (Opcional)</label>
             <input type="date" class="form-control" id="fechaBajaMatriculacionMateriaMatriculacion" name="fechaBajaMatriculacionMateriaMatriculacion">
           </div>
 
-          <button type="submit" class="btn btn-primary mt-3">Inscribir Materia</button>
+          <button type="submit" class="btn btn-primary mt-3">Inscribir materia</button>
         </form>
 
-        <h6 class="mt-4">Inscripciones a Materias Existentes:</h6>
+        <h6 class="mt-4">Inscripciones a materias existentes:</h6>
 
         <div class="row mb-3 mt-3">
             <div class="col-md-6">
-                <label for="filtroPlan" class="form-label">Filtrar por Plan:</label>
+                <label for="filtroPlan" class="form-label">Filtrar por plan:</label>
                 <select class="form-select" id="filtroPlan" onchange="handleFiltroPlanChange()">
                     <?php if (empty($planesParaFiltro)): ?>
                         <option value="">No hay planes matriculados</option>
@@ -383,7 +383,7 @@ $today = date('Y-m-d');
                 </select>
             </div>
             <div class="col-md-6">
-                <label for="filtroCurso" class="form-label">Filtrar por Curso:</label>
+                <label for="filtroCurso" class="form-label">Filtrar por curso:</label>
                 <select class="form-select" id="filtroCurso" onchange="filterTableInscripciones()">
                     <option value="">Todos los Cursos</option>
                 </select>
@@ -397,10 +397,10 @@ $today = date('Y-m-d');
                 <th>Materia</th>
                 <th>Curso</th>
                 <th>Plan</th>
-                <th>Fec. Insc.</th>
+                <th>Fecha Insc.</th>
                 <th>Estado</th>
-                <th>Fec. Baja</th>
-                <th>Ciclo Lec.</th>
+                <th>Fecha baja</th>
+                <th>Ciclo lec.</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -642,7 +642,7 @@ $today = date('Y-m-d');
   function handleFiltroPlanChange() {
       var selectedPlanValue = $('#filtroPlan').val();
       if (!selectedPlanValue) {
-          $('#filtroCurso').empty().append('<option value="">Todos los Cursos</option>');
+          $('#filtroCurso').empty().append('<option value="">Todos los cursos</option>');
           $('#tablaInscripciones tbody').empty();
           currentPlanValueForCoursePopulate = '';
       } else {
