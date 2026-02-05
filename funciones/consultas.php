@@ -2108,19 +2108,19 @@ function insertarMatriculacionMateria($conexion, $data) {
 
 
 function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter = null, $idCursoFilter = null) {
-    // Consulta simplificada y directa según tu requerimiento.
-    // La fuente de verdad para el año es: matriculacionmateria.idCicloLectivo
-    
+    // Consulta corregida con los nombres reales de la columnas (fechaMatriculacion, estado, etc.)
     $sql = "SELECT 
                 mm.idMatriculacionMateria, 
                 mt.nombre AS nombreMateria, 
                 c.nombre AS nombreCurso, 
                 pe.nombre AS nombrePlan,
-                mm.fechaMatriculacionMateria as fechaMatriculacion, /* Alias para mantener compatibilidad JS */
-                mm.estadoMatriculacionMateria as estado, 
-                mm.fechaBajaMatriculacionMateria as fechaBajaMatriculacion,
                 
-                /* CAMBIO CLAVE: Obtenemos el año directamente del ciclo guardado en la matrícula */
+                /* CORRECCIÓN: Usamos los nombres de columna que coinciden con tu INSERT */
+                mm.fechaMatriculacion, 
+                mm.estado, 
+                mm.fechaBajaMatriculacion,
+                
+                /* Obtenemos el año directamente del ciclo guardado */
                 cl.anio AS anioCicloLectivo,
                 
                 mm.idMateria, 
@@ -2132,7 +2132,7 @@ function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter
             INNER JOIN curso c ON mt.idCurso = c.idCurso
             INNER JOIN plandeestudio pe ON mt.idPlan = pe.idPlan
             
-            /* JOIN DIRECTO: Relacionamos mm.idCicloLectivo con la tabla ciclolectivo */
+            /* JOIN con ciclolectivo para mostrar el año correcto */
             INNER JOIN ciclolectivo cl ON mm.idCicloLectivo = cl.idCicloLectivo
             
             WHERE mm.idAlumno = ?";
@@ -2151,9 +2151,11 @@ function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter
         $types .= "i";
     }
 
-    $sql .= " ORDER BY cl.anio DESC, mm.fechaMatriculacionMateria DESC";
+    $sql .= " ORDER BY cl.anio DESC, mm.fechaMatriculacion DESC";
 
     $stmt = $conexion->prepare($sql);
+    
+    // Verificación de seguridad por si falla la preparación
     if (!$stmt) {
         error_log("Error al preparar obtenerMatriculacionesMateriaAlumno: " . $conexion->error);
         return [];
@@ -2168,6 +2170,8 @@ function obtenerMatriculacionesMateriaAlumno($conexion, $idAlumno, $idPlanFilter
 
     $stmt->execute();
     $result = $stmt->get_result();
+    
+    // Retornamos array asociativo
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
