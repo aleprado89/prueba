@@ -4145,19 +4145,31 @@ function buscarSolicitudesCursadoWeb($conn, $idCiclo, $idMateria = null, $estado
  * También corregido el JOIN con persona por si se necesita mostrar datos.
  */
 function obtenerSolicitudCursadoWebPorId($conn, $idMatriculacionWeb) {
-    $sql = "SELECT mw.*, m.nombre as nombreMateria, m.idUnicoMateria, 
-                   p.apellido, p.nombre
+    // Convertimos a entero por seguridad
+    $id = (int)$idMatriculacionWeb;
+
+    $sql = "SELECT mw.*, 
+                   m.nombre as nombreMateria, m.idUnicoMateria, 
+                   p.apellido, p.nombre, p.dni,
+                   a.legajo
             FROM matriculacionmateria_web mw
-            JOIN alumno a ON mw.idAlumno = a.idAlumno
-            JOIN persona p ON a.idPersona = p.idPersona
-            JOIN materiaterciario m ON mw.idMateria = m.idMateria
+            LEFT JOIN alumno a ON mw.idAlumno = a.idAlumno
+            LEFT JOIN persona p ON a.idPersona = p.idPersona
+            LEFT JOIN materiaterciario m ON mw.idMateria = m.idMateria
             WHERE mw.id_matriculacion_web = ?";
+            
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $idMatriculacionWeb);
+    if (!$stmt) {
+        error_log("Error prepare obtenerSolicitudCursadoWebPorId: " . $conn->error);
+        return null;
+    }
+
+    $stmt->bind_param("i", $id);
     $stmt->execute();
     $res = $stmt->get_result();
     $data = $res->fetch_assoc();
     $stmt->close();
+    
     return $data;
 }
 

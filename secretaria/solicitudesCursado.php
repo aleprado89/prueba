@@ -2,7 +2,7 @@
 /**
  * solicitudesCursado.php
  * Módulo de Administración para aceptar/rechazar inscripciones a cursado.
- * Corrección: Permite forzar inscripciones (Excepciones) y rechazos manuales.
+ * Lógica: Búsqueda rápida + Validación asíncrona (Barra de Progreso) + Autoridad de decisión manual.
  * Autor: Programador de SistemasEscolares
  */
 
@@ -52,6 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $response = ['success' => true, 'data' => $condiciones];
                 break;
 
+            // 1. BÚSQUEDA RÁPIDA (Solo devuelve datos, no valida)
             case 'buscar_solicitudes':
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idPlan = filter_input(INPUT_POST, 'idPlan', FILTER_VALIDATE_INT);
@@ -67,12 +68,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $estadoBuscar = ($verHistorico == 1) ? 2 : 1; 
 
                 if (!function_exists('buscarSolicitudesCursadoWeb')) {
-                    throw new Exception("La función buscarSolicitudesCursadoWeb no existe en consultas.php");
+                    throw new Exception("Error: Función buscarSolicitudesCursadoWeb no encontrada.");
                 }
 
                 $solicitudes = buscarSolicitudesCursadoWeb($conn, $idCiclo, $idMateria, $estadoBuscar);
                 
                 if ($verHistorico == 1) {
+                     // Si es histórico, traemos también las rechazadas (estado 3)
                      $solicitudesRechazadas = buscarSolicitudesCursadoWeb($conn, $idCiclo, $idMateria, 3);
                      $solicitudes = array_merge($solicitudes, $solicitudesRechazadas);
                 }
@@ -94,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         'idInscripcionWeb' => $idInscripcion,
                         'idAlumno' => $sol['idAlumno'],
                         'idMateria' => $sol['idMateria'],
-                        'idUnicoMateria' => $sol['idUnicoMateria'],
+                        'idUnicoMateria' => $sol['idUnicoMateria'], // Fundamental para validar después
                         'alumno' => $sol['apellido'] . ', ' . $sol['nombre'] . ' (' . $sol['dni'] . ')',
                         'materia' => $sol['nombreMateria'],
                         'curso' => $sol['nombreCurso'] ?? '-',
@@ -109,6 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $response = ['success' => true, 'data' => $dataProcessed];
                 break;
 
+            // 2. VALIDACIÓN INDIVIDUAL (Llamada por la barra de progreso)
             case 'validar_individual':
                 $idUnicoMateria = filter_input(INPUT_POST, 'idUnicoMateria'); 
                 $idAlumno = filter_input(INPUT_POST, 'idAlumno', FILTER_VALIDATE_INT);
@@ -122,7 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     global $materiasAdeuda;
                     $materiasAdeuda = ''; 
 
-                    // 0 para Cursado
+                    // 0 = Tipo Inscripción Cursado
                     if (function_exists('controlCorrelatividades')) {
                         $esValidaCorrelativas = controlCorrelatividades((int)$idUnicoMateria, (int)$idAlumno, 0);
                     }
@@ -144,78 +147,98 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 break;
 
-            case 'procesar_lote_final':
+            // 3. PROCESAMIENTO FINAL (Obedece decisión manual)
+          case 'procesar_lote_final':
                 $lista = json_decode($_POST['lista'], true); 
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 
                 if (!$lista || !is_array($lista) || !$idCiclo) {
-                    echo json_encode(['success'=>false, 'message'=>'Datos inválidos.']);
+                    echo json_encode(['success'=>false, 'message'=>'Datos inválidos o Ciclo no seleccionado.']);
                     exit;
                 }
 
                 $procesadosExito = 0;
                 $detallesError = []; 
-                $conn->autocommit(FALSE); 
 
-                try {
-                    foreach ($lista as $item) {
-                        $idWeb = $item['idWeb'];
-                        $accion = $item['accion']; 
-                        $idCondicion = $item['idCondicion']; 
-                        $observacionUI = $item['observacionUI']; 
-                        $nombreAlumno = $item['alumno'] ?? 'Alumno';
+                foreach ($lista as $item) {
+                    // Aseguramos que sea entero
+                    $idWeb = intval($item['idWeb']);
+                    $accion = $item['accion']; 
+                    $idCondicion = intval($item['idCondicion']); 
+                    $observacionUI = $item['observacionUI']; 
+                    $nombreAlumno = $item['alumno'] ?? 'Alumno';
 
-                        $datosOrig = obtenerSolicitudCursadoWebPorId($conn, $idWeb);
-                        if (!$datosOrig) { continue; } 
+                    // 1. Buscamos los datos originales
+                    $datosOrig = obtenerSolicitudCursadoWebPorId($conn, $idWeb);
 
-                        // --- CAMBIO CLAVE DE LÓGICA ---
-                        // Si el usuario eligió ACEPTAR, procedemos a inscribir SIN revalidar correlativas.
-                        // La validación ya se mostró en el frontend (rojo/verde), ahora es una decisión ejecutiva.
-                        
-                        if ($accion === 'ACEPTAR') {
-                            if (!$idCondicion) {
-                                $detallesError[] = "<b>$nombreAlumno:</b> No se seleccionó condición de cursado.";
-                                continue;
+                    if (!$datosOrig) { 
+                        // MENSAJE DE DEPURACIÓN: Mostramos el ID que falló
+                        $detallesError[] = "<b>$nombreAlumno:</b> Solicitud ID ($idWeb) no encontrada en BD.";
+                        continue; 
+                    } 
+
+                    if ($accion === 'ACEPTAR') {
+                        if (!$idCondicion) {
+                            $detallesError[] = "<b>$nombreAlumno:</b> No seleccionó condición.";
+                            continue;
+                        }
+
+                        // 2. Traducir ID Condición a Texto (Para tabla matriculacionmateria)
+                        $textoCondicion = "Regular"; 
+                        $sqlCond = "SELECT condicion FROM condicionescursado WHERE idCondicion = ?";
+                        $stmtC = $conn->prepare($sqlCond);
+                        if ($stmtC) {
+                            $stmtC->bind_param("i", $idCondicion);
+                            $stmtC->execute();
+                            $resC = $stmtC->get_result();
+                            if ($rowC = $resC->fetch_assoc()) {
+                                $textoCondicion = $rowC['condicion'];
                             }
-                            
-                            $datosMatricula = [
-                                'idAlumno' => $datosOrig['idAlumno'],
-                                'idMateria' => $datosOrig['idMateria'],
-                                'fechaMatriculacion' => date('Y-m-d'),
-                                'fechaBajaMatriculacion' => null,
-                                'estado' => $idCondicion, 
-                                'idCicloLectivo' => $idCiclo
-                            ];
+                            $stmtC->close();
+                        }
+                        
+                        // 3. Insertar Matriculación Real
+                        $datosMatricula = [
+                            'idAlumno' => $datosOrig['idAlumno'],
+                            'idMateria' => $datosOrig['idMateria'],
+                            'fechaMatriculacion' => date('Y-m-d'),
+                            'fechaBajaMatriculacion' => null,
+                            'estado' => $textoCondicion, // Texto (ej: Regular, Promocional)
+                            'idCicloLectivo' => $idCiclo
+                        ];
 
-                            if (insertarMatriculacionMateria($conn, $datosMatricula)) {
-                                inicializarAsistenciaMateria($conn, $datosOrig['idAlumno'], $datosOrig['idMateria'], $idCiclo);
-                                inicializarCalificacionMateria($conn, $datosOrig['idAlumno'], $datosOrig['idMateria']);
+                        if (insertarMatriculacionMateria($conn, $datosMatricula)) {
+                            // Inicializar datos académicos
+                            inicializarAsistenciaMateria($conn, $datosOrig['idAlumno'], $datosOrig['idMateria'], $idCiclo);
+                            inicializarCalificacionMateria($conn, $datosOrig['idAlumno'], $datosOrig['idMateria']);
 
-                                // Actualizamos solicitud como aceptada (2)
-                                actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 2, "Inscripción Correcta (Admin)");
+                            // Actualizar Web a ACEPTADA (2)
+                            if (actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 2, "Inscripción Correcta")) {
                                 $procesadosExito++;
                             } else {
-                                // Fallo de base de datos
-                                $motivoError = "Error al insertar registro en BD.";
-                                actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, $motivoError);
-                                $detallesError[] = "<b>$nombreAlumno:</b> Error BD al guardar inscripción.";
+                                $detallesError[] = "<b>$nombreAlumno:</b> Se inscribió, pero falló actualizar la solicitud web.";
                             }
-
                         } else {
-                            // SI ES RECHAZAR, rechazamos directamenmte, aunque la fila estuviera en verde.
-                            $motivoRechazo = "Rechazo manual: " . $observacionUI;
-                            actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, $motivoRechazo);
+                            $errorDB = $conn->error;
+                            actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, "Error BD: " . $errorDB);
+                            $detallesError[] = "<b>$nombreAlumno:</b> Error BD al inscribir (posible duplicado).";
+                        }
+
+                    } else {
+                        // RECHAZAR
+                        $motivoRechazo = "Rechazo manual: " . $observacionUI;
+                        if (actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, $motivoRechazo)) {
                             $procesadosExito++;
+                        } else {
+                            $errorDB = $conn->error;
+                            $detallesError[] = "<b>$nombreAlumno:</b> Error al rechazar: " . $errorDB;
                         }
                     }
-
-                    $conn->commit();
-                    $response = ['success' => true, 'procesados' => $procesadosExito, 'errores' => $detallesError];
-
-                } catch (Exception $e) {
-                    $conn->rollback();
-                    $response = ['success' => false, 'message' => 'Error en transacción: ' . $e->getMessage()];
                 }
+                
+                $response = ['success' => true, 'procesados' => $procesadosExito, 'errores' => $detallesError];
+                echo json_encode($response);
+                exit;
                 break;
         }
 
@@ -249,15 +272,12 @@ ob_end_flush();
         .custom-card { background-color: rgba(255, 255, 255, 0.98); box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #ddd; }
         .card-header-custom { background-color: #fff; color: #333; border-bottom: 1px solid #eee; padding: 1rem 1.25rem; }
         
-        /* Colores Tabla */
         tr.table-success-custom, tr.table-success-custom > td { background-color: #d1e7dd !important; color: #0f5132 !important; }
         tr.table-danger-custom, tr.table-danger-custom > td { background-color: #f8d7da !important; color: #842029 !important; }
         .table-loading { background-color: #f8f9fa; color: #6c757d; }
         
         .select-condicion-tabla { font-size: 0.9rem; padding: 0.25rem 0.5rem; min-width: 150px; }
         .btn-accion-group .btn-outline-success, .btn-accion-group .btn-outline-danger { padding: 0.2rem 0.5rem; font-size: 0.9rem; }
-        
-        /* Checkbox radio buttons style */
         .btn-accion-group .btn-check:checked + .btn-outline-success { background-color: #198754; color: white; }
         .btn-accion-group .btn-check:checked + .btn-outline-danger { background-color: #dc3545; color: white; }
     </style>
@@ -382,7 +402,23 @@ ob_end_flush();
         </div>
     </div>
 
-    <div class="modal fade" id="modalProgreso" data-bs-backdrop="static" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-body text-center"><div class="spinner-border text-primary"></div><p class="mt-2" id="progresoTexto">Iniciando...</p></div></div></div></div>
+    <div class="modal fade" id="modalProgreso" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Procesando</h5>
+                </div>
+                <div class="modal-body text-center">
+                    <p id="progresoTexto" class="mb-2">Iniciando...</p>
+                    <div class="progress" style="height: 25px;">
+                        <div id="barraProgreso" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;">0%</div>
+                    </div>
+                    <small class="text-muted mt-2 d-block" id="progresoDetalle">Consultando...</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modalAlerta" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="modalAlertaTitulo">Mensaje</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="modalAlertaMensaje"></div></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button></div></div></div></div>
 
     <script src="../js/jquery-3.7.1.min.js"></script>
@@ -397,9 +433,13 @@ ob_end_flush();
             const modalProgreso = new bootstrap.Modal(document.getElementById('modalProgreso'));
             const modalAlerta = new bootstrap.Modal(document.getElementById('modalAlerta'));
             
+            const $barra = $('#barraProgreso');
+            const $textoProgreso = $('#progresoTexto');
+            const $detalleProgreso = $('#progresoDetalle');
+            
             let listaCondiciones = [];
 
-            // Carga inicial condiciones
+            // Carga inicial
             $.post('solicitudesCursado.php', { action: 'get_condiciones' }, function(res){ if(res.success) listaCondiciones = res.data; }, 'json');
 
             // Combos
@@ -444,15 +484,21 @@ ob_end_flush();
                 });
             });
 
-            // BUSCAR
+            // --- BÚSQUEDA Y PROCESO ASÍNCRONO ---
             $('#formFiltros').on('submit', function(e) {
                 e.preventDefault();
                 const esHistorico = $('#resueltas-tab').hasClass('active');
                 if(!$selCiclo.val() || !$selPlan.val()){
-                    $('#modalAlertaTitulo').text("Faltan Datos"); $('#modalAlertaMensaje').text("Complete Ciclo y Plan."); modalAlerta.show(); return;
+                    $('#modalAlertaTitulo').text("Faltan Datos"); 
+                    $('#modalAlertaMensaje').text("Complete Ciclo y Plan."); 
+                    modalAlerta.show(); 
+                    return;
                 }
                 
-                $('#progresoTexto').text('Buscando...'); modalProgreso.show();
+                $barra.css('width', '100%').addClass('progress-bar-striped progress-bar-animated');
+                $textoProgreso.text('Buscando solicitudes...'); 
+                $detalleProgreso.text('');
+                modalProgreso.show();
 
                 $.post('solicitudesCursado.php', {
                     action: 'buscar_solicitudes',
@@ -482,10 +528,12 @@ ob_end_flush();
                                     let selected = (c.condicion.toLowerCase() === (row.condicionSolicitada || '').toLowerCase()) ? 'selected' : '';
                                     selCond += `<option value="${c.idCondicion}" ${selected}>${c.condicion}</option>`;
                                 });
+                            } else {
+                                selCond += `<option value="">Sin datos</option>`;
                             }
                             selCond += `</select>`;
 
-                            // Radio Buttons (ACEPTAR / RECHAZAR) con name unico
+                            // Radio Buttons
                             const radioGroup = `
                                 <div class="btn-group btn-group-sm btn-accion-group">
                                     <input type="radio" class="btn-check btn-accion-radio" name="radio_accion_${row.idInscripcionWeb}" id="btnAceptar_${row.idInscripcionWeb}" value="ACEPTAR">
@@ -509,18 +557,46 @@ ob_end_flush();
                         $tbody.append(tr);
                     });
 
-                    if (!esHistorico) procesarLote(solicitudes, 0);
-                    else setTimeout(() => { modalProgreso.hide(); }, 300);
+                    // Si NO es histórico, iniciamos la validación recursiva
+                    if (!esHistorico) {
+                        $barra.removeClass('progress-bar-animated').css('width', '0%');
+                        $textoProgreso.text('Analizando correlatividades...');
+                        // IMPORTANTE: Llamamos a la función recursiva
+                        procesarLote(solicitudes, 0);
+                    } else {
+                        setTimeout(() => { modalProgreso.hide(); }, 300);
+                    }
 
-                }, 'json').fail(() => { setTimeout(() => { modalProgreso.hide(); }, 300); });
+                }, 'json').fail(() => { setTimeout(() => { modalProgreso.hide(); }, 300); alert("Error de conexión."); });
             });
 
-            // Validación Visual
+            // --- FUNCIÓN RECURSIVA PARA VALIDAR UNO POR UNO ---
             function procesarLote(lista, index) {
-                if (index >= lista.length) { setTimeout(() => { modalProgreso.hide(); $('#btnEjecutar').prop('disabled', false); }, 300); return; }
+                const total = lista.length;
+                
+                // Fin del proceso
+                if (index >= total) {
+                    setTimeout(() => { 
+                        modalProgreso.hide(); 
+                        $('#btnEjecutar').prop('disabled', false); 
+                    }, 500); 
+                    return; 
+                }
+
                 const item = lista[index];
                 
-                $.post('solicitudesCursado.php', { action: 'validar_individual', idUnicoMateria: item.idUnicoMateria, idAlumno: item.idAlumno }, function(res) {
+                // Actualizar barra y textos
+                const porcentaje = Math.round((index / total) * 100);
+                $barra.css('width', porcentaje + '%').text(porcentaje + '%');
+                $textoProgreso.text(`Procesando solicitud ${index + 1} de ${total}`);
+                $detalleProgreso.text(`Validando: ${item.alumno}`);
+                
+                // Llamada AJAX individual
+                $.post('solicitudesCursado.php', { 
+                    action: 'validar_individual', 
+                    idUnicoMateria: item.idUnicoMateria, 
+                    idAlumno: item.idAlumno 
+                }, function(res) {
                     const $fila = $(`#fila-${item.idInscripcionWeb}`);
                     const esValida = (res.success && res.esValida);
                     $fila.removeClass('table-loading');
@@ -533,11 +609,18 @@ ob_end_flush();
                         $fila.find(`input[value="RECHAZAR"]`).prop('checked', true); // Sugerir Rechazar
                     }
                     $fila.find('.celda-observacion').html(`<small>${res.observacion}</small>`);
+                    
+                    // Siguiente item
                     procesarLote(lista, index + 1);
-                }, 'json');
+
+                }, 'json').fail(function() {
+                    // Si falla uno, marcamos error visual y seguimos con el siguiente
+                    $(`#fila-${item.idInscripcionWeb}`).addClass('table-warning').find('.celda-observacion').text("Error al validar");
+                    procesarLote(lista, index + 1);
+                });
             }
 
-            // Click manual en Radio Buttons cambia color
+            // Click manual cambia color
             $(document).on('change', '.btn-accion-radio', function() {
                 const idWeb = $(this).attr('name').split('_')[2];
                 const val = $(this).val();
@@ -567,10 +650,13 @@ ob_end_flush();
                     if(accion) lista.push({ idWeb: idWeb, accion: accion, idCondicion: cond, observacionUI: obs, alumno: alumno });
                 });
 
-                if(lista.length === 0) { alert("No hay acciones seleccionadas en las filas marcadas."); return; }
+                if(lista.length === 0) { alert("No hay acciones seleccionadas."); return; }
                 if(!confirm(`¿Procesar ${lista.length} solicitudes?`)) return;
 
-                $('#progresoTexto').text('Guardando...'); modalProgreso.show();
+                $barra.addClass('progress-bar-animated').css('width', '100%');
+                $textoProgreso.text('Guardando...'); 
+                $detalleProgreso.text('');
+                modalProgreso.show();
 
                 $.post('solicitudesCursado.php', {
                     action: 'procesar_lote_final', lista: JSON.stringify(lista), idCiclo: $selCiclo.val()
