@@ -54,7 +54,7 @@ $req17 = "Falta Documentación";
 [16:39, 27/8/2025] Ale: Mercedarias:
 $req17 = "Cert. Int. Sexual";
 $req18 = "Pase Sanitario";
-$req19 = "Apto Psicofísico";*/
+$req19 = "Apto Psicofísico"; */
 
 ?>
 
