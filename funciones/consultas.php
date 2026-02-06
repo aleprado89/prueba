@@ -1419,20 +1419,102 @@ function obtenerActa($conexion, $idFechaExamen){
 }
 
 //actualizar acta
-function actualizarActa($conexion, $idFechaExamen, $idAlumno, $setUpdate){
-  $consulta = "UPDATE inscripcionexamenes SET $setUpdate WHERE idFechaExamen = ? AND idAlumno = ?";
+/**
+ * Actualiza la nota en el acta de examen y repercute en el analítico (calificacionesterciario).
+ * * @param mysqli $conn La conexión a la base de datos.
+ * @param int $idInscripcion ID de la tabla inscripcionexamenes.
+ * @param string $campo El campo a editar ('escrito', 'oral', 'calificacion').
+ * @param mixed $valor El valor numérico (1-10) o vacío.
+ * @return array Respuesta estandarizada ['success' => bool, 'message' => string].
+ */
+function actualizarNotaInscripcion($conn, $idInscripcion, $campo, $valor) {
+    // 1. Sanitización estricta de parámetros
+    $id = (int)$idInscripcion;
+    
+    // Lista blanca de campos permitidos para evitar inyección en nombres de columna
+    $camposValidos = ['escrito', 'oral', 'calificacion', 'libro', 'folio'];
+    if (!in_array($campo, $camposValidos)) {
+        return ['success' => false, 'message' => 'Campo no permitido.'];
+    }
 
-  $stmt = mysqli_prepare($conexion, $consulta);
-  mysqli_stmt_bind_param($stmt, "is", $idFechaExamen, $idAlumno);
-  mysqli_stmt_execute($stmt);
-  $resultado = mysqli_stmt_affected_rows($stmt);
+    // Tratamiento del valor (NULL si está vacío, Entero si es número)
+    $nota = ($valor === '' || $valor === null) ? null : $valor; // Dejamos como string/int por ahora
 
-  if (!$resultado) {
-    $respuesta = "Error: " . mysqli_error($conexion);
-  } else {
-    $respuesta = "actualizado";
-  }
-  return $respuesta;
+    // Validación específica para notas numéricas
+    if (in_array($campo, ['escrito', 'oral', 'calificacion'])) {
+        if ($nota !== null) {
+            $notaInt = (int)$nota;
+            if ($notaInt < 1 || $notaInt > 10) {
+                return ['success' => false, 'message' => 'La nota debe ser entre 1 y 10.'];
+            }
+            $nota = $notaInt;
+        }
+    }
+
+    // 2. Actualizar el Acta Volante (inscripcionexamenes)
+    // Usamos sentencias preparadas para seguridad
+    $sql = "UPDATE inscripcionexamenes SET $campo = ? WHERE idInscripcion = ?";
+    $stmt = $conn->prepare($sql);
+    
+    if ($campo === 'libro' || $campo === 'folio') {
+        $stmt->bind_param("si", $nota, $id); // String para libro/folio
+    } else {
+        $stmt->bind_param("ii", $nota, $id); // Integer para notas
+    }
+
+    if (!$stmt->execute()) {
+        return ['success' => false, 'message' => 'Error SQL al actualizar acta: ' . $stmt->error];
+    }
+    $stmt->close();
+
+    // 3. Lógica de Aprobación Automática (Solo si se editó 'calificacion')
+    if ($campo === 'calificacion') {
+        // A. Obtener datos de contexto: Alumno, Materia y Nota necesaria para aprobar esa materia
+        $sqlInfo = "SELECT 
+                        ie.idAlumno, 
+                        fe.idMateria, 
+                        m.calificacionExamen 
+                    FROM inscripcionexamenes ie
+                    INNER JOIN fechasexamenes fe ON ie.idFechaExamen = fe.idFechaExamen
+                    INNER JOIN materiaterciario m ON fe.idMateria = m.idMateria
+                    WHERE ie.idInscripcion = ?";
+        
+        $stmtInfo = $conn->prepare($sqlInfo);
+        $stmtInfo->bind_param("i", $id);
+        $stmtInfo->execute();
+        $resInfo = $stmtInfo->get_result();
+        $datos = $resInfo->fetch_assoc();
+        $stmtInfo->close();
+
+        if ($datos) {
+            $idAlumno = $datos['idAlumno'];
+            $idMateria = $datos['idMateria'];
+            $notaAprobacion = (int)$datos['calificacionExamen'];
+
+            // B. Determinar estado
+            // Si hay nota Y es mayor/igual a la requerida -> Aprobado (1)
+            // Si no -> NULL (Pendiente/Reprobado logicamente se maneja con NULL o 0 según tu sistema, aquí usaremos NULL para limpiar)
+            $materiaAprobada = null;
+            $idInscripcionExamenRef = null;
+
+            if ($nota !== null && $nota >= $notaAprobacion) {
+                $materiaAprobada = 1;
+                $idInscripcionExamenRef = $id;
+            }
+
+            // C. Actualizar Historial Académico (calificacionesterciario)
+            $sqlFinal = "UPDATE calificacionesterciario 
+                         SET materiaAprobada = ?, idInscripcionExamen = ? 
+                         WHERE idAlumno = ? AND idMateria = ?";
+            
+            $stmtFinal = $conn->prepare($sqlFinal);
+            $stmtFinal->bind_param("iiii", $materiaAprobada, $idInscripcionExamenRef, $idAlumno, $idMateria);
+            $stmtFinal->execute();
+            $stmtFinal->close();
+        }
+    }
+
+    return ['success' => true, 'message' => 'Dato actualizado correctamente.'];
 }
 //actualizar abandono cursado
 function actualizarAbandonoCursado($conexion, $idAlumno, $idMateria, $estado){
@@ -3547,7 +3629,7 @@ function buscarMesasExamen($conn, $idCiclo, $idTurno, $idMateria) {
 // 3. Obtener Alumnos Inscriptos en la Mesa (JOIN CORRECTO)
 function obtenerDetalleActaCompleto($conn, $idFechaExamen) {
     $sql = "SELECT 
-                ie.idInscripcion, 
+                ie.idInscripcion,
                 p.apellido, 
                 p.nombre, 
                 p.dni,
@@ -3893,20 +3975,18 @@ function filtrarMesasExamen($conn, $idCicloFilter = null, $idTurnoFilter = null,
  */
 function obtenerDocentesActivos($conn) {
     $docentes = [];
-    $sql = "SELECT p.legajo, pe.apellido, pe.nombre 
+    // Cambiamos para que el ID que identifique al docente sea pe.idPersona
+    $sql = "SELECT pe.idPersona, pe.apellido, pe.nombre 
             FROM personal p 
             JOIN persona pe ON p.idPersona = pe.idPersona 
             WHERE p.actual = 1 
             ORDER BY pe.apellido, pe.nombre";
     
     $result = $conn->query($sql);
-    
-    if (!$result) {
-         throw new Exception("Error al consultar docentes: " . $conn->error);
-    }
-    
-    while ($row = $result->fetch_assoc()) {
-        $docentes[] = $row;
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $docentes[] = $row;
+        }
     }
     return $docentes;
 }

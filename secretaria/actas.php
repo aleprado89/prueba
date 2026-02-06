@@ -59,14 +59,17 @@ if (isset($_POST['ajax_action'])) {
                 exit;
 
             case 'update_nota':
-                $idInscripcion = intval($_POST['idInscripcion']);
-                $campo = $_POST['campo'];
-                $valor = trim($_POST['valor']);
+                // Validación básica de entrada
+                $idInscripcion = isset($_POST['idInscripcion']) ? intval($_POST['idInscripcion']) : 0;
+                $campo = $_POST['campo'] ?? '';
+                $valor = isset($_POST['valor']) ? trim($_POST['valor']) : null;
                 
-                if (actualizarDatoActa($conn, $idInscripcion, $campo, $valor)) {
-                    echo json_encode(['success' => true, 'message' => 'Guardado']);
+                if ($idInscripcion > 0 && $campo !== '') {
+                    // Llamada a la función en consultas.php
+                    $resultado = actualizarNotaInscripcion($conn, $idInscripcion, $campo, $valor);
+                    echo json_encode($resultado);
                 } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al guardar']);
+                    echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
                 }
                 exit;
         }
@@ -364,23 +367,53 @@ $(document).ready(function() {
                     let cond = alu.condicion || 'Sin Condición';
                     condiciones.add(cond);
                     
-                    let row = `
-                        <tr data-condicion="${cond}">
-                            <td>
-                                ${alu.apellido}, ${alu.nombre}<br>
-                                <small class="text-muted">DNI: ${alu.dni}</small>
-                            </td>
-                            <td><span class="badge bg-secondary">${cond}</span></td>
-                            
-                            <td><input type="text" class="editable-input" data-id="${alu.idInscripcion}" data-campo="escrito" value="${alu.escrito || ''}" placeholder="-"></td>
-                            <td><input type="text" class="editable-input" data-id="${alu.idInscripcion}" data-campo="oral" value="${alu.oral || ''}" placeholder="-"></td>
-                            <td><input type="text" class="editable-input fw-bold" data-id="${alu.idInscripcion}" data-campo="calificacion" value="${alu.calificacion || ''}" placeholder="-"></td>
-                            <td><input type="text" class="editable-input" data-id="${alu.idInscripcion}" data-campo="libro" value="${alu.libro || ''}" placeholder="-"></td>
-                            <td><input type="text" class="editable-input" data-id="${alu.idInscripcion}" data-campo="folio" value="${alu.folio || ''}" placeholder="-"></td>
-                            
-                            <td class="text-center status-cell"></td>
-                        </tr>
-                    `;
+                   let row = `
+    <tr data-condicion="${cond}">
+        <td>
+            ${alu.apellido}, ${alu.nombre}<br>
+            <small class="text-muted">DNI: ${alu.dni}</small>
+        </td>
+        <td><span class="badge bg-secondary">${cond}</span></td>
+        
+        <td>
+            <input type="number" 
+                   class="form-control input-sm editable-input text-center" 
+                   data-id="${alu.idInscripcion}" 
+                   data-campo="escrito" 
+                   value="${alu.escrito || ''}" 
+                   min="1" max="10" 
+                   oninput="validarNota(this)"
+                   placeholder="-">
+        </td>
+        
+        <td>
+            <input type="number" 
+                   class="form-control input-sm editable-input text-center" 
+                   data-id="${alu.idInscripcion}" 
+                   data-campo="oral" 
+                   value="${alu.oral || ''}" 
+                   min="1" max="10" 
+                   oninput="validarNota(this)"
+                   placeholder="-">
+        </td>
+        
+        <td>
+            <input type="number" 
+                   class="form-control input-sm editable-input text-center fw-bold" 
+                   data-id="${alu.idInscripcion}" 
+                   data-campo="calificacion" 
+                   value="${alu.calificacion || ''}" 
+                   min="1" max="10" 
+                   oninput="validarNota(this)"
+                   placeholder="-"
+                   style="border: 2px solid #e9ecef;"> </td>
+        
+        <td><input type="text" class="editable-input text-center" data-id="${alu.idInscripcion}" data-campo="libro" value="${alu.libro || ''}" placeholder="-"></td>
+        <td><input type="text" class="editable-input text-center" data-id="${alu.idInscripcion}" data-campo="folio" value="${alu.folio || ''}" placeholder="-"></td>
+        
+        <td class="text-center status-cell"></td>
+    </tr>
+`;
                     tbody.append(row);
                 });
 
@@ -439,6 +472,23 @@ $(document).ready(function() {
     });
 
 });
+
+function validarNota(input) {
+    // 1. Limpieza estricta de caracteres no numéricos
+    input.value = input.value.replace(/[^0-9]/g, '');
+
+    // Si está vacío, terminamos
+    if (input.value === '') return;
+
+    // 2. Control de rango
+    let valor = parseInt(input.value);
+
+    if (valor > 10) {
+        input.value = 10; // Si escribe 11, se corrige a 10
+    } else if (valor < 1) {
+        input.value = 1;  // Si escribe 0, se corrige a 1 (si no quieres permitir 0)
+    }
+}
 </script>
 
 </body>

@@ -741,9 +741,10 @@ $(document).ready(function() {
                 data: { ajax_action: 'get_teachers' },
                 dataType: 'json',
                 success: function(teachers) {
-                    $.each(teachers, function(i, teacher) {
-                        teacherListHtml += `<option value="${teacher.legajo}">${teacher.apellido}, ${teacher.nombre}</option>`;
-                    });
+    $.each(teachers, function(i, teacher) {
+        // Ahora usamos teacher.idPersona como value
+        teacherListHtml += `<option value="${teacher.idPersona}">${teacher.apellido}, ${teacher.nombre}</option>`;
+    });
                     // *** AHORA: .append() solo añade los docentes (sin el duplicado "-Sin Asignar-") ***
                     $('.teacher-select').append(teacherListHtml); 
                     teachersLoaded = true;
