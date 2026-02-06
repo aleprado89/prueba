@@ -175,7 +175,7 @@ if (isset($_GET['search_submitted'])) {
                                                 $dni      = rawurlencode(trim(htmlspecialchars($alumno['dni'] ?? '', ENT_QUOTES, 'UTF-8')));
                                                 $idAlumno = intval($alumno['idAlumno'] ?? 0);
                                                 $action_link = "../reportes/aluRegularPDF.php?nombre={$nombre}&apellido={$apellido}&dni={$dni}&idAlumno={$idAlumno}";
-                                                $button_text = "Certificado Regular";
+                                                $button_text = "Certificado regular";
                                                 $target_blank = true;
                                             } elseif($redirect_origin == 'equivalencias'){
                                                 $action_link = 'equivalencias.php?idAlumno=' . $id_alumno_seguro;
