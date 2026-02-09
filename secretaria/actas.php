@@ -51,11 +51,14 @@ if (isset($_POST['ajax_action'])) {
 
             case 'get_acta':
                 $idFechaExamen = $_POST['idFechaExamen'] ?? null;
-                $alumnos = [];
+                
+                // Usamos la nueva función que devuelve ['cabecera'] y ['alumnos']
                 if ($idFechaExamen) {
-                    $alumnos = obtenerDetalleActaCompleto($conn, $idFechaExamen);
+                    $resultado = obtenerDetalleActaCompleto($conn, $idFechaExamen);
+                    echo json_encode(['data' => $resultado, 'success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'ID faltante']);
                 }
-                echo json_encode(['data' => $alumnos, 'success' => true]);
                 exit;
 
             case 'update_nota':
@@ -117,6 +120,12 @@ $turnos = obtenerTodosTurnos($conn);
     }
     .status-icon {
         font-size: 0.8rem;
+    }
+    /* Spinner pequeño para carga */
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
     }
   </style>
 </head>
@@ -203,12 +212,19 @@ $turnos = obtenerTodosTurnos($conn);
 
       <div id="contenedorActa" style="display: none;">
           <div class="row mb-3 mt-3 align-items-center">
-             <div class="col-md-6">
-                 <h6>Alumnos Inscriptos:</h6>
+             <div class="col-md-5">
+                 <h6 class="mb-0">
+                     Docente Titular: <span id="txtDocenteTitular" class=" fw-bold">---</span>
+                 </h6>
              </div>
-             <div class="col-md-6 text-end">
+             <div class="col-md-7 text-end">
+                 <button type="button" class="btn btn-primary btn-sm me-3" id="btnImprimirActa">
+                     <i class="bi bi-printer-fill"></i> Imprimir Acta Volante
+                 </button>
+
+                 <span class="border-end mx-2"></span> 
                  <label for="filtroCondicion" class="me-2">Filtrar:</label>
-                 <select id="filtroCondicion" class="form-select d-inline-block w-auto">
+                 <select id="filtroCondicion" class="form-select d-inline-block w-auto input-sm">
                      <option value="todos">Todos</option>
                  </select>
              </div>
@@ -218,7 +234,7 @@ $turnos = obtenerTodosTurnos($conn);
             <table class="table table-striped table-hover mt-3 align-middle" id="tablaActa">
               <thead>
                 <tr>
-                  <th style="width: 25%;">Alumno</th>
+                  <th style="width: 30%;">Alumno</th>
                   <th>Condición</th>
                   <th class="text-center">Escrito</th>
                   <th class="text-center">Oral</th>
@@ -355,78 +371,67 @@ $(document).ready(function() {
         }
 
         let tbody = $('#bodyTablaActa');
-        tbody.html('<tr><td colspan="8" class="text-center">Cargando alumnos...</td></tr>');
+        let txtDocente = $('#txtDocenteTitular');
+        
+        tbody.html('<tr><td colspan="8" class="text-center">Cargando datos...</td></tr>');
+        txtDocente.text('Cargando...');
         $('#contenedorActa').show();
 
         $.post('actas.php', { ajax_action: 'get_acta', idFechaExamen: idFechaExamen }, function(res) {
             tbody.empty();
             let condiciones = new Set();
             
-            if(res.success && res.data.length > 0) {
-                res.data.forEach(alu => {
-                    let cond = alu.condicion || 'Sin Condición';
-                    condiciones.add(cond);
-                    
-                   let row = `
-    <tr data-condicion="${cond}">
-        <td>
-            ${alu.apellido}, ${alu.nombre}<br>
-            <small class="text-muted">DNI: ${alu.dni}</small>
-        </td>
-        <td><span class="badge bg-secondary">${cond}</span></td>
-        
-        <td>
-            <input type="number" 
-                   class="form-control input-sm editable-input text-center" 
-                   data-id="${alu.idInscripcion}" 
-                   data-campo="escrito" 
-                   value="${alu.escrito || ''}" 
-                   min="1" max="10" 
-                   oninput="validarNota(this)"
-                   placeholder="-">
-        </td>
-        
-        <td>
-            <input type="number" 
-                   class="form-control input-sm editable-input text-center" 
-                   data-id="${alu.idInscripcion}" 
-                   data-campo="oral" 
-                   value="${alu.oral || ''}" 
-                   min="1" max="10" 
-                   oninput="validarNota(this)"
-                   placeholder="-">
-        </td>
-        
-        <td>
-            <input type="number" 
-                   class="form-control input-sm editable-input text-center fw-bold" 
-                   data-id="${alu.idInscripcion}" 
-                   data-campo="calificacion" 
-                   value="${alu.calificacion || ''}" 
-                   min="1" max="10" 
-                   oninput="validarNota(this)"
-                   placeholder="-"
-                   style="border: 2px solid #e9ecef;"> </td>
-        
-        <td><input type="text" class="editable-input text-center" data-id="${alu.idInscripcion}" data-campo="libro" value="${alu.libro || ''}" placeholder="-"></td>
-        <td><input type="text" class="editable-input text-center" data-id="${alu.idInscripcion}" data-campo="folio" value="${alu.folio || ''}" placeholder="-"></td>
-        
-        <td class="text-center status-cell"></td>
-    </tr>
-`;
-                    tbody.append(row);
-                });
+            if(res.success && res.data && res.data.alumnos) {
+                
+                // Mostrar Docente
+                let cabecera = res.data.cabecera;
+                if(cabecera && cabecera.apellidoDocente) {
+                    txtDocente.text(cabecera.apellidoDocente + ', ' + cabecera.nombreDocente);
+                } else {
+                    txtDocente.text('Sin asignar');
+                }
 
-                // Llenar Filtro
-                let filtro = $('#filtroCondicion');
-                filtro.html('<option value="todos">Todos</option>');
-                condiciones.forEach(c => filtro.append(`<option value="${c}">${c}</option>`));
+                // Mostrar Alumnos
+                let alumnos = res.data.alumnos;
+                
+                if(alumnos.length > 0) {
+                    alumnos.forEach(alu => {
+                        let cond = alu.condicion || 'Sin Condición';
+                        condiciones.add(cond);
+                        
+                        let row = `
+                            <tr data-condicion="${cond}">
+                                <td>
+                                    ${alu.apellido}, ${alu.nombre}<br>
+                                    <small class="text-muted">DNI: ${alu.dni}</small>
+                                </td>
+                                <td><span class="badge bg-secondary">${cond}</span></td>
+                                
+                                <td><input type="number" class="form-control input-sm editable-input text-center" data-id="${alu.idInscripcion}" data-campo="escrito" value="${alu.escrito || ''}" min="1" max="10" oninput="validarNota(this)" placeholder="-"></td>
+                                <td><input type="number" class="form-control input-sm editable-input text-center" data-id="${alu.idInscripcion}" data-campo="oral" value="${alu.oral || ''}" min="1" max="10" oninput="validarNota(this)" placeholder="-"></td>
+                                <td><input type="number" class="form-control input-sm editable-input text-center fw-bold" data-id="${alu.idInscripcion}" data-campo="calificacion" value="${alu.calificacion || ''}" min="1" max="10" oninput="validarNota(this)" placeholder="-" style="border: 2px solid #e9ecef;"></td>
+                                <td><input type="text" class="editable-input text-center" data-id="${alu.idInscripcion}" data-campo="libro" value="${alu.libro || ''}" placeholder="-"></td>
+                                <td><input type="text" class="editable-input text-center" data-id="${alu.idInscripcion}" data-campo="folio" value="${alu.folio || ''}" placeholder="-"></td>
+                                
+                                <td class="text-center status-cell"></td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
 
+                    // Llenar Filtro
+                    let filtro = $('#filtroCondicion');
+                    filtro.html('<option value="todos">Todos (Ver pantalla)</option>');
+                    condiciones.forEach(c => filtro.append(`<option value="${c}">${c}</option>`));
+
+                } else {
+                    tbody.html('<tr><td colspan="8" class="text-center">No se encontraron alumnos inscriptos en esta mesa.</td></tr>');
+                }
             } else {
-                tbody.html('<tr><td colspan="8" class="text-center">No se encontraron alumnos inscriptos en esta mesa.</td></tr>');
+                tbody.html('<tr><td colspan="8" class="text-center text-danger">Error al recuperar datos del servidor.</td></tr>');
             }
         }, 'json').fail(function() {
-            tbody.html('<tr><td colspan="8" class="text-center text-danger">Error al cargar listado.</td></tr>');
+            tbody.html('<tr><td colspan="8" class="text-center text-danger">Error de conexión.</td></tr>');
         });
     });
 
@@ -471,6 +476,28 @@ $(document).ready(function() {
         });
     });
 
+    // --- BOTÓN IMPRIMIR ACTA (Validación Estricta) ---
+    $('#btnImprimirActa').click(function() {
+        let idFechaExamen = $('#idMesa').val();
+        let condicionSeleccionada = $('#filtroCondicion').val();
+        
+        // 1. Validar Mesa
+        if (!idFechaExamen) {
+            alert('Por favor, seleccione una mesa de examen válida.');
+            return;
+        }
+
+        // 2. Validar Condición (Requisito para Acta Volante)
+        if (condicionSeleccionada === 'todos' || !condicionSeleccionada) {
+            alert('ATENCIÓN: Para imprimir el Acta Volante, debe seleccionar una CONDICIÓN específica (ej: "Regular" o "Libre") en el filtro.\n\nEl sistema genera actas separadas por condición.');
+            $('#filtroCondicion').focus(); 
+            return;
+        }
+
+        // 3. Abrir PDF
+        window.open('../reportes/actaVolantePDF.php?idFechaExamen=' + idFechaExamen + '&condicion=' + encodeURIComponent(condicionSeleccionada), '_blank');
+    });
+
 });
 
 function validarNota(input) {
@@ -484,9 +511,9 @@ function validarNota(input) {
     let valor = parseInt(input.value);
 
     if (valor > 10) {
-        input.value = 10; // Si escribe 11, se corrige a 10
+        input.value = 10; 
     } else if (valor < 1) {
-        input.value = 1;  // Si escribe 0, se corrige a 1 (si no quieres permitir 0)
+        input.value = 1;  
     }
 }
 </script>

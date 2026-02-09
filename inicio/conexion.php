@@ -1,3 +1,4 @@
+<link rel="icon" type="image/png" href="../img/icon.png">
 <?php
 //configuracion para trabajar en nuestras pc local
 $servername = "localhost";

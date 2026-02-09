@@ -3002,20 +3002,19 @@ function obtenerCondicionesExamen($conexion) {
  * Crea el registro base en inscripcionexamenes para un aprobado presistema.
  * Devuelve el ID de la inscripción creada.
  */
-function crearInscripcionExamenPresistema($conn, $idAlumno, $idMateria, $calificacion, $idCondicionExamen, $libro, $folio) {
-    // Obtenemos el PRIMER ciclo lectivo registrado (el más antiguo) como placeholder
-    $sql_ciclo = "SELECT idciclolectivo FROM ciclolectivo ORDER BY anio ASC LIMIT 1";
-    $idCiclo = $conn->query($sql_ciclo)->fetch_assoc()['idciclolectivo'] ?? 1; // Usar 1 como fallback
-
+function crearInscripcionExamenPresistema($conn, $idAlumno, $idMateria, $calificacion, $idCondicionExamen, $libro, $folio, $idCicloLectivo) {
+    // Usamos el ciclo lectivo pasado por parámetro en lugar de buscar uno aleatorio
     $sql_insert = "INSERT INTO inscripcionexamenes 
                    (idAlumno, idMateria, idCicloLectivo, idFechaExamen, calificacion, libro, folio, idCondicion, registroNuevo, registroModificacion) 
-                   VALUES (?, ?, ?, 0, ?, ?, ?, ?, 0, 0)"; // Marcamos como no nuevo y no modificado (es histórico)
+                   VALUES (?, ?, ?, 0, ?, ?, ?, ?, 0, 0)";
     
     $stmt = $conn->prepare($sql_insert);
     if (!$stmt) {
         throw new Exception("Error al preparar crearInscripcionExamenPresistema: " . $conn->error);
     }
-    $stmt->bind_param("iiisssi", $idAlumno, $idMateria, $idCiclo, $calificacion, $libro, $folio, $idCondicionExamen);
+    // "iiisssi" -> int, int, int, string, string, string, int
+    $stmt->bind_param("iiisssi", $idAlumno, $idMateria, $idCicloLectivo, $calificacion, $libro, $folio, $idCondicionExamen);
+    
     if (!$stmt->execute()) {
         throw new Exception("Error al ejecutar crearInscripcionExamenPresistema: " . $stmt->error);
     }
@@ -3028,29 +3027,35 @@ function crearInscripcionExamenPresistema($conn, $idAlumno, $idMateria, $calific
  * Inserta un registro de REGULARIDAD presistema.
  * (Debe ser llamado dentro de una transacción)
  */
-function insertarPresistemaRegular($conn, $idAlumno, $idMateria, $fechaObtencion, $turnosTranscurridos = 0) {
+function insertarPresistemaRegular($conn, $idAlumno, $idMateria, $fechaObtencion, $idCicloLectivo, $turnosTranscurridos = 0) {
     // 1. Insertar en matriculacionmateria
+    // Nota: Cambiamos el 0 hardcodeado por ? para el idCicloLectivo
     $sql_mm = "INSERT INTO matriculacionmateria 
                (idAlumno, idNivel, idMateria, fechaMatriculacion, estado, idCicloLectivo, registroNuevo, registroModificacion) 
-               VALUES (?, 6, ?, ?, 'Regularidad PreSistema', 0, 0, 0)";
+               VALUES (?, 6, ?, ?, 'Regularidad PreSistema', ?, 0, 0)";
+    
     $stmt_mm = $conn->prepare($sql_mm);
     if (!$stmt_mm) throw new Exception("Error al preparar (matriculacionmateria): " . $conn->error);
-    $stmt_mm->bind_param("iis", $idAlumno, $idMateria, $fechaObtencion);
+    
+    // Ajustamos los tipos: "iisi" (int, int, string, int)
+    $stmt_mm->bind_param("iisi", $idAlumno, $idMateria, $fechaObtencion, $idCicloLectivo);
+    
     if (!$stmt_mm->execute()) throw new Exception("Error al insertar (matriculacionmateria): " . $stmt_mm->error);
     $stmt_mm->close();
 
     // 2. Insertar en calificacionesterciario
-    // (Aquí 'asistencia' se usa para guardar los turnos transcurridos, es un hack si no hay campo)
-    // Vamos a asumir que no guardamos los turnos si no hay campo y lo dejamos en 100%
-    // NOTA: La solicitud pedía guardar turnos. No hay un campo claro. Usaremos 'asistencia' como hack.
-    $asistencia_hack = $turnosTranscurridos; // O '100%' si no queremos usar el hack
+    $asistencia_hack = $turnosTranscurridos; 
 
     $sql_ct = "INSERT INTO calificacionesterciario 
                (idAlumno, idMateria, asistencia, sinAsistencia, estadoCursadoNumero, estadoCursado, registroNuevo, registroModificacion) 
                VALUES (?, ?, ?, 0, 1, 'Regularidad PreSistema', 0, 0)";
+               
     $stmt_ct = $conn->prepare($sql_ct);
     if (!$stmt_ct) throw new Exception("Error al preparar (calificacionesterciario): " . $conn->error);
+    
+    // Aquí turnosTranscurridos llegará con el valor correcto, no con el del ciclo
     $stmt_ct->bind_param("iis", $idAlumno, $idMateria, $asistencia_hack);
+    
     if (!$stmt_ct->execute()) throw new Exception("Error al insertar (calificacionesterciario): " . $stmt_ct->error);
     $stmt_ct->close();
 }
@@ -3059,17 +3064,22 @@ function insertarPresistemaRegular($conn, $idAlumno, $idMateria, $fechaObtencion
  * Inserta un registro de APROBACIÓN presistema.
  * (Debe ser llamado dentro de una transacción)
  */
-function insertarPresistemaAprobado($conn, $idAlumno, $idMateria, $fechaObtencion, $calificacion, $idCondicionExamen, $libro, $folio) {
-    // 1. Crear el registro de examen
-    $idInscripcion = crearInscripcionExamenPresistema($conn, $idAlumno, $idMateria, $calificacion, $idCondicionExamen, $libro, $folio);
+function insertarPresistemaAprobado($conn, $idAlumno, $idMateria, $fechaObtencion, $idCicloLectivo, $calificacion, $idCondicionExamen, $libro, $folio) {
+    // 1. Crear el registro de examen (Pasamos también el $idCicloLectivo)
+    $idInscripcion = crearInscripcionExamenPresistema($conn, $idAlumno, $idMateria, $calificacion, $idCondicionExamen, $libro, $folio, $idCicloLectivo);
 
     // 2. Insertar en matriculacionmateria
+    // Usamos ? para idCicloLectivo en lugar de 0
     $sql_mm = "INSERT INTO matriculacionmateria 
                (idAlumno, idNivel, idMateria, fechaMatriculacion, estado, idCicloLectivo, registroNuevo, registroModificacion) 
-               VALUES (?, 6, ?, ?, 'Aprobación PreSistema', 0, 0, 0)";
+               VALUES (?, 6, ?, ?, 'Aprobación PreSistema', ?, 0, 0)";
+               
     $stmt_mm = $conn->prepare($sql_mm);
     if (!$stmt_mm) throw new Exception("Error al preparar (matriculacionmateria Aprob): " . $conn->error);
-    $stmt_mm->bind_param("iis", $idAlumno, $idMateria, $fechaObtencion);
+    
+    // "iisi" -> int, int, string, int
+    $stmt_mm->bind_param("iisi", $idAlumno, $idMateria, $fechaObtencion, $idCicloLectivo);
+    
     if (!$stmt_mm->execute()) throw new Exception("Error al insertar (matriculacionmateria Aprob): " . $stmt_mm->error);
     $stmt_mm->close();
 
@@ -3077,9 +3087,13 @@ function insertarPresistemaAprobado($conn, $idAlumno, $idMateria, $fechaObtencio
     $sql_ct = "INSERT INTO calificacionesterciario 
                (idAlumno, idMateria, asistencia, examenIntegrador, sinAsistencia, estadoCursadoNumero, estadoCursado, materiaAprobada, idInscripcionExamen, registroNuevo, registroModificacion) 
                VALUES (?, ?, '100%', ?, 0, 11, 'Aprobación PreSistema', 1, ?, 0, 0)";
+    
     $stmt_ct = $conn->prepare($sql_ct);
     if (!$stmt_ct) throw new Exception("Error al preparar (calificacionesterciario Aprob): " . $conn->error);
+    
+    // Ahora $calificacion tendrá el valor correcto
     $stmt_ct->bind_param("iisi", $idAlumno, $idMateria, $calificacion, $idInscripcion);
+    
     if (!$stmt_ct->execute()) throw new Exception("Error al insertar (calificacionesterciario Aprob): " . $stmt_ct->error);
     $stmt_ct->close();
 }
@@ -3627,7 +3641,7 @@ function buscarMesasExamen($conn, $idCiclo, $idTurno, $idMateria) {
 }
 
 // 3. Obtener Alumnos Inscriptos en la Mesa (JOIN CORRECTO)
-function obtenerDetalleActaCompleto($conn, $idFechaExamen) {
+/*function obtenerDetalleActaCompleto($conn, $idFechaExamen) {
     $sql = "SELECT 
                 ie.idInscripcion,
                 p.apellido, 
@@ -3655,6 +3669,78 @@ function obtenerDetalleActaCompleto($conn, $idFechaExamen) {
     $data = [];
     while ($row = $result->fetch_assoc()) { $data[] = $row; }
     return $data;
+}*/
+function obtenerDetalleActaCompleto($conn, $idFechaExamen) {
+    $id = (int)$idFechaExamen;
+    $resultado = [
+        'cabecera' => null,
+        'alumnos' => []
+    ];
+
+    // 1. OBTENER DATOS DE CABECERA (Corregido según tu estructura real)
+    // Usamos 'fechasexamenes', 'turnosexamenes', 'plandeestudio', etc.
+    $sqlCabecera = "SELECT 
+                        fe.fecha,
+                        p.apellido as apellidoDocente,
+                        p.nombre as nombreDocente,
+                        m.nombre as nombreMateria,
+                        c.nombre as nombreCurso,
+                        pl.nombre as nombrePlan,
+                        cl.anio as cicloLectivo,
+                        t.nombre as nombreTurno
+                    FROM fechasexamenes fe
+                    LEFT JOIN persona p ON fe.p1 = p.idPersona
+                    INNER JOIN materiaterciario m ON fe.idMateria = m.idMateria
+                    INNER JOIN curso c ON m.idCurso = c.idCurso
+                    INNER JOIN plandeestudio pl ON m.idPlan = pl.idPlan
+                    INNER JOIN ciclolectivo cl ON fe.idCicloLectivo = cl.idCicloLectivo
+                    INNER JOIN turnosexamenes t ON fe.idTurno = t.idTurno
+                    WHERE fe.idFechaExamen = ?";
+
+    $stmt = $conn->prepare($sqlCabecera);
+    if ($stmt) {
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $resultado['cabecera'] = $res->fetch_assoc();
+        $stmt->close();
+    } else {
+        // Para debug: si falla el prepare, loguear error o devolver vacío
+        // error_log("Error SQL Cabecera: " . $conn->error);
+    }
+
+    // 2. OBTENER LISTADO DE ALUMNOS
+    $sqlAlumnos = "SELECT 
+                    ie.idInscripcion,
+                    p.apellido, 
+                    p.nombre, 
+                    p.dni,
+                    ie.oral, 
+                    ie.escrito, 
+                    ie.calificacion, 
+                    ie.libro, 
+                    ie.folio, 
+                    cond.condicion,
+                    cond.idCondicion
+                FROM inscripcionexamenes ie
+                INNER JOIN alumnosterciario at ON ie.idAlumno = at.idAlumno 
+                INNER JOIN persona p ON at.idPersona = p.idPersona
+                LEFT JOIN condicion cond ON ie.idCondicion = cond.idCondicion
+                WHERE ie.idFechaExamen = ?
+                ORDER BY p.apellido ASC, p.nombre ASC";
+
+    $stmt2 = $conn->prepare($sqlAlumnos);
+    if ($stmt2) {
+        $stmt2->bind_param("i", $id);
+        $stmt2->execute();
+        $res2 = $stmt2->get_result();
+        while ($row = $res2->fetch_assoc()) {
+            $resultado['alumnos'][] = $row;
+        }
+        $stmt2->close();
+    }
+
+    return $resultado;
 }
 
 // 4. Actualizar Nota (Seguridad: Lista blanca de campos)
