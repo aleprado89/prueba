@@ -120,6 +120,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
   </style>
 
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 <?php include '../funciones/menu_docente.php'; ?>

@@ -127,6 +127,8 @@ if ($primerCicloLectivoId && $primerPlanId) {
       margin-bottom: 1rem;
     }
   </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 <?php include '../funciones/menu_secretaria.php'; // Incluimos el menú de secretaría ?>

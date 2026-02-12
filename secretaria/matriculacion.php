@@ -172,6 +172,8 @@ $today = date('Y-m-d');
   <link rel="stylesheet" href="../css/estilos.css">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

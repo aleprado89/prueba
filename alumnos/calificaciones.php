@@ -66,6 +66,8 @@ $mostrarEstadoParcial = ($hoy >= $fechaLimite);
 <!-- Bootstrap JS (necesario para el navvar) -->
 <script src="../js/bootstrap.min.js"></script> 
 
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 
 <body>

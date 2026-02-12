@@ -340,6 +340,8 @@ ob_end_flush();
             background-color: #dc3545; color: white;
         }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

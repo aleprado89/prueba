@@ -91,6 +91,8 @@ $html = '
         margin-bottom: 20px;
     }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div class="header">

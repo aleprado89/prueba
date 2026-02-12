@@ -129,6 +129,8 @@ $html = '
         
         .clear { clear: both; }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

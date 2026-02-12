@@ -53,6 +53,8 @@ $html = '
         .nombre-alumno { width: 40%; }
         .renglon { width: 60%; }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div class="header"><img src="data:image/jpeg;base64,' . $img_base64 . '"></div>

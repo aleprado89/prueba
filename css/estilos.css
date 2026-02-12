@@ -1,4 +1,13 @@
 /* --- ESTILOS GENERALES Y PREEXISTENTES --- */
+/* Primero, forzamos todo el título a minúsculas para estandarizar */
+.fc-toolbar-title {
+    text-transform: lowercase;
+}
+
+/* Luego, aplicamos mayúscula ÚNICAMENTE a la primera letra de la cadena */
+.fc-toolbar-title::first-letter {
+    text-transform: uppercase;
+}
 .table-wrapper {
     overflow-x: auto; /* Habilita el scroll horizontal */
     margin-bottom: 1.5rem; /* Espacio debajo si se pone uno abajo */

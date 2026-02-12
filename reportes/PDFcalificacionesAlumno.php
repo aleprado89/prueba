@@ -77,6 +77,8 @@ $html = '
         .fecha { text-align: right; font-size: 14px; margin-bottom: 20px; }
         .aprobada {  font-weight: bold; } /* Estilo para materia aprobada */
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div class="header">

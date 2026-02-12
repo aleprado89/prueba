@@ -60,6 +60,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       margin-top: 20px;
     }
   </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 
 <body>

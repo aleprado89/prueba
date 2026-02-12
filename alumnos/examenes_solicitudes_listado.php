@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
@@ -27,13 +30,13 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
 
 //FUNCIONES
 //LISTAR SOLICITUDES
-$idTurno=$datosColegio[$i]['idTurno'];
+$idTurno = isset($datosColegio[0]['idTurno']) ? $datosColegio[0]['idTurno'] : null;
 $listadoSolicitudes = array();
 $listadoSolicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo,$idTurno);
 $cantidad = count($listadoSolicitudes);
 ?>
 <!DOCTYPE html>
-<html lang="es"></html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,6 +50,8 @@ $cantidad = count($listadoSolicitudes);
 
 <!-- Bootstrap JS (necesario para el navvar) -->
 <script src="../js/bootstrap.min.js"></script> 
+
+<link rel="icon" type="image/png" href="../img/icon.png">
 
 </head>
 

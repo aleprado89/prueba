@@ -195,6 +195,8 @@ try {
         
         .resultado-icon { font-size: 1.2rem; margin-right: 8px; vertical-align: middle; }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

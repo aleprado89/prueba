@@ -93,6 +93,8 @@ $html = '
     line-height: 0.2; /* ajusta el valor según tus necesidades */
 }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div class="header">

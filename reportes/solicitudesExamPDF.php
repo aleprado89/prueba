@@ -26,6 +26,7 @@ $nombrePlan=$_SESSION['nombreP'];
 $membrete=$_SESSION['membrete'];
 $cicloLectivo =  $datosColegio[0]['anioautoweb'];
 $idCicloLectivo = buscarIdCiclo($conn, $cicloLectivo);
+$idTurno = isset($datosColegio[0]['idTurno']) ? $datosColegio[0]['idTurno'] : null;
 //busco ciclo lectivo
 //$anio=buscarnombreCiclo($conn,$idCicloLectivo);
 
@@ -34,7 +35,7 @@ $img = file_get_contents(__DIR__ . '/'.$membrete);
 $img_base64 = base64_encode($img);
 
 //BUSCO SOLICITUDES
-$solicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo);
+$solicitudes = buscarSolicitudesExamen($conn, $idAlumno, $idPlan, $idCicloLectivo,$idTurno);
 
 // Cargar el contenido HTML
 $html = '<html lang="es">

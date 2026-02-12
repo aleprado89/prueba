@@ -1,4 +1,7 @@
 <?php 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start(); 
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
@@ -55,11 +58,13 @@ while ($b < $cantidadMaterias) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es"></html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Carreras</title>
+  <link rel="icon" type="image/png" href="../img/icon.png">
+
   <!-- Bootstrap CSS -->
   <!-- <link rel="stylesheet" href="../css/estilo-prebootstrap.css"> -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
@@ -71,6 +76,7 @@ while ($b < $cantidadMaterias) {
   <script src="../js/chartjs/dist/chart.umd.js"></script><!-- charjs  (necesario para el grafico de torta) -->
 
   
+
 </head>
 
 <body>

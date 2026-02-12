@@ -201,6 +201,8 @@ $groupedExamDetailsJson = json_encode($groupedExamDetails);
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
 
 
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

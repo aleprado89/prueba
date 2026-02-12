@@ -80,6 +80,8 @@ $html = "
         .firma { margin-top: 60px; text-align: center; }
         .firma-linea { border-top: 1px solid #000; width: 250px; margin: 0 auto; }
     </style>
+
+
 </head>
 <body>
     <div class='header'>

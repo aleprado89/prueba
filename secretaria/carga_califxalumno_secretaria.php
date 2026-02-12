@@ -1,35 +1,59 @@
 <?php
 // Archivo: carga_califxalumno_secretaria.php
 ob_start();
+
 // --- INCLUSIONES Y CONFIGURACIÓN INICIAL ---
 include '../funciones/verificarSesion.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+// 1. INCLUSIÓN NECESARIA PARA CALCULAR EL ESTADO
+include '../funciones/analisisestado.php'; 
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // --- MANEJO DE PETICIONES AJAX (POST) ---
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // 1. Apagamos la visualización de errores solo para las peticiones AJAX
+    ini_set('display_errors', 0);
     ob_end_clean(); 
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
 
     switch ($action) {
         case 'update_calif':
-            if (isset($_POST['idCalificacion'], $_POST['columna'], $_POST['nuevoValor'])) {
+            // 2. RECIBIMOS TAMBIÉN IDMATERIA E IDALUMNO PARA EL ANÁLISIS
+            if (isset($_POST['idCalificacion'], $_POST['columna'], $_POST['nuevoValor'], $_POST['idMateria'], $_POST['idAlumno'])) {
                 $idCalificacion = $_POST['idCalificacion'];
+                $idMateria = $_POST['idMateria'];
+                $idAlumno = $_POST['idAlumno'];
                 $columna = $_POST['columna'];
                 $nuevoValor = trim($_POST['nuevoValor']);
+                
                 $valoresPermitidos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', 'AP', 'NA'];
                 $valorParaGuardar = ($nuevoValor === '') ? null : strtoupper($nuevoValor);
+                
                 if (!is_null($valorParaGuardar) && !in_array($valorParaGuardar, $valoresPermitidos)) {
                     echo json_encode(['respuesta' => 'error_validacion', 'mensaje' => 'Valor no permitido.']);
                     exit;
                 }
+                
+                // Actualizamos la nota
                 $respuesta_db = actualizarCalifDocente($conn, $idCalificacion, $columna, $valorParaGuardar);
-                echo json_encode(['respuesta' => $respuesta_db]);
+                
+                // 3. EJECUTAMOS EL ANÁLISIS DE ESTADO (Igual que en carga_calif_secretaria)
+                $nuevoEstado = iniciarAnalisis($conn, $idMateria, $idAlumno, $idCalificacion);
+
+                // 3. Volvemos a limpiar el buffer justo antes del JSON, 
+                // por si 'iniciarAnalisis' hizo algún echo accidental o generó un warning oculto
+                ob_clean();
+                // Devolvemos el nuevo estado en el JSON
+                echo json_encode([
+                    'respuesta' => $respuesta_db, 
+                    'nuevoEstado' => $nuevoEstado
+                ]);
             } else {
+                ob_clean();
                 echo json_encode(['respuesta' => 'error_datos', 'mensaje' => 'Datos POST incompletos para actualizar calificación.']);
             }
             break;
@@ -101,12 +125,11 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         .calif-cell, .prom-cell { min-width: 50px; padding: 8px; text-align: center; border: 1px solid #dee2e6; }
         .prom-cell { min-width: 100px; }
         
-        /* >>> NUEVOS ESTILOS PARA MATERIAS APROBADAS Y ABANDONADAS <<< */
         .fila-abandonada td { background-color: #e9ecef !important; color: #6c757d; }
         .fila-abandonada .calif-cell, .fila-abandonada .prom-cell { pointer-events: none; }
 
         .fila-aprobada td { background-color: #8ddfbaff   }
-        .fila-aprobada .calif-cell, .fila-aprobada .prom-cell, .fila-aprobada .check-abandono { pointer-events: none; } /* Deshabilita todo menos detalles */
+        .fila-aprobada .calif-cell, .fila-aprobada .prom-cell, .fila-aprobada .check-abandono { pointer-events: none; } 
 
         .estado-cursado-aprobado { color: green; font-weight: bold; }
         .estado-cursado-desaprobado { color: red; font-weight: bold; }
@@ -120,6 +143,8 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         .scroll-top {overflow-x: auto; overflow-y: hidden;}
         .scroll-top-inner {height: 1px;}
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div id="info-pagina" 
@@ -264,7 +289,6 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         </div>
     </div>
 
-    <!-- Todos los modales completos -->
     <div class="modal fade" id="modalDetalleMateria" tabindex="-1" aria-labelledby="modalDetalleMateriaLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -404,17 +428,40 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             });
         }
         
+        // 4. LÓGICA AJAX ACTUALIZADA PARA CALIFICACIONES
         $(document).on('blur', '.calif-cell, .prom-cell', function() {
             const celda = $(this);
-            if (celda.closest('tr').is('.fila-abandonada, .fila-aprobada')) return;
+            const fila = celda.closest('tr'); // Referencia a la fila
+            
+            if (fila.is('.fila-abandonada, .fila-aprobada')) return;
+
+            // Preparamos los datos, incluyendo idMateria e idAlumno para el recálculo
             const data = {
-                idCalificacion: celda.closest('tr').data('idcalificacion'),
+                idCalificacion: fila.data('idcalificacion'),
+                idMateria: fila.data('idmateria'), // Enviamos ID Materia
+                idAlumno: fila.data('idalumno'),   // Enviamos ID Alumno
                 columna: celda.data('columna'),
                 nuevoValor: celda.text().trim()
             };
+
             enviarAjax('update_calif', data, function(response) {
                 if (response && (response.respuesta === 'actualizado' || response.respuesta === 'sin_cambios')) {
                     celda.css('background-color', 'lightgreen');
+                    
+                    // 5. ACTUALIZACIÓN VISUAL DEL ESTADO EN LA TABLA
+                    if (response.nuevoEstado) {
+                        fila.find('.estado-cursado-display').html(response.nuevoEstado);
+                        
+                        // Opcional: Actualizar el atributo data-info por si se abre el modal de detalles
+                        try {
+                            let info = fila.data('info');
+                            if (typeof info === 'string') info = JSON.parse(info);
+                            info.estadoCursado = response.nuevoEstado;
+                            fila.attr('data-info', JSON.stringify(info));
+                        } catch(e) { console.error("Error actualizando data-info JSON", e); }
+                    }
+
+                    setTimeout(() => celda.css('background-color', ''), 1500); // Quitar verde después de un momento
                 } else {
                     alert('Error: ' + (response.mensaje || 'Respuesta desconocida.'));
                     celda.css('background-color', 'lightcoral');
@@ -422,16 +469,22 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
             });
         });
         
+        // --- Manejo de Abandono (Igual que antes) ---
         let currentCheckbox;
         const modalConfirmAbandono = new bootstrap.Modal('#modalConfirmAbandono');
         const modalRevertAbandono = new bootstrap.Modal('#modalRevertAbandono');
 
         function actualizarInfoFila(fila, nuevoEstadoInscripcion, nuevoEstadoCursado) {
             try {
-                const info = JSON.parse(fila.attr('data-info'));
-                info.estadoInscripcion = nuevoEstadoInscripcion;
-                if (nuevoEstadoCursado !== undefined) info.estadoCursado = nuevoEstadoCursado;
-                fila.attr('data-info', JSON.stringify(info));
+                // Parseamos, actualizamos y volvemos a guardar como string para que jQuery .data() funcione bien la próxima vez
+                let info = fila.attr('data-info'); 
+                if (info) {
+                    let objInfo = JSON.parse(info);
+                    objInfo.estadoInscripcion = nuevoEstadoInscripcion;
+                    if (nuevoEstadoCursado !== undefined) objInfo.estadoCursado = nuevoEstadoCursado;
+                    fila.attr('data-info', JSON.stringify(objInfo));
+                    fila.data('info', objInfo); // Actualizamos también la caché de jQuery
+                }
             } catch(e) { console.error("Error al actualizar data-info:", e); }
         }
 
@@ -501,7 +554,9 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
         $(document).on('click', '.icono-detalle', function(e) {
             e.preventDefault();
             const fila = $(this).closest('tr');
-            const info = fila.data('info');
+            // Aseguramos leer la data más fresca
+            const info = fila.data('info') || JSON.parse(fila.attr('data-info')); 
+            
             const modal = $('#modalDetalleMateria');
             modal.find('#modalMateriaNombre').text(info.nombreMateria || 'N/A');
             modal.find('#modalMateriaCurso').text(info.nombreCurso || 'N/A');

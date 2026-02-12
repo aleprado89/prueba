@@ -151,7 +151,7 @@ exit(); // Asegúrate de llamar a exit() después de header()
 }
 ?>
 <!DOCTYPE html>
-<html lang="es"></html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -165,6 +165,8 @@ exit(); // Asegúrate de llamar a exit() después de header()
 
 <!-- Bootstrap JS (necesario para el navvar) -->
 <script src="../js/bootstrap.min.js"></script> 
+
+<link rel="icon" type="image/png" href="../img/icon.png">
 
 </head>
 
@@ -203,9 +205,12 @@ exit(); // Asegúrate de llamar a exit() después de header()
                 </select> 
                     <br>
                        <label for="fotoCarnet">Foto Carnet:</label>
-                <?php if (!empty($select_FotoCarnet)): ?><br>
-    <img>Archivo actual: <img src='<?php echo $select_FotoCarnet; ?>' width="50px"></img>  </php>
+                <?php if (!empty($select_FotoCarnet)): ?>
+    <br>
+    Archivo actual:<br>
+    <img src="<?php echo $select_FotoCarnet; ?>" width="50">
 <?php endif; ?>
+
             <input type="file" class="form-control" id="fotoCarnet" name="fotoCarnet">
             
   </div>

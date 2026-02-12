@@ -207,6 +207,8 @@ function formatDateTimeForInput($dateTimeStr) {
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

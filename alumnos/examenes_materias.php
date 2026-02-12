@@ -73,6 +73,8 @@ $cantidad = count($listadoMaterias);
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="../js/bootstrap.min.js"></script>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 
 <body>
@@ -149,8 +151,8 @@ $cantidad = count($listadoMaterias);
                 $calif = $materia['CalificacionFinal'];
                 $idDivision = $materia['idDivision'];
 
-                if (empty(trim($calif))) {
-                    $hayRegistros = true;
+               if (empty(trim(string: (string)$calif))) {                
+               $hayRegistros = true;
                     $nombreMateriaReducido = implode(' ', array_slice(explode(' ', $nombreMateriaCompleto), 0, 8));
                     if (str_word_count($nombreMateriaCompleto) > 8) {
                         $nombreMateriaReducido .= "...";

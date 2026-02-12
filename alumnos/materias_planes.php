@@ -70,6 +70,8 @@ while ($b < $cantidadMaterias) {
   <script src="../js/chartjs/dist/chart.umd.js"></script><!-- charjs  (necesario para el grafico de torta) -->
 
   
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 
 <body>

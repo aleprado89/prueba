@@ -1,3 +1,4 @@
+
 <?php
 //session_start();
   //$_SESSION['idColegio']=1;// en banfield es el 1 pero puede ser 0 en otro hay que buscar el registro de nivel terciario. Esto esta por si hubiera mas de un terciario

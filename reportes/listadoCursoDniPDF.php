@@ -44,6 +44,8 @@ $html = '
         .nombre-alumno { width: 50%; } /* Un poco más ancho para el DNI */
         .renglon { width: 50%; }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div class="header"><img src="data:image/jpeg;base64,' . $img_base64 . '"></div>

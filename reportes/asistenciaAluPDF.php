@@ -98,6 +98,8 @@ $html = '
       text-align: left; /* Left align for subject name */
     }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div class="header">

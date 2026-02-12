@@ -45,6 +45,8 @@ $html = '
         .nombre-alumno { width: 25%; text-align: left; }
         .cuadro { width: 2.3%; height: 20px; }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div class="header"><img src="data:image/jpeg;base64,' . $img_base64 . '"></div>

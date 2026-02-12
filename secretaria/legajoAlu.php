@@ -417,6 +417,8 @@ $fotoDisplayPath = !empty($alumnoData['fotoURL']) && file_exists('../' . $alumno
       color: #007bff;
     }
   </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

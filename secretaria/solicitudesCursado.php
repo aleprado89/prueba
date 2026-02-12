@@ -2,7 +2,11 @@
 /**
  * solicitudesCursado.php
  * Módulo de Administración para aceptar/rechazar inscripciones a cursado.
- * Lógica: Búsqueda rápida + Validación asíncrona (Barra de Progreso) + Autoridad de decisión manual.
+ * Correcciones: 
+ * - Filtro correcto por curso.
+ * - Control de duplicados antes de inscribir.
+ * - Respeto absoluto a la decisión manual (Rechazar = No inscribir).
+ * - Corrección de UI (Modal 0% y Histórico).
  * Autor: Programador de SistemasEscolares
  */
 
@@ -57,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idPlan = filter_input(INPUT_POST, 'idPlan', FILTER_VALIDATE_INT);
                 $idCurso = filter_input(INPUT_POST, 'idCurso', FILTER_VALIDATE_INT); 
-                $idMateria = filter_input(INPUT_POST, 'idMateria'); 
+                $idMateria = filter_input(INPUT_POST, 'idMateria', FILTER_VALIDATE_INT); 
                 $verHistorico = filter_input(INPUT_POST, 'verHistorico', FILTER_VALIDATE_INT);
 
                 if (!$idCiclo || !$idPlan) {
@@ -65,20 +69,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     exit;
                 }
 
-                $estadoBuscar = ($verHistorico == 1) ? 2 : 1; 
+                // Definir estados a buscar
+                $estadosBuscar = ($verHistorico == 1) ? [2, 3] : [1];
 
-                if (!function_exists('buscarSolicitudesCursadoWeb')) {
-                    throw new Exception("Error: Función buscarSolicitudesCursadoWeb no encontrada.");
+                // Usamos la NUEVA función que filtra correctamente por Curso
+                if (!function_exists('buscarSolicitudesCursadoFiltros')) {
+                     // Fallback por si no has actualizado consultas.php aún, pero dará error de filtro
+                    throw new Exception("Error: Función buscarSolicitudesCursadoFiltros no encontrada en consultas.php. Por favor actualice el archivo.");
                 }
 
-                $solicitudes = buscarSolicitudesCursadoWeb($conn, $idCiclo, $idMateria, $estadoBuscar);
+                $solicitudes = buscarSolicitudesCursadoFiltros($conn, $idCiclo, $idPlan, $idCurso, $idMateria, $estadosBuscar);
                 
-                if ($verHistorico == 1) {
-                     // Si es histórico, traemos también las rechazadas (estado 3)
-                     $solicitudesRechazadas = buscarSolicitudesCursadoWeb($conn, $idCiclo, $idMateria, 3);
-                     $solicitudes = array_merge($solicitudes, $solicitudesRechazadas);
-                }
-
                 $dataProcessed = [];
 
                 foreach ($solicitudes as $sol) {
@@ -161,7 +162,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $detallesError = []; 
 
                 foreach ($lista as $item) {
-                    // Aseguramos que sea entero
                     $idWeb = intval($item['idWeb']);
                     $accion = $item['accion']; 
                     $idCondicion = intval($item['idCondicion']); 
@@ -172,18 +172,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $datosOrig = obtenerSolicitudCursadoWebPorId($conn, $idWeb);
 
                     if (!$datosOrig) { 
-                        // MENSAJE DE DEPURACIÓN: Mostramos el ID que falló
                         $detallesError[] = "<b>$nombreAlumno:</b> Solicitud ID ($idWeb) no encontrada en BD.";
                         continue; 
                     } 
 
+                    // --- LÓGICA DE AUTORIDAD ---
                     if ($accion === 'ACEPTAR') {
+                        // El usuario decidió ACEPTAR. Verificamos datos y duplicados.
+                        
                         if (!$idCondicion) {
                             $detallesError[] = "<b>$nombreAlumno:</b> No seleccionó condición.";
                             continue;
                         }
 
-                        // 2. Traducir ID Condición a Texto (Para tabla matriculacionmateria)
+                        // Verificar Duplicados (NUEVO)
+                        if (function_exists('estaMatriculadoEnMateria')) {
+                            if (estaMatriculadoEnMateria($conn, $datosOrig['idAlumno'], $datosOrig['idMateria'], $idCiclo)) {
+                                // Ya está inscripto: Marcamos la solicitud como Error/Rechazada (3) para limpiar la lista
+                                actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, "Error: Alumno ya inscripto en esta materia.");
+                                $detallesError[] = "<b>$nombreAlumno:</b> Ya está inscripto en esta materia. Solicitud cancelada.";
+                                continue;
+                            }
+                        }
+
+                        // Traducir ID Condición a Texto
                         $textoCondicion = "Regular"; 
                         $sqlCond = "SELECT condicion FROM condicionescursado WHERE idCondicion = ?";
                         $stmtC = $conn->prepare($sqlCond);
@@ -197,13 +209,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $stmtC->close();
                         }
                         
-                        // 3. Insertar Matriculación Real
+                        // Insertar Matriculación Real
                         $datosMatricula = [
                             'idAlumno' => $datosOrig['idAlumno'],
                             'idMateria' => $datosOrig['idMateria'],
                             'fechaMatriculacion' => date('Y-m-d'),
                             'fechaBajaMatriculacion' => null,
-                            'estado' => $textoCondicion, // Texto (ej: Regular, Promocional)
+                            'estado' => $textoCondicion, 
                             'idCicloLectivo' => $idCiclo
                         ];
 
@@ -213,25 +225,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             inicializarCalificacionMateria($conn, $datosOrig['idAlumno'], $datosOrig['idMateria']);
 
                             // Actualizar Web a ACEPTADA (2)
-                            if (actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 2, "Inscripción Correcta")) {
-                                $procesadosExito++;
-                            } else {
-                                $detallesError[] = "<b>$nombreAlumno:</b> Se inscribió, pero falló actualizar la solicitud web.";
-                            }
+                            actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 2, "Inscripción Correcta");
+                            $procesadosExito++;
                         } else {
                             $errorDB = $conn->error;
                             actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, "Error BD: " . $errorDB);
-                            $detallesError[] = "<b>$nombreAlumno:</b> Error BD al inscribir (posible duplicado).";
+                            $detallesError[] = "<b>$nombreAlumno:</b> Error BD al inscribir.";
                         }
 
                     } else {
-                        // RECHAZAR
+                        // ACCIÓN: RECHAZAR
+                        // IMPORTANTE: Aquí NO inscribimos, solo actualizamos el estado.
                         $motivoRechazo = "Rechazo manual: " . $observacionUI;
                         if (actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, $motivoRechazo)) {
                             $procesadosExito++;
                         } else {
-                            $errorDB = $conn->error;
-                            $detallesError[] = "<b>$nombreAlumno:</b> Error al rechazar: " . $errorDB;
+                            $detallesError[] = "<b>$nombreAlumno:</b> Error al rechazar en BD.";
                         }
                     }
                 }
@@ -281,6 +290,8 @@ ob_end_flush();
         .btn-accion-group .btn-check:checked + .btn-outline-success { background-color: #198754; color: white; }
         .btn-accion-group .btn-check:checked + .btn-outline-danger { background-color: #dc3545; color: white; }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 
@@ -509,8 +520,10 @@ ob_end_flush();
                     $tbody.empty();
                     const colCount = esHistorico ? 7 : 8;
 
+                    // CORRECCIÓN 1: Si no hay datos, ocultar modal inmediatamente
                     if (!res.success || !res.data || res.data.length === 0) {
-                        setTimeout(() => { modalProgreso.hide(); }, 300); 
+                        $barra.css('width', '100%');
+                        setTimeout(() => { modalProgreso.hide(); }, 500); 
                         $tbody.html(`<tr><td colspan="${colCount}" class="text-center text-muted">No se encontraron solicitudes.</td></tr>`);
                         return;
                     }
@@ -557,17 +570,21 @@ ob_end_flush();
                         $tbody.append(tr);
                     });
 
-                    // Si NO es histórico, iniciamos la validación recursiva
-                    if (!esHistorico) {
+                    // CORRECCIÓN 2: Si es histórico, ocultar modal y terminar (evita loop)
+                    if (esHistorico) {
+                         $barra.css('width', '100%');
+                         setTimeout(() => { modalProgreso.hide(); }, 500);
+                    } else {
+                        // Si es Pendientes, iniciar proceso recursivo
                         $barra.removeClass('progress-bar-animated').css('width', '0%');
                         $textoProgreso.text('Analizando correlatividades...');
-                        // IMPORTANTE: Llamamos a la función recursiva
                         procesarLote(solicitudes, 0);
-                    } else {
-                        setTimeout(() => { modalProgreso.hide(); }, 300);
                     }
 
-                }, 'json').fail(() => { setTimeout(() => { modalProgreso.hide(); }, 300); alert("Error de conexión."); });
+                }, 'json').fail(() => { 
+                    setTimeout(() => { modalProgreso.hide(); }, 300); 
+                    alert("Error de conexión."); 
+                });
             });
 
             // --- FUNCIÓN RECURSIVA PARA VALIDAR UNO POR UNO ---
@@ -598,7 +615,7 @@ ob_end_flush();
                     idAlumno: item.idAlumno 
                 }, function(res) {
                     const $fila = $(`#fila-${item.idInscripcionWeb}`);
-                    const esValida = (res.success && res.esValida);
+                    const esValida = (res.success && esVerdad(res.esValida));
                     $fila.removeClass('table-loading');
                     
                     if (esValida) {
@@ -614,10 +631,13 @@ ob_end_flush();
                     procesarLote(lista, index + 1);
 
                 }, 'json').fail(function() {
-                    // Si falla uno, marcamos error visual y seguimos con el siguiente
                     $(`#fila-${item.idInscripcionWeb}`).addClass('table-warning').find('.celda-observacion').text("Error al validar");
                     procesarLote(lista, index + 1);
                 });
+            }
+
+            function esVerdad(val) {
+                return val === true || val === "true" || val === 1 || val === "1";
             }
 
             // Click manual cambia color
@@ -665,7 +685,7 @@ ob_end_flush();
                     if (res.success) {
                         let msg = `<div class="text-success fw-bold">Se procesaron ${res.procesados} solicitudes.</div>`;
                         if (res.errores.length > 0) {
-                            msg += `<div class="text-danger mt-2 small">Errores:<ul>${res.errores.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
+                            msg += `<div class="text-danger mt-2 small">Excepciones:<ul>${res.errores.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
                         }
                         $('#modalAlertaTitulo').text("Resultado");
                         $('#modalAlertaMensaje').html(msg);
@@ -681,4 +701,4 @@ ob_end_flush();
         });
     </script>
 </body>
-</html> 
+</html>

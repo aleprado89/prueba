@@ -1,4 +1,50 @@
 <?php
+/**
+ * Obtiene los parámetros de configuración del colegio (fechas, turnos, etc).
+ * @param mysqli $conn La conexión a la base de datos.
+ * @param int $codNivel El nivel educativo (ej. 6 para terciario).
+ * @return array|null Datos del colegio o null si no se encuentra.
+ */
+function obtenerParametrosColegio($conn, $codNivel = 6) {
+    // 1. Consulta principal al colegio
+    $sql = "SELECT * FROM colegio WHERE codnivel = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $codNivel);
+    $stmt->execute();
+    $resColegio = $stmt->get_result();
+
+    if ($data = $resColegio->fetch_assoc()) {
+        $datos = array(); // Array de salida limpio
+        
+        // Mapeo directo de datos básicos
+        $datos['idTurno']         = $data['iDturnoautoweb'];
+        $datos['examenDesde']     = $data['inscExamDesde'];
+        $datos['examenHasta']     = $data['inscExamHasta'];
+        $datos['cursadoDesde']    = $data['inscCursDesde'];
+        $datos['cursadoHasta']    = $data['inscCursHasta'];
+        $datos['examenLectDesde'] = $data['inscExamLectDesde'];
+        $datos['cursadoLectDesde']= $data['inscCursLectDesde'];
+        $datos['anioautoweb']     = $data['anioautoweb'];
+        $datos['nombreColegio']   = $data['nombreColegio'];
+        
+        // 2. Sub-consulta para obtener el nombre del turno (Optimizada)
+        if (!empty($datos['idTurno'])) {
+            $sqlTurno = "SELECT nombre FROM turnosexamenes WHERE idTurno = ?";
+            $stmtTurno = $conn->prepare($sqlTurno);
+            $stmtTurno->bind_param("i", $datos['idTurno']);
+            $stmtTurno->execute();
+            $resTurno = $stmtTurno->get_result();
+            if ($dataT = $resTurno->fetch_assoc()) {
+                $datos['nombreTurno'] = $dataT['nombre'];
+            }
+            $stmtTurno->close();
+        }
+
+        return $datos;
+    }
+
+    return null;
+}
 //Estado de Cursado de un alumno por Plan
 function estadoPlan($conexion, $idAlumno, $idPlan, $cicloLectivo)
 {
@@ -520,11 +566,11 @@ function buscarSolicitudesExamen($conexion, $idAlumno, $idPlan, $idCicloLectivo,
   $consulta = "SELECT *, materiaterciario.nombre as nombreMateria from inscripcionexamenes_web inner join fechasexamenes
 on inscripcionexamenes_web.idFechaExamen = fechasexamenes.idFechaExamen inner join materiaterciario
 on inscripcionexamenes_web.idMateria = materiaterciario.idMateria
-where inscripcionexamenes_web.idAlumno = ? and materiaterciario.idPlan = ? and fechasexamenes= ?
+where inscripcionexamenes_web.idAlumno = ? and materiaterciario.idPlan = ? and fechasexamenes.idTurno = ?
 and inscripcionexamenes_web.idcicloLectivo = ? order by inscripcionexamenes_web.fechhora_inscri desc";
 
   $stmt = $conexion->prepare($consulta);
-  $stmt->bind_param("iiii", $idAlumno, $idPlan, $idCicloLectivo,$idTurno);
+  $stmt->bind_param("iiii", $idAlumno, $idPlan,$idTurno,$idCicloLectivo);
   $stmt->execute();
   $sol = $stmt->get_result();
 
@@ -610,51 +656,76 @@ and fechasexamenes.idTurno = ?";
 }
 
 //Listado de fechas a examen por materia y turno
-function buscarFechasExamenTurno($conexion, $idMateria, $idCicloLectivo, $idTurno, $idDivision)
-{// esta consulta busca las fechas de examen por idUnicoMateria porque puede rendir en otro año donde
-  // la materia tiene otro id y luego filtra por el idDivision para que sea el mismo curso
-  $consulta = "SELECT * from fechasexamenes inner join materiaterciario
-on fechasexamenes.idMateria = materiaterciario.idMateria inner join curso
-on materiaterciario.idCurso = curso.idCurso inner join cursospredeterminado
-on curso.idcursopredeterminado = cursospredeterminado.idcursopredeterminado
-where materiaterciario.idMateria in
-(select m.idMateria from materiaterciario m where m.idUnicoMateria =
-(select m1.idUnicoMateria from materiaterciario m1 where m1.idMateria = ?))
-and fechasexamenes.idCicloLectivo = ?
-and fechasexamenes.idTurno = ? AND curso.idDivision=?";
+function buscarFechasExamenTurno($conexion, $idMateria, $idCicloLectivo, $idTurno, $idDivision) {
+    // Sanitización y casteo estricto a enteros
+    $idMateria = (int)$idMateria;
+    $idCicloLectivo = (int)$idCicloLectivo;
+    $idTurno = (int)$idTurno;
+    $idDivision = (int)$idDivision;
 
-  $stmt = $conexion->prepare($consulta);
-  $stmt->bind_param("iiii", $idMateria, $idCicloLectivo, $idTurno, $idDivision);
-  $stmt->execute();
-  $fec = $stmt->get_result();
-
-  $listadoFechasExamenes = array();
-  $i = 0;
-  if (!empty($fec)) {
-    while ($data = mysqli_fetch_array($fec)) {
-      $listadoFechasExamenes[$i]['idFechaExamen'] = $data['idFechaExamen'];
-      $listadoFechasExamenes[$i]['Fecha'] = $data['fecha'];
-      $listadoFechasExamenes[$i]['Hora'] = $data['hora'];
-      $listadoFechasExamenes[$i]['idMateria']=$data['idMateria'];
-      $i++;
+    // Validación temprana: Si la materia o ciclo son 0, la base de datos no devolverá nada.
+    if ($idMateria === 0 || $idCicloLectivo === 0) {
+        return [];
     }
-  }
-  return $listadoFechasExamenes;
+
+    $consulta = "SELECT f.idFechaExamen, f.fecha, f.hora, f.idMateria 
+                 FROM fechasexamenes f 
+                 INNER JOIN materiaterciario mt ON f.idMateria = mt.idMateria 
+                 INNER JOIN curso c ON mt.idCurso = c.idCurso 
+                 INNER JOIN cursospredeterminado cp ON c.idcursopredeterminado = cp.idcursopredeterminado 
+                 WHERE mt.idMateria IN (
+                     SELECT m.idMateria FROM materiaterciario m 
+                     WHERE m.idUnicoMateria = (
+                         SELECT m1.idUnicoMateria FROM materiaterciario m1 WHERE m1.idMateria = ?
+                     )
+                 ) 
+                 AND f.idCicloLectivo = ? 
+                 AND f.idTurno = ? 
+                 AND c.idDivision = ?";
+
+    $stmt = $conexion->prepare($consulta);
+    if (!$stmt) {
+        error_log("Error crítico preparando buscarFechasExamenTurno: " . $conexion->error);
+        return [];
+    }
+
+    $stmt->bind_param("iiii", $idMateria, $idCicloLectivo, $idTurno, $idDivision);
+    $stmt->execute();
+    $fec = $stmt->get_result();
+
+    $listadoFechasExamenes = [];
+    // Utilizamos fetch_assoc() para no duplicar datos en memoria (numérico y asociativo)
+    while ($data = $fec->fetch_assoc()) {
+        $listadoFechasExamenes[] = [
+            'idFechaExamen' => $data['idFechaExamen'],
+            'Fecha'         => $data['fecha'],
+            'Hora'          => $data['hora'],
+            'idMateria'     => $data['idMateria']
+        ];
+    }
+    
+    $stmt->close();
+    return $listadoFechasExamenes;
 }
 
 //Generar solicitud a examen
 function solicitarExamen($conexion, $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen)
 {
-    $timestamp = time();
-    $currentDate = gmdate('Y-m-d H:i:s', $timestamp);
+    // Forzamos la zona horaria a Argentina antes de capturar el momento actual
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
+    $currentDate = date('Y-m-d H:i:s');
 
-    $consulta = "insert into inscripcionexamenes_web
-    (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion, estado, fechhora_inscri) values
-    (?, ?, ?, ?, 0, 1, ?)";
+    // Estado inicial: 1 (Pendiente), Condición inicial: 0
+    $consulta = "INSERT INTO inscripcionexamenes_web
+                 (idAlumno, idMateria, idCicloLectivo, idFechaExamen, idCondicion, estado, fechhora_inscri) 
+                 VALUES (?, ?, ?, ?, 0, 1, ?)";
 
-    $stmt = $conexion->prepare($consulta);
-    $stmt->bind_param("iiiis", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $currentDate);
-    $stmt->execute();
+    if ($stmt = $conexion->prepare($consulta)) {
+        // Vinculación segura de parámetros (i=int, s=string)
+        $stmt->bind_param("iiiis", $idAlumno, $idMateria, $idCicloLectivo, $idFechaExamen, $currentDate);
+        $stmt->execute();
+        $stmt->close(); // Importante cerrar el statement
+    }
 }
 
 //Cancelar solicitud a examen
@@ -898,32 +969,115 @@ function existeSolicitudMateria($conexion, $idAlumno, $idMateria, $idCicloLectiv
   }
   return $listadoSolicitudesMateria;
 }
+/**
+ * Busca solicitudes de cursado aplicando filtros de Plan y Curso.
+ * Soluciona el problema de que al seleccionar "Todas" traía materias de otros cursos.
+ */
+function buscarSolicitudesCursadoFiltros($conn, $idCiclo, $idPlan, $idCurso, $idMateria, $estados) {
+    // Validación de seguridad para el array de estados
+    if (!is_array($estados)) {
+        $estados = [$estados];
+    }
+    // Sanitizamos los estados
+    $estadosInt = array_map('intval', $estados);
+    $estadosStr = implode(',', $estadosInt);
+
+    $sql = "SELECT mw.*, 
+                   m.nombre as nombreMateria, m.idUnicoMateria, m.anio as anioMateria,
+                   c.nombre as nombreCurso,
+                   p.apellido, p.nombre, p.dni,
+                   a.legajo
+            FROM matriculacionmateria_web mw
+            INNER JOIN materiaterciario m ON mw.idMateria = m.idMateria
+            INNER JOIN alumnosterciario a ON mw.idAlumno = a.idAlumno
+            INNER JOIN persona p ON a.idPersona = p.idPersona
+            LEFT JOIN curso c ON m.idCurso = c.idCurso
+            WHERE mw.idCicloLectivo = ? 
+            AND m.idPlan = ?
+            AND mw.estado IN ($estadosStr)";
+
+    $types = "ii";
+    $params = [$idCiclo, $idPlan];
+
+    // Filtro por Curso (si es > 0)
+    if ($idCurso > 0) {
+        $sql .= " AND m.idCurso = ?";
+        $types .= "i";
+        $params[] = $idCurso;
+    }
+
+    // Filtro por Materia (si es > 0)
+    if ($idMateria > 0) {
+        $sql .= " AND mw.idMateria = ?";
+        $types .= "i";
+        $params[] = $idMateria;
+    }
+
+    $sql .= " ORDER BY mw.fechhora_inscri ASC";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        throw new Exception("Error en prepare SQL (buscarSolicitudesCursadoFiltros): " . $conn->error);
+    }
+
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    
+    return $res->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Verifica si un alumno ya está matriculado (estado Regular o Promocional) en una materia para un ciclo dado.
+ * Evita duplicados.
+ */
+function estaMatriculadoEnMateria($conn, $idAlumno, $idMateria, $idCiclo) {
+    $sql = "SELECT idMatriculacion 
+            FROM matriculacionmateria 
+            WHERE idAlumno = ? AND idMateria = ? AND idCicloLectivo = ? 
+            AND (estado = 'Regular' OR estado = 'Promocional')"; // Ajustar según tus estados reales en BD
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("iii", $idAlumno, $idMateria, $idCiclo);
+    $stmt->execute();
+    $stmt->store_result();
+    $existe = $stmt->num_rows > 0;
+    $stmt->close();
+    
+    return $existe;
+}
 
 //Generar solicitud a cursado
 function solicitarCursado($conexion, $idAlumno, $idMateria, $idCicloLectivo)
 {
-  $timestamp = time();
-  $currentDate = gmdate('Y-m-d H:i:s', $timestamp);
+    // Definimos la zona horaria local para asegurar la precisión del registro
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
+    $currentDate = date('Y-m-d H:i:s');
 
-  $consulta = "INSERT INTO matriculacionmateria_web
-        (idAlumno, idMateria, idCicloLectivo, condicion, estado, fechhora_inscri)
-        VALUES (?, ?, ?, 'Regular', 1, ?)";
+    $consulta = "INSERT INTO matriculacionmateria_web 
+                 (idAlumno, idMateria, idCicloLectivo, condicion, estado, fechhora_inscri) 
+                 VALUES (?, ?, ?, 'Regular', 1, ?)";
 
-  $stmt = mysqli_prepare($conexion, $consulta);
-  mysqli_stmt_bind_param($stmt, "iiis", $idAlumno, $idMateria, $idCicloLectivo, $currentDate);
-  mysqli_stmt_execute($stmt);
+    if ($stmt = mysqli_prepare($conexion, $consulta)) {
+        // Vinculación de parámetros y ejecución segura
+        mysqli_stmt_bind_param($stmt, "iiis", $idAlumno, $idMateria, $idCicloLectivo, $currentDate);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
 }
 
 //Cancelar solicitud a examen
 function cancelarCursado($conexion, $idMatriculacionWeb)
 {
-  $consulta = "UPDATE matriculacionmateria_web
-        SET estado = '4'
-        WHERE id_matriculacion_web = ?";
+    $consulta = "UPDATE matriculacionmateria_web 
+                 SET estado = '4' 
+                 WHERE id_matriculacion_web = ?";
 
-  $stmt = mysqli_prepare($conexion, $consulta);
-  mysqli_stmt_bind_param($stmt, "i", $idMatriculacionWeb);
-  mysqli_stmt_execute($stmt);
+    if ($stmt = mysqli_prepare($conexion, $consulta)) {
+        mysqli_stmt_bind_param($stmt, "i", $idMatriculacionWeb);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
 }
 
 //levantar ciclos lectivos
@@ -4328,10 +4482,13 @@ function obtenerDatosSolicitudWeb($conn, $idInscripcionWeb) {
 /**
  * Actualiza el estado de la solicitud WEB (Aceptada/Rechazada).
  */
-function actualizarEstadoSolicitudWeb($conn, $idInscripcionWeb, $estado, $idCondicion, $observacion) {
+function actualizarEstadoSolicitudWeb($conn, $idInscripcionWeb, $estado, $idCondicion, $observacion) 
+{
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
     $fechaHora = date('Y-m-d H:i:s');
-    // Si idCondicion es 0 o null, lo guardamos como tal.
-    if (!$idCondicion) $idCondicion = 0;
+    
+    // Validación de seguridad para idCondicion
+    $idCondicion = $idCondicion ? $idCondicion : 0;
 
     $sql = "UPDATE inscripcionexamenes_web 
             SET estado = ?, 
@@ -4340,14 +4497,13 @@ function actualizarEstadoSolicitudWeb($conn, $idInscripcionWeb, $estado, $idCond
                 fechhora_proces = ? 
             WHERE id_Inscripcion_web = ?";
     
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) return false;
-
-    $stmt->bind_param("iissi", $estado, $idCondicion, $observacion, $fechaHora, $idInscripcionWeb);
-    $resultado = $stmt->execute();
-    $stmt->close();
-    
-    return $resultado;
+    if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("iissi", $estado, $idCondicion, $observacion, $fechaHora, $idInscripcionWeb);
+        $resultado = $stmt->execute();
+        $stmt->close();
+        return $resultado;
+    }
+    return false;
 }
 /**
  * CORREGIDA: Busca solicitudes de inscripción a CURSADO (Web).
@@ -4436,14 +4592,20 @@ function obtenerSolicitudCursadoWebPorId($conn, $idMatriculacionWeb) {
 /**
  * Actualiza el estado de la solicitud WEB de cursado.
  */
-function actualizarEstadoSolicitudCursadoWeb($conn, $idMatriculacionWeb, $estado, $observacion = '') {
+function actualizarEstadoSolicitudCursadoWeb($conn, $idMatriculacionWeb, $estado, $observacion = '') 
+{
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
     $fechaHora = date('Y-m-d H:i:s');
+
     $sql = "UPDATE matriculacionmateria_web 
             SET estado = ?, observaciones = ?, fechhora_proces = ? 
             WHERE id_matriculacion_web = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("issi", $estado, $observacion, $fechaHora, $idMatriculacionWeb);
-    $res = $stmt->execute();
-    $stmt->close();
-    return $res;
+            
+    if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("issi", $estado, $observacion, $fechaHora, $idMatriculacionWeb);
+        $res = $stmt->execute();
+        $stmt->close();
+        return $res;
+    }
+    return false;
 }

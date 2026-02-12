@@ -77,6 +77,8 @@ if (isset($_GET['search_submitted'])) {
             display: none;
         }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div id="loader">

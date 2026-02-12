@@ -191,6 +191,8 @@ try {
         .table-hover tbody tr:hover { cursor: pointer; }
         .btn-eliminar-inscripcion { cursor: pointer; }
     </style>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
     <div id="loader">

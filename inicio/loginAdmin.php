@@ -101,6 +101,8 @@ if (!$skip_session_clear) {
   <title>Inicio de sesión de Administrador</title>
   <!-- Bootswatch Material theme -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

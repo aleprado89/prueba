@@ -95,6 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizarAcordeones']
   <script src="../js/jquery-3.7.1.min.js"></script>
   <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.bundle.min.js"></script>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 

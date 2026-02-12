@@ -63,6 +63,8 @@ $num_dias_mes_seleccionado = ($mesSeleccionado && $anioCiclo != 'N/A') ? cal_day
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="../js/bootstrap.min.js"></script>
   <!-- Ya no se necesita el estilo personalizado attendance-table -->
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 
 <body>

@@ -62,6 +62,8 @@
     <script src="../js/popper.min.js"></script>
     <script src="../js/bootstrap.min.js"></script> 
 
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 <body>
 <?php include '../funciones/menu_docente.php';?>

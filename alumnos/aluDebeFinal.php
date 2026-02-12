@@ -63,6 +63,8 @@ if (isset($idPlan)) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Bootstrap JS (necesario para el navvar) -->
     <script src="../js/bootstrap.min.js"></script>
+<link rel="icon" type="image/png" href="../img/icon.png">
+
 </head>
 
 <body>
