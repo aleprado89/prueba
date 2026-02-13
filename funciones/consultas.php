@@ -973,7 +973,7 @@ function existeSolicitudMateria($conexion, $idAlumno, $idMateria, $idCicloLectiv
  * Busca solicitudes de cursado aplicando filtros de Plan y Curso.
  * Soluciona el problema de que al seleccionar "Todas" traía materias de otros cursos.
  */
-function buscarSolicitudesCursadoFiltros($conn, $idCiclo, $idPlan, $idCurso, $idMateria, $estados) {
+/*function buscarSolicitudesCursadoFiltros($conn, $idCiclo, $idPlan, $idCurso, $idMateria, $estados) {
     // Validación de seguridad para el array de estados
     if (!is_array($estados)) {
         $estados = [$estados];
@@ -1025,7 +1025,7 @@ function buscarSolicitudesCursadoFiltros($conn, $idCiclo, $idPlan, $idCurso, $id
     $res = $stmt->get_result();
     
     return $res->fetch_all(MYSQLI_ASSOC);
-}
+}*/
 
 /**
  * Verifica si un alumno ya está matriculado (estado Regular o Promocional) en una materia para un ciclo dado.
@@ -2212,45 +2212,6 @@ function obtenerMatriculacionesPlanAlumno($conexion, $idAlumno) {
     return $matriculaciones;
 }
 
-/*function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
-    $sql = "UPDATE matriculacion SET idNivel=?, idCurso=?, idAlumno=?, fechaMatriculacion=?, anio=?, estado=?, tarde=?, idPlanDeEstudio=?, pagoMatricula=?, pagoMonto=?, certificadoSalud=?, fechaBajaMatriculacion=?, certificadoTrabajo=?
-            WHERE idMatriculacion=?";
-    $stmt = $conexion->prepare($sql);
-    if (!$stmt) {
-        error_log("Error en preparar actualizarMatriculacionPlan: " . $conexion->error);
-        return false;
-    }
-
-    $fechaMatriculacion = !empty($data['fechaMatriculacion']) ? $data['fechaMatriculacion'] : null;
-    $fechaBajaMatriculacion = !empty($data['fechaBajaMatriculacion']) ? $data['fechaBajaMatriculacion'] : null;
-    $pagoMonto = ($data['pagoMatricula'] == 0 || empty($data['pagoMonto'])) ? null : $data['pagoMonto'];
-    $estado = empty($fechaBajaMatriculacion) ? 'Activo' : 'De Baja';
-    
-    $idNivel = 6;
-    $anio = date('Y');
-
-    // parámetros: (idNivel(i), idCurso(i), idAlumno(i), fechaMatriculacion(s), anio(i), estado(s), tarde(i), idPlanDeEstudio(i), pagoMatricula(i), pagoMonto(s), certificadoSalud(i), fechaBajaMatriculacion(s), certificadoTrabajo(i), idMatriculacion(i))
-    // Totales: 7 int, 4 string
-    $stmt->bind_param("iiisisiiisisi", // String de tipos corregida: (6i, 4s, 3i, 1i)
-        $idNivel,
-        $data['idCurso'],
-        $data['idAlumno'],
-        $fechaMatriculacion,
-        $anio,
-        $estado,
-        $data['tarde'],
-        $data['idPlanDeEstudio'],
-        $data['pagoMatricula'],
-        $pagoMonto,
-        $data['certificadoSalud'],
-        $fechaBajaMatriculacion,
-        $data['certificadoTrabajo'],
-        $idMatriculacion
-    );
-    $success = $stmt->execute();
-    $stmt->close();
-    return $success;
-}*/
 
 function eliminarMatriculacionPlan($conexion, $idMatriculacion) {
     $sql = "DELETE FROM matriculacion WHERE idMatriculacion = ?"; // Se podria hacer un soft delete con un campo 'activo'
@@ -4509,51 +4470,62 @@ function actualizarEstadoSolicitudWeb($conn, $idInscripcionWeb, $estado, $idCond
  * CORREGIDA: Busca solicitudes de inscripción a CURSADO (Web).
  * Se agrega JOIN con tabla PERSONA para obtener nombre y apellido.
  */
-function buscarSolicitudesCursadoWeb($conn, $idCiclo, $idMateria = null, $estado = 1) {
-    $params = [];
-    $types = "";
-
-    // NOTA: Se agrego el JOIN con persona (p) porque alumno (a) no tiene los campos de nombre
-    $sql = "SELECT mw.id_matriculacion_web, mw.idAlumno, mw.idMateria, mw.idCicloLectivo, 
-                   mw.condicion, mw.estado, mw.observaciones, mw.fechhora_inscri,
-                   p.apellido, p.nombre, p.dni, a.idAlumno,
-                   m.nombre as nombreMateria, m.idUnicoMateria,
-                   c.nombre as nombreCurso
+function buscarSolicitudesCursadoWeb($conn, $idCiclo, $idPlan, $idMateria = 0, $estado = 1, $idCurso = 0) {
+    // 1. Construcción del SQL Base con los JOINs necesarios para filtrar por estructura académica
+    $sql = "SELECT 
+                mw.id_matriculacion_web,
+                mw.fechhora_inscri,
+                mw.estado,
+                mw.observaciones,
+                mw.condicion,
+                a.idAlumno,
+                p.apellido, p.nombre, p.dni,
+                m.idMateria, m.nombre as nombreMateria, m.idUnicoMateria,
+                c.nombre as nombreCurso, c.idCurso
             FROM matriculacionmateria_web mw
-            JOIN alumnosterciario a ON mw.idAlumno = a.idAlumno
-            JOIN persona p ON a.idPersona = p.idPersona
-            JOIN materiaterciario m ON mw.idMateria = m.idMateria
-            LEFT JOIN curso c ON m.idCurso = c.idCurso
-            WHERE mw.idCicloLectivo = ? AND mw.estado = ?";
+            INNER JOIN alumnosterciario a ON mw.idAlumno = a.idAlumno
+            INNER JOIN persona p ON a.idPersona = p.idPersona
+            INNER JOIN materiaterciario m ON mw.idMateria = m.idMateria
+            INNER JOIN curso c ON m.idCurso = c.idCurso
+            WHERE mw.idCicloLectivo = ? 
+            AND m.idPlan = ? 
+            AND mw.estado = ?";
     
-    $params[] = $idCiclo;
-    $params[] = $estado;
-    $types .= "ii";
+    // 2. Definición de parámetros obligatorios
+    // Tipos: i (entero) para Ciclo, Plan, Estado
+    $types = "iii";
+    $params = [];
+    $params[] = (int)$idCiclo;
+    $params[] = (int)$idPlan;     // <--- Clave para que no traiga solicitudes de otros planes
+    $params[] = (int)$estado;
 
-    if ($idMateria && $idMateria != 'all') {
+    // 3. Filtros Opcionales (Materia y Curso)
+
+    // Si se seleccionó una materia específica
+    if ($idMateria && $idMateria > 0) {
         $sql .= " AND mw.idMateria = ?";
-        $params[] = $idMateria;
         $types .= "i";
+        $params[] = (int)$idMateria;
     }
 
-    $sql .= " ORDER BY mw.fechhora_inscri ASC, p.apellido ASC";
+    // Si se seleccionó un curso específico
+    if ($idCurso && $idCurso > 0) {
+        $sql .= " AND c.idCurso = ?";
+        $types .= "i";
+        $params[] = (int)$idCurso;
+    }
 
+    $sql .= " ORDER BY c.idCurso ASC, p.apellido ASC, p.nombre ASC";
+
+    // 4. Ejecución
     $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        error_log("Error prepare buscarSolicitudesCursadoWeb: " . $conn->error);
-        return [];
-    }
-    
+    if(!$stmt) return [];
+
     $stmt->bind_param($types, ...$params);
+
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-    $stmt->close();
-    return $data;
+    return $result->fetch_all(MYSQLI_ASSOC);
 }
 
 /**

@@ -46,6 +46,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 break;
 
+            // Obtener lista de condiciones desde la base de datos
+            case 'get_condiciones_lista':
+                if (function_exists('obtenerCondicionesExamen')) {
+                    $condiciones = obtenerCondicionesExamen($conn);
+                    $response = ['success' => true, 'data' => $condiciones];
+                } else {
+                    $response = ['success' => false, 'message' => 'Error: Fn obtenerCondicionesExamen no existe en consultas.php'];
+                }
+                break;
+
             case 'buscar_solicitudes':
                 $idCiclo = filter_input(INPUT_POST, 'idCiclo', FILTER_VALIDATE_INT);
                 $idTurno = filter_input(INPUT_POST, 'idTurno', FILTER_VALIDATE_INT);
@@ -199,10 +209,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     foreach ($lista as $item) {
                         $idWeb = $item['idWeb'];
                         $accion = $item['accion']; // ACEPTAR o RECHAZAR
-                        $idCondicion = $item['idCondicion']; 
-                        $idFechaExamen = $item['idFechaExamen'];
-                        $observacionUI = $item['observacionUI']; 
-                        $nombreAlumno = $item['alumno'] ?? 'Alumno';
+                        $idCondicion = filter_var($item['idCondicion'], FILTER_VALIDATE_INT); // Sanitización extra
+                        $idFechaExamen = filter_var($item['idFechaExamen'], FILTER_VALIDATE_INT);
+                        $observacionUI = htmlspecialchars($item['observacionUI']); // Sanitización extra
+                        $nombreAlumno = htmlspecialchars($item['alumno'] ?? 'Alumno');
 
                         // Obtenemos los datos originales de la solicitud
                         $datosOrig = obtenerDatosSolicitudWeb($conn, $idWeb);
@@ -211,15 +221,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         // --- LÓGICA DE AUTORIDAD ---
                         if ($accion === 'ACEPTAR') {
-                            // IMPORTANTE: Aquí NO validamos controlCorrelatividades.
-                            // Si llegó "ACEPTAR", es porque el usuario (Secretaría) decidió inscribirlo
-                            // ignorando la sugerencia del sistema (Rojo/Verde).
                             
-                            if (!$idFechaExamen || !$idCondicion) {
-                                $idCondicion = ($idCondicion) ? $idCondicion : 0; 
+                            // VALIDACIÓN DEL BACKEND: Condición obligatoria para proteger BD
+                            if (empty($idCondicion) || $idCondicion <= 0) {
+                                $motivoError = "Error de Sistema: No se asignó ninguna condición de examen obligatoria.";
+                                actualizarEstadoSolicitudWeb($conn, $idWeb, 3, 0, $motivoError);
+                                $detallesError[] = "<b>$nombreAlumno:</b> Rechazado automáticamente por falta de condición.";
+                                continue; // Saltamos a la siguiente inscripción
                             }
 
-                            // Llamamos a la función que compartiste (que solo chequea duplicados)
+                            if (!$idFechaExamen) {
+                                $idFechaExamen = 0; 
+                            }
+
                             $resultadoInscripcion = inscribirAlumnoExamen(
                                 $conn, 
                                 $datosOrig['idAlumno'], 
@@ -231,19 +245,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             );
 
                             if ($resultadoInscripcion['success']) {
-                                // Éxito: marcamos solicitud como Aceptada (2)
                                 actualizarEstadoSolicitudWeb($conn, $idWeb, 2, $idCondicion, "Inscripción Correcta (Manual)");
                                 $procesadosExito++;
                             } else {
-                                // Error (ej: ya estaba inscripto en el turno)
                                 $motivoError = "Error BD: " . $resultadoInscripcion['message'];
                                 actualizarEstadoSolicitudWeb($conn, $idWeb, 3, 0, $motivoError);
                                 $detallesError[] = "<b>$nombreAlumno:</b> " . $resultadoInscripcion['message'];
                             }
 
                         } else {
-                            // ACCIÓN: RECHAZAR
-                            // Rechazamos directamente, aunque el sistema hubiera sugerido verde.
+                            // RECHAZAR
                             $motivoRechazo = "Rechazo manual: " . $observacionUI;
                             actualizarEstadoSolicitudWeb($conn, $idWeb, 3, 0, $motivoRechazo);
                             $procesadosExito++; 
@@ -320,7 +331,9 @@ ob_end_flush();
         }
 
         .table-loading { background-color: #f8f9fa; color: #6c757d; }
-        .select-fecha-tabla { font-size: 0.9rem; padding: 0.25rem 0.5rem; min-width: 160px; }
+        .select-fecha-tabla, .select-condicion-tabla { font-size: 0.9rem; padding: 0.25rem 0.5rem; }
+        .select-fecha-tabla { min-width: 160px; }
+        .select-condicion-tabla { min-width: 120px; }
         
         .filtro-rapido-container { position: relative; }
         .filtro-rapido-icon { position: absolute; top: 10px; left: 10px; color: #aaa; }
@@ -610,17 +623,26 @@ ob_end_flush();
             const $textoProgreso = $('#progresoTexto');
             const $detalleProgreso = $('#progresoDetalle');
             
+            let listaParaEnviar = [];
+            let listaCondicionesGlobal = [];
+
             // Helper para mostrar alertas HTML
             function mostrarAlerta(mensajeHTML, titulo = "Atención") {
                 $('#modalAlertaTitulo').text(titulo);
-                $('#modalAlertaMensaje').html(mensajeHTML); // Usamos HTML para permitir listas
+                $('#modalAlertaMensaje').html(mensajeHTML);
                 modalAlerta.show();
             }
 
-            // Variable global para almacenar datos a enviar
-            let listaParaEnviar = [];
+            // 1. CARGA DE CONDICIONES GLOBALES
+            $.post('solicitudesExamen.php', { action: 'get_condiciones_lista' }, function(res) {
+                if(res.success) {
+                    listaCondicionesGlobal = res.data;
+                } else {
+                    console.error("No se pudieron cargar las condiciones de examen.");
+                }
+            }, 'json');
 
-            // --- COMBOS ---
+            // --- COMBOS DEPENDIENTES ---
             function checkAndLoadCursos() {
                 const idPlan = $selPlan.val();
                 const idCiclo = $selCiclo.val();
@@ -666,7 +688,7 @@ ob_end_flush();
                 });
             });
 
-            // --- BÚSQUEDA ---
+            // --- BÚSQUEDA Y CREACIÓN DE TABLA ---
             $('#formFiltros').on('submit', function(e) {
                 e.preventDefault();
                 const esHistorico = $('#resueltas-tab').hasClass('active');
@@ -750,7 +772,6 @@ ob_end_flush();
                                     <input type="radio" class="btn-check btn-accion-radio" name="radio_accion_${row.idInscripcionWeb}" id="btnRechazar_${row.idInscripcionWeb}" value="RECHAZAR" autocomplete="off">
                                     <label class="btn btn-outline-danger" for="btnRechazar_${row.idInscripcionWeb}" title="Rechazar"><i class="bi bi-x-lg"></i></label>
                                 </div>
-                                <input type="hidden" name="idCondicionBD_${row.idInscripcionWeb}" class="id-condicion-bd">
                             `;
 
                             tr = `
@@ -762,7 +783,7 @@ ob_end_flush();
                                     <td>${fechaDisplay}</td>
                                     <td>${row.horaExamen}</td>
                                     <td>${row.fechaSolicitud}</td>
-                                    <td class="celda-condicion"><i class="fas fa-spinner fa-spin"></i></td>
+                                    <td class="celda-condicion-container text-center"><i class="fas fa-spinner fa-spin text-muted"></i></td>
                                     <td class="celda-observacion">Verificando...</td>
                                     <td class="text-center">${radioGroup}</td>
                                 </tr>`;
@@ -783,7 +804,7 @@ ob_end_flush();
                 });
             });
 
-            // --- PROCESAMIENTO RECURSIVO ---
+            // --- PROCESAMIENTO RECURSIVO PARA VALIDAR CONDICIONES ---
             function procesarLote(lista, index) {
                 const total = lista.length;
                 if (index >= total) {
@@ -820,33 +841,39 @@ ob_end_flush();
                         $fila.find(`input[value="RECHAZAR"]`).prop('checked', true);
                     }
                     
-                    $fila.find('.celda-condicion').html(res.condicionTexto || 'S/D');
-                    $fila.find('.celda-observacion').html(`<small>${res.observacion}</small>`);
+                    // CONSTRUCCIÓN DEL SELECT DE CONDICIÓN (DATO: extraído de DB)
+                    let selectHTML = `<select class="form-select form-select-sm select-condicion-tabla" name="condicion_${item.idInscripcionWeb}">`;
+                    selectHTML += `<option value="">Seleccione...</option>`;
+                    listaCondicionesGlobal.forEach(c => {
+                        let selected = (c.idCondicion == res.idCondicionBD) ? 'selected' : '';
+                        selectHTML += `<option value="${c.idCondicion}" ${selected}>${c.condicion}</option>`;
+                    });
+                    selectHTML += `</select>`;
                     
-                    if (res.idCondicionBD) {
-                        $fila.find(`input[name="idCondicionBD_${item.idInscripcionWeb}"]`).val(res.idCondicionBD);
-                    }
+                    $fila.find('.celda-condicion-container').html(selectHTML).removeClass('text-center');
+                    $fila.find('.celda-observacion').html(`<small>${res.observacion}</small>`);
 
                     procesarLote(lista, index + 1);
 
                 }, 'json').fail(function() {
                     $(`#fila-${item.idInscripcionWeb}`).addClass('table-warning');
+                    $(`#fila-${item.idInscripcionWeb}`).find('.celda-condicion-container').html('<span class="text-danger">Error</span>');
                     procesarLote(lista, index + 1);
                 });
             }
 
+            // --- FILTROS Y SELECCIÓN RÁPIDA ---
             function actualizarFiltroCondiciones() {
                 let condiciones = new Set();
                 $('#tablaPendientes tbody tr').each(function() {
-                    let cond = $(this).find('.celda-condicion').text().trim();
-                    if (cond && cond !== 'S/D') condiciones.add(cond);
+                    let cond = $(this).find('.select-condicion-tabla option:selected').text().trim();
+                    if (cond && cond !== 'Seleccione...' && cond !== 'S/D') condiciones.add(cond);
                 });
                 let $sel = $('#selFiltroCondicion');
                 $sel.empty().append('<option value="">Seleccione...</option>');
                 condiciones.forEach(c => $sel.append(`<option value="${c}">${c}</option>`));
             }
 
-            // --- BOTONES SELECCIÓN RÁPIDA ---
             $('#btnSelCorrectos').click(function() {
                 $('.solicitud-check').prop('checked', false);
                 $('#tablaPendientes tbody tr.table-success-custom .solicitud-check').prop('checked', true);
@@ -860,7 +887,7 @@ ob_end_flush();
                 if(!val) return;
                 $('.solicitud-check').prop('checked', false);
                 $('#tablaPendientes tbody tr').each(function() {
-                    if($(this).find('.celda-condicion').text().trim() === val) {
+                    if($(this).find('.select-condicion-tabla option:selected').text().trim() === val) {
                         $(this).find('.solicitud-check').prop('checked', true);
                     }
                 });
@@ -880,7 +907,7 @@ ob_end_flush();
                 }
             });
 
-            // --- PREPARAR EJECUCIÓN (MODAL) ---
+            // --- PREPARAR EJECUCIÓN (MODAL Y VALIDACIÓN) ---
             $('#btnEjecutar').on('click', function() {
                 const checked = $('.solicitud-check:checked');
                 if (checked.length === 0) {
@@ -889,23 +916,42 @@ ob_end_flush();
                 }
 
                 listaParaEnviar = [];
+                let validacionFallida = false;
+                let mensajeError = "";
+
                 checked.each(function() {
                     const idWeb = $(this).val();
                     const $fila = $(`#fila-${idWeb}`);
                     const accion = $fila.find(`input[name="radio_accion_${idWeb}"]:checked`).val();
                     
                     let idFecha = $fila.find(`select[name="fecha_${idWeb}"]`).val() || $fila.find(`input[name="fecha_${idWeb}"]`).val();
-                    const idCondicion = $fila.find(`input[name="idCondicionBD_${idWeb}"]`).val();
+                    const idCondicion = $fila.find(`select[name="condicion_${idWeb}"]`).val();
                     const obsTexto = $fila.find('.celda-observacion').text().trim();
-                    const nombreAlumno = $fila.find('.td-alumno').text().trim(); // Capturamos nombre
+                    const nombreAlumno = $fila.find('.td-alumno').text().trim(); 
 
                     if(accion) {
+                        // VALIDACIÓN ESTRICTA EN FRONTEND: Si acepta, la condición es obligatoria
+                        if (accion === 'ACEPTAR' && (!idCondicion || idCondicion === "0" || idCondicion === "")) {
+                            validacionFallida = true;
+                            mensajeError = `Debe seleccionar una <b>Condición</b> de examen para el alumno <b>${nombreAlumno}</b> antes de poder ACEPTAR su inscripción.`;
+                            return false; // Break del bucle each
+                        }
+
                         listaParaEnviar.push({
-                            idWeb: idWeb, accion: accion, idCondicion: idCondicion,
-                            idFechaExamen: idFecha, observacionUI: obsTexto, alumno: nombreAlumno
+                            idWeb: idWeb, 
+                            accion: accion, 
+                            idCondicion: parseInt(idCondicion) || 0, // Sanitización a entero
+                            idFechaExamen: idFecha, 
+                            observacionUI: obsTexto, 
+                            alumno: nombreAlumno
                         });
                     }
                 });
+
+                if (validacionFallida) {
+                    mostrarAlerta(mensajeError, "Condición Requerida");
+                    return;
+                }
 
                 if (listaParaEnviar.length === 0) {
                     mostrarAlerta("No hay acciones definidas (Aceptar/Rechazar) para las filas seleccionadas.", "Error");
@@ -916,7 +962,7 @@ ob_end_flush();
                 modalConfirmacion.show();
             });
 
-            // --- CONFIRMAR EJECUCIÓN (Lógica modificada para reporte detallado) ---
+            // --- CONFIRMAR EJECUCIÓN (LOTE AJAX) ---
             $('#btnConfirmarEjecucion').on('click', function() {
                 modalConfirmacion.hide();
                 $barra.css('width', '100%').addClass('progress-bar-striped progress-bar-animated');
@@ -932,12 +978,10 @@ ob_end_flush();
                     setTimeout(() => { modalProgreso.hide(); }, 500);
                     
                     if (res.success) {
-                        // Construir mensaje detallado
                         let mensajeFinal = `<p class="text-success fw-bold"><i class="bi bi-check-circle"></i> Se procesaron ${res.procesados} solicitudes correctamente.</p>`;
                         
-                        // Si hubo excepciones (alumnos aceptados pero rebotados por la BD)
                         if (res.errores && res.errores.length > 0) {
-                            mensajeFinal += `<hr><p class="text-danger fw-bold mb-2"><i class="bi bi-exclamation-triangle"></i> Hubo ${res.errores.length} excepciones:</p>`;
+                            mensajeFinal += `<hr><p class="text-danger fw-bold mb-2"><i class="bi bi-exclamation-triangle"></i> Hubo ${res.errores.length} excepciones/rechazos automáticos:</p>`;
                             mensajeFinal += `<ul class="list-group list-group-flush small">`;
                             res.errores.forEach(err => {
                                 mensajeFinal += `<li class="list-group-item list-group-item-danger">${err}</li>`;
@@ -949,7 +993,7 @@ ob_end_flush();
                             mostrarAlerta(mensajeFinal, "Operación Exitosa");
                         }
 
-                        // Eliminar filas visualmente
+                        // Limpiar filas procesadas
                         listaParaEnviar.forEach(function(item) {
                             $(`#fila-${item.idWeb}`).fadeOut(300, function() { $(this).remove(); });
                         });
@@ -962,7 +1006,7 @@ ob_end_flush();
                     }
                 }, 'json').fail(function() {
                     setTimeout(() => { modalProgreso.hide(); }, 500);
-                    mostrarAlerta("Error crítico de servidor al procesar.", "Error Fatal");
+                    mostrarAlerta("Error crítico de servidor al procesar el lote.", "Error Fatal");
                 });
             });
 
