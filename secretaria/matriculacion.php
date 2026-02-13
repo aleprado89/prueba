@@ -238,13 +238,13 @@ $today = date('Y-m-d');
             </div>
             <div class="col-md-6">
               <label for="fechaMatriculacion" class="form-label">Fecha de matriculación <span class="text-danger">*</span></label>
-              <input type="date" class="form-control form-select" id="fechaMatriculacion" name="fechaMatriculacion" value="<?php echo $today; ?>" required>
+              <input type="date" class="form-control " id="fechaMatriculacion" name="fechaMatriculacion" value="<?php echo $today; ?>" required>
             </div>
           </div>
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="fechaBajaMatriculacion" class="form-label">Fecha de baja matriculación (Opcional)</label>
+              <label for="fechaBajaMatriculacion" class="form-label">Fecha de baja matriculación (Si corresponde)</label>
               <input type="date" class="form-control" id="fechaBajaMatriculacion" name="fechaBajaMatriculacion">
               <div class="form-text">Si se carga, la matriculación se registrará como "De Baja"</div>
             </div>
@@ -371,7 +371,7 @@ $today = date('Y-m-d');
             <input type="date" class="form-control" id="edit_fechaMatriculacion" name="fechaMatriculacion" required>
           </div>
           <div class="mb-3">
-            <label for="edit_fechaBajaMatriculacion" class="form-label">Fecha de baja (Opcional)</label>
+            <label for="edit_fechaBajaMatriculacion" class="form-label">Fecha de baja (Si corresponde)</label>
             <input type="date" class="form-control" id="edit_fechaBajaMatriculacion" name="fechaBajaMatriculacion">
           </div>
           <div class="mb-3 form-check">

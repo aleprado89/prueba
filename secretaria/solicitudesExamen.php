@@ -754,11 +754,19 @@ ob_end_flush();
                             let fechaDisplay = row.fechaActualTexto;
                             if (row.fechasAlternativas && row.fechasAlternativas.length > 0) {
                                 fechaDisplay = `<select class="form-select select-fecha-tabla" name="fecha_${row.idInscripcionWeb}">`;
-                                row.fechasAlternativas.forEach(f => {
-                                    let horaCorta = f.hora.substring(0,5);
-                                    let selected = (f.idFechaExamen == row.fechaActualId) ? 'selected' : '';
-                                    fechaDisplay += `<option value="${f.idFechaExamen}" ${selected}>${f.fecha} (${horaCorta})</option>`;
-                                });
+                               row.fechasAlternativas.forEach(f => {
+    let horaCorta = f.hora.substring(0,5);
+    let selected = (f.idFechaExamen == row.fechaActualId) ? 'selected' : '';
+
+    // FORMATEO DE FECHA
+    let partes = f.fecha.split('-');
+    let fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+    fechaDisplay += `<option value="${f.idFechaExamen}" ${selected}>
+        ${fechaFormateada} (${horaCorta})
+    </option>`;
+});
+
                                 fechaDisplay += `</select>`;
                             } else {
                                 fechaDisplay += `<input type="hidden" name="fecha_${row.idInscripcionWeb}" value="${row.fechaActualId}">`;

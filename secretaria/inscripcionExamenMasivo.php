@@ -444,6 +444,13 @@ try {
                 if(resMesas.success && resMesas.data.length > 0) {
                     let htmlMesas = '';
                     resMesas.data.forEach(m => {
+ let fechaFormateada = '';
+
+        if (m.fecha) {
+            const partes = m.fecha.split(' ')[0].split('-');
+            fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
                         // AQUÍ MODIFICAMOS LOS COLORES A TEXT-DARK (NEGRO)
                         htmlMesas += `
                         <div class="col-md-6 col-lg-4">
@@ -451,7 +458,7 @@ try {
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="bi bi-calendar-check fs-3 text-dark me-3"></i>
                                     <div>
-                                        <h6 class="mb-0 fw-bold text-dark">${m.fecha}</h6>
+                                        <h6 class="mb-0 fw-bold text-dark">${fechaFormateada}</h6>
                                         <span class="text-muted small">Hora: ${m.hora}</span>
                                     </div>
                                 </div>

@@ -451,8 +451,7 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
                                     <span class="badge bg-warning text-dark">Regular</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo htmlspecialchars($reg['fechaMatriculacion']); ?></td>
-                            <td><?php echo htmlspecialchars($reg['calificacion'] ?? ($reg['examenIntegrador'] ?? '-')); ?></td>
+                       <td><?php echo date("d/m/Y", strtotime($reg['fechaMatriculacion'])); ?></td>                            <td><?php echo htmlspecialchars($reg['calificacion'] ?? ($reg['examenIntegrador'] ?? '-')); ?></td>
                             <td><?php echo htmlspecialchars($reg['libro'] ?? '-'); ?> / <?php echo htmlspecialchars($reg['folio'] ?? '-'); ?></td>
                             <td>
                                 <div class="action-icon-container">

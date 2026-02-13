@@ -511,12 +511,19 @@ try {
                         spinnerMesas.hide();
                         if (response.success && response.data.length > 0) {
                             response.data.forEach(mesa => {
+ let fechaFormateada = '';
+
+        if (mesa.fecha) {
+            const partes = mesa.fecha.split('-');
+            fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
                                 const row = `
                                     <tr>
                                         <td>
                                             <input class="form-check-input" type="radio" name="idFechaExamen" value="${mesa.idFechaExamen}" required>
                                         </td>
-                                        <td>${mesa.fecha}</td>
+                                        <td>${fechaFormateada}</td>
                                         <td>${mesa.hora}</td>
                                         <td>${mesa.nombreMateria}</td>
                                         <td>${mesa.nombreCurso}</td>
@@ -558,10 +565,17 @@ try {
                         spinnerInscripcionesTurno.hide();
                         if (response.success && response.data.length > 0) {
                             response.data.forEach(inscripcion => {
+ let fechaFormateada = '';
+
+        if (inscripcion.fecha) {
+            const partes = inscripcion.fecha.split('-');
+            fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
                                 const row = `
                                     <tr id="inscripcion-row-${inscripcion.idInscripcion}">
                                         <td>${inscripcion.nombreMateria}</td>
-                                        <td>${inscripcion.fecha}</td>
+                                        <td>${fechaFormateada}</td>
                                         <td>${inscripcion.hora}</td>
                                         <td>${inscripcion.condicion}</td>
                                         <td>

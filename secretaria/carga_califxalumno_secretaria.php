@@ -580,7 +580,14 @@ $planesDelAlumno = obtenerPlanesDeAlumnoConCalificaciones($conn, $idAlumno);
                 examenesBody.empty();
                 if (response && response.examenes && response.examenes.length > 0) {
                     response.examenes.forEach(ex => {
-                        examenesBody.append(`<tr><td>${ex.Fecha || 'N/A'}</td><td>${ex.Calificacion || '-'}</td></tr>`);
+                         let fechaFormateada = 'N/A';
+
+        if (ex.Fecha) {
+            const fecha = new Date(ex.Fecha);
+            fechaFormateada = fecha.toLocaleDateString('es-AR');
+        }
+
+                        examenesBody.append(`<tr><td>${fechaFormateada}</td><td>${ex.Calificacion || '-'}</td></tr>`);
                     });
                 } else {
                     examenesBody.html('<tr><td colspan="2">No se encontraron exámenes rendidos.</td></tr>');

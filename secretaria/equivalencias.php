@@ -149,7 +149,7 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
         </ol>
 
         <h3 class="mb-3">Gestión de equivalencias</h3>
-        <h4>Alumno: <?php echo $nombreCompletoAlumno; ?> (ID: <?php echo $idAlumno; ?>)</h4>
+        <h4>Alumno: <?php echo $nombreCompletoAlumno; ?> </h4>
 
         <?php if ($message): ?>
             <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
