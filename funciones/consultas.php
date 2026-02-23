@@ -1048,21 +1048,26 @@ function estaMatriculadoEnMateria($conn, $idAlumno, $idMateria, $idCiclo) {
 }
 
 //Generar solicitud a cursado
-function solicitarCursado($conexion, $idAlumno, $idMateria, $idCicloLectivo)
+function solicitarCursado($conexion, $idAlumno, $idMateria, $idCicloLectivo, $condicionSeleccionada)
 {
     // Definimos la zona horaria local para asegurar la precisión del registro
     date_default_timezone_set('America/Argentina/Buenos_Aires');
     $currentDate = date('Y-m-d H:i:s');
 
+    // Modificamos la consulta para insertar la condición parametrizada
     $consulta = "INSERT INTO matriculacionmateria_web 
                  (idAlumno, idMateria, idCicloLectivo, condicion, estado, fechhora_inscri) 
-                 VALUES (?, ?, ?, 'Regular', 1, ?)";
+                 VALUES (?, ?, ?, ?, 1, ?)";
 
     if ($stmt = mysqli_prepare($conexion, $consulta)) {
         // Vinculación de parámetros y ejecución segura
-        mysqli_stmt_bind_param($stmt, "iiis", $idAlumno, $idMateria, $idCicloLectivo, $currentDate);
+        // Tipos: i (integer) para IDs, s (string) para la condición y la fecha
+        mysqli_stmt_bind_param($stmt, "iiiss", $idAlumno, $idMateria, $idCicloLectivo, $condicionSeleccionada, $currentDate);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
+    } else {
+        // Buena práctica: registrar en el log del servidor si falla la preparación
+        error_log("Error al preparar la consulta (solicitarCursado): " . mysqli_error($conexion));
     }
 }
 
@@ -1585,45 +1590,52 @@ function actualizarNotaInscripcion($conn, $idInscripcion, $campo, $valor) {
     // 1. Sanitización estricta de parámetros
     $id = (int)$idInscripcion;
     
-    // Lista blanca de campos permitidos para evitar inyección en nombres de columna
+    // Lista blanca de campos permitidos
     $camposValidos = ['escrito', 'oral', 'calificacion', 'libro', 'folio'];
     if (!in_array($campo, $camposValidos)) {
         return ['success' => false, 'message' => 'Campo no permitido.'];
     }
 
-    // Tratamiento del valor (NULL si está vacío, Entero si es número)
-    $nota = ($valor === '' || $valor === null) ? null : $valor; // Dejamos como string/int por ahora
+    // Tratamiento del valor: pasamos a mayúsculas y limpiamos espacios. Si está vacío, es NULL.
+    $nota = ($valor === '' || $valor === null) ? null : strtoupper(trim($valor)); 
 
-    // Validación específica para notas numéricas
+    // Validación específica para notas numéricas y alfanuméricas
     if (in_array($campo, ['escrito', 'oral', 'calificacion'])) {
         if ($nota !== null) {
-            $notaInt = (int)$nota;
-            if ($notaInt < 1 || $notaInt > 10) {
-                return ['success' => false, 'message' => 'La nota debe ser entre 1 y 10.'];
+            $valoresTextualesPermitidos = ['A', 'AP', 'APTO', 'NA', 'APT'];
+            
+            // Si NO es un número, verificamos que esté en la lista de textos permitidos
+            if (!is_numeric($nota) && !in_array($nota, $valoresTextualesPermitidos)) {
+                return ['success' => false, 'message' => 'Dato inválido. Use 1-10 o A, AP, APTO, NA.'];
             }
-            $nota = $notaInt;
+            
+            // Si ES un número, verificamos el rango
+            if (is_numeric($nota)) {
+                $notaInt = (int)$nota;
+                if ($notaInt < 1 || $notaInt > 10) {
+                    return ['success' => false, 'message' => 'La nota debe ser entre 1 y 10.'];
+                }
+                $nota = (string)$notaInt; // Lo guardamos como string limpio para la base de datos
+            }
         }
     }
 
     // 2. Actualizar el Acta Volante (inscripcionexamenes)
-    // Usamos sentencias preparadas para seguridad
     $sql = "UPDATE inscripcionexamenes SET $campo = ? WHERE idInscripcion = ?";
     $stmt = $conn->prepare($sql);
     
-    if ($campo === 'libro' || $campo === 'folio') {
-        $stmt->bind_param("si", $nota, $id); // String para libro/folio
-    } else {
-        $stmt->bind_param("ii", $nota, $id); // Integer para notas
-    }
+    // Usamos "si" (String, Integer) para TODO, ya que las notas ahora pueden ser letras ("AP")
+    $stmt->bind_param("si", $nota, $id); 
 
     if (!$stmt->execute()) {
-        return ['success' => false, 'message' => 'Error SQL al actualizar acta: ' . $stmt->error];
+        $error = $stmt->error;
+        $stmt->close();
+        return ['success' => false, 'message' => 'Error SQL al actualizar acta: ' . $error];
     }
     $stmt->close();
 
     // 3. Lógica de Aprobación Automática (Solo si se editó 'calificacion')
     if ($campo === 'calificacion') {
-        // A. Obtener datos de contexto: Alumno, Materia y Nota necesaria para aprobar esa materia
         $sqlInfo = "SELECT 
                         ie.idAlumno, 
                         fe.idMateria, 
@@ -1645,18 +1657,27 @@ function actualizarNotaInscripcion($conn, $idInscripcion, $campo, $valor) {
             $idMateria = $datos['idMateria'];
             $notaAprobacion = (int)$datos['calificacionExamen'];
 
-            // B. Determinar estado
-            // Si hay nota Y es mayor/igual a la requerida -> Aprobado (1)
-            // Si no -> NULL (Pendiente/Reprobado logicamente se maneja con NULL o 0 según tu sistema, aquí usaremos NULL para limpiar)
             $materiaAprobada = null;
             $idInscripcionExamenRef = null;
 
-            if ($nota !== null && $nota >= $notaAprobacion) {
-                $materiaAprobada = 1;
-                $idInscripcionExamenRef = $id;
+            // B. Determinar estado de aprobación (Lógica dual: Números o Textos)
+            if ($nota !== null) {
+                if (is_numeric($nota)) {
+                    // Si es número, evaluamos si es mayor o igual a la nota de aprobación
+                    if ((int)$nota >= $notaAprobacion) {
+                        $materiaAprobada = 1;
+                        $idInscripcionExamenRef = $id;
+                    }
+                } else {
+                    // Si es texto, aprobamos automáticamente si es "AP", "APTO" o "APT"
+                    if (in_array($nota, ['AP', 'APTO', 'APT'])) {
+                        $materiaAprobada = 1;
+                        $idInscripcionExamenRef = $id;
+                    }
+                }
             }
 
-            // C. Actualizar Historial Académico (calificacionesterciario)
+            // C. Actualizar Historial Académico
             $sqlFinal = "UPDATE calificacionesterciario 
                          SET materiaAprobada = ?, idInscripcionExamen = ? 
                          WHERE idAlumno = ? AND idMateria = ?";
