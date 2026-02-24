@@ -3275,25 +3275,40 @@ function obtenerRegistrosPresistema($conexion, $idAlumno) {
  * Obtiene los detalles de un registro presistema para edición/eliminación.
  */
 function obtenerDetallesPresistema($conn, $idMatriculacionMateria) {
+    // Añadimos mm.idCicloLectivo a la consulta SQL
     $sql = "SELECT 
-                mm.idMatriculacionMateria, mm.idAlumno, mm.idMateria,
+                mm.idMatriculacionMateria, 
+                mm.idAlumno, 
+                mm.idMateria, 
+                mm.idCicloLectivo, 
                 ct.idCalificacion, 
                 ie.idInscripcion
             FROM matriculacionmateria mm
-            LEFT JOIN calificacionesterciario ct ON mm.idAlumno = ct.idAlumno AND mm.idMateria = ct.idMateria AND (ct.estadoCursado LIKE '%PreSistema%')
-            LEFT JOIN inscripcionexamenes ie ON ct.idInscripcionExamen = ie.idInscripcion
+            LEFT JOIN calificacionesterciario ct 
+                ON mm.idAlumno = ct.idAlumno 
+                AND mm.idMateria = ct.idMateria 
+                AND (ct.estadoCursado LIKE '%PreSistema%')
+            LEFT JOIN inscripcionexamenes ie 
+                ON ct.idInscripcionExamen = ie.idInscripcion
             WHERE mm.idMatriculacionMateria = ?";
     
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
+        // El uso de error_log es una excelente práctica de seguridad 
+        // para no exponer errores de SQL al usuario final.
         error_log("Error al preparar obtenerDetallesPresistema: " . $conn->error);
         return null;
     }
+    
+    // "i" -> integer (idMatriculacionMateria)
     $stmt->bind_param("i", $idMatriculacionMateria);
     $stmt->execute();
+    
     $result = $stmt->get_result();
     $details = $result->fetch_assoc();
+    
     $stmt->close();
+    
     return $details;
 }
 
@@ -3371,9 +3386,9 @@ function actualizarPresistemaAprobado($conn, $idMatriculacionMateria, $idCalific
 /**
  * Convierte un registro de 'Regular' a 'Aprobado'.
  */
-function convertirPresistemaRegularAAprobado($conn, $idMatriculacionMateria, $idCalificacion, $idMateria, $idAlumno, $fechaObtencion, $calificacion, $idCondicionExamen, $libro, $folio) {
+function convertirPresistemaRegularAAprobado($conn, $idMatriculacionMateria, $idCalificacion, $idMateria, $idAlumno, $fechaObtencion, $calificacion, $idCondicionExamen, $libro, $folio,$idCicloLectivo) {
     // 1. Crear el NUEVO registro de examen
-    $idInscripcion = crearInscripcionExamenPresistema($conn, $idAlumno, $idMateria, $calificacion, $idCondicionExamen, $libro, $folio);
+    $idInscripcion = crearInscripcionExamenPresistema($conn, $idAlumno, $idMateria, $calificacion, $idCondicionExamen, $libro, $folio,$idCicloLectivo);
 
     // 2. Actualizar matriculacionmateria
     $sql_mm = "UPDATE matriculacionmateria SET fechaMatriculacion = ?, estado = 'Aprobación PreSistema' WHERE idMatriculacionMateria = ?";
@@ -3699,19 +3714,41 @@ function getMateriasPorCurso($conn, $idCurso) {
 function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condicionInscripcion) {
     $estadosPermitidos = [];
     
-    if ($condicionInscripcion == 'Regular' || $condicionInscripcion == 'Aprobó Cursada') {
-        $estadosPermitidos = [1,4]; // Agrega aquí los IDs que consideras "Regular" (Regular, Aprobado, etc si aplica)
-    } elseif ($condicionInscripcion == 'Libre' || $condicionInscripcion == 'No Regular') {
-        $estadosPermitidos = [ 3, 0, 10, 12]; // Libre, Abandono, etc.
-        // Nota: Si los "Sin cursar" (null) pueden rendir libre, la lógica cambia, 
-        // pero por SQL necesitamos registros existentes. Para masivos, asumimos que tienen legajo.
+    // 1. Sanitización Crítica: 
+    // Quitamos espacios en blanco accidentales (trim) y convertimos todo a minúsculas
+    // para que la validación sea inmune a diferencias de tipeo (Ej: "Regular " o "REGULAR").
+    $condicionLimpia = trim(mb_strtolower($condicionInscripcion, 'UTF-8'));
+    $condicionNormalizada = strtr($condicionLimpia, [
+        'á' => 'a',
+        'é' => 'e',
+        'í' => 'i',
+        'ó' => 'o',
+        'ú' => 'u',
+        'ü' => 'u'
+    ]);
+    
+    // Evaluamos contra las versiones normalizadas (minúsculas)
+    if (in_array($condicionNormalizada, ['regular', 'aprobo cursada'])) {
+        $estadosPermitidos = [1, 4];
+    } elseif ($condicionNormalizada == 'coloquio') {
+        $estadosPermitidos = [2, 5];
+    } elseif (in_array($condicionNormalizada, ['promocional', 'promocion', 'aprueba'])) {
+        $estadosPermitidos = [11, 13, 14, 15];
+    } elseif (in_array($condicionNormalizada, ['libre', 'no regular'])) {
+        $estadosPermitidos = [3, 0, 10, 12]; 
     } else {
-        return []; // Condición no válida
+        // 2. Trazabilidad: Si la condición sigue sin coincidir, lo registramos en el log
+        // del servidor para saber exactamente QUÉ texto rebelde está enviando el frontend.
+        error_log("SistemasEscolares WARNING - buscarAlumnosAptosPorCondicion: Condición no reconocida -> '" . $condicionInscripcion . "'");
+        return []; 
     }
 
     if (empty($estadosPermitidos)) return [];
 
-    // Convertimos array a string para el IN de SQL
+    // 3. Casteo de seguridad antes de preparar la consulta
+    $idUnicoMateriaSeguro = (int) $idUnicoMateria;
+    $idCursoSeguro = (int) $idCurso;
+
     $listaEstados = implode(',', $estadosPermitidos);
 
     $sql = "SELECT c.idAlumno, p.apellido, p.nombre, p.dni, c.estadoCursadoNumero, c.estadoCursado
@@ -3725,11 +3762,20 @@ function buscarAlumnosAptosPorCondicion($conn, $idUnicoMateria, $idCurso, $condi
             ORDER BY p.apellido ASC";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $idUnicoMateria, $idCurso);
+    if (!$stmt) {
+        error_log("Error en buscarAlumnosAptosPorCondicion: " . $conn->error);
+        return [];
+    }
+    
+    // "ii" exige enteros. Con el casteo previo evitamos posibles advertencias de PHP.
+    $stmt->bind_param("ii", $idUnicoMateriaSeguro, $idCursoSeguro);
     $stmt->execute();
     $result = $stmt->get_result();
     
-    return $result->fetch_all(MYSQLI_ASSOC);
+    $datos = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    
+    return $datos;
 }
 
 

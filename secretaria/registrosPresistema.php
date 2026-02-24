@@ -69,6 +69,7 @@ $message_type = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // La transacción se inicia DESPUÉS de la validación
+    $transaccionActiva = false;
     try {
         $action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING);
 
@@ -129,6 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Si pasa la validación, iniciar la transacción
             $conn->begin_transaction();
+            $transaccionActiva = true;
 
             $condicionTipo = filter_input(INPUT_POST, 'condicionTipo', FILTER_SANITIZE_STRING);
             $fechaObtencion = filter_input(INPUT_POST, 'fechaObtencion', FILTER_SANITIZE_STRING);
@@ -160,11 +162,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Registros de aprobación presistema creados exitosamente.";
             }
             $conn->commit(); // Commit solo si la acción fue exitosa
+            $transaccionActiva = false;
             $message_type = 'success';
 
         } elseif ($action == 'update_presistema') {
             // --- INICIO TRANSACCIÓN (Update) ---
             $conn->begin_transaction();
+            $transaccionActiva = true;
             
             $idMatriculacionMateria = filter_input(INPUT_POST, 'editIdMatriculacion', FILTER_VALIDATE_INT);
             $idCalificacion = filter_input(INPUT_POST, 'editIdCalificacion', FILTER_VALIDATE_INT);
@@ -197,8 +201,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 if ($estadoOriginal == 'Regularidad PreSistema') {
                     // Conversión de Regular -> Aprobado
-                    // NOTA: La conversión usará el idCicloLectivo que ya estaba en la matriculación original
-                    convertirPresistemaRegularAAprobado($conn, $idMatriculacionMateria, $idCalificacion, $detalles['idMateria'], $idAlumno, $fechaObtencion, $calificacion, $idCondicionExamen, $libro, $folio);
+                    $idCicloLectivo = $detalles['idCicloLectivo'] ?? null;
+                    if (empty($idCicloLectivo)) {
+                        throw new Exception("No se pudo determinar el ciclo lectivo del registro a convertir.");
+                    }
+                    convertirPresistemaRegularAAprobado($conn, $idMatriculacionMateria, $idCalificacion, $detalles['idMateria'], $idAlumno, $fechaObtencion, $calificacion, $idCondicionExamen, $libro, $folio, $idCicloLectivo);
                     $message = "Registro convertido a 'Aprobado' exitosamente.";
                 } else {
                     // Actualización de Aprobado -> Aprobado
@@ -207,13 +214,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
             $conn->commit(); // Commit del update
+            $transaccionActiva = false;
             $message_type = 'success';
         }
 
     } catch (Exception $e) {
         // Rollback solo si la transacción fue iniciada
-        if ($conn->inTransaction()) {
+        if ($transaccionActiva) {
             $conn->rollback();
+            $transaccionActiva = false;
         }
         $message = "Error: " . $e->getMessage();
         $message_type = 'danger';

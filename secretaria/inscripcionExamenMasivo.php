@@ -427,7 +427,7 @@ try {
             const idCurso = $('#idCurso').val();
             const idCiclo = $('#idCiclo').val();
             const idTurno = $('#idTurno').val();
-            const condicionTexto = $('#idCondicion option:selected').text(); 
+const condicionTexto = $('#idCondicion option:selected').text().trim();
 
             if(!idUnico) { showAlert("Error: Identificador de materia no válido."); return; }
 
