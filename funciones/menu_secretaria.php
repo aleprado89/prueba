@@ -78,6 +78,16 @@
 </li>
 
                <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPersonal" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-vcard"></i> Personal
+    </a>
+    <ul class="dropdown-menu shadow" aria-labelledby="navbarDropdownPersonal">
+        <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Legajos</h6></li>
+        <li><a class="dropdown-item ps-4" href="buscarPersonal.php">ABM de Legajos</a></li>
+    </ul>
+</li>
+
+               <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownListados" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-list-check"></i> Listados
     </a>

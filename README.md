@@ -15,18 +15,29 @@ El sistema está dividido en tres subsistemas principales:
    - Consulta de calificaciones y asistencias
    - Solicitudes de inscripción a materias y exámenes
    - Gestión de datos personales
+   -Archivos en /alumnos/
+
+
 
 2. **Autogestión de Docentes** (`inicio/login.php`)
    - Acceso para profesores
    - Carga de calificaciones y asistencias
    - Gestión de actas de examen
    - Consulta de materias asignadas
+   - Archivos en /docentes/
+
+
 
 3. **Sistema Principal Administrativo** (`inicio/loginAdmin.php`)
    - Acceso para secretarios y personal administrativo
    - Gestión completa de alumnos, docentes y cursos
    - Administración de planes de estudio y materias
    - Generación de reportes y estadísticas
+  - Archivos en /secretaria/
+
+
+
+
 
 ## Tecnologías Utilizadas
 

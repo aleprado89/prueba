@@ -2013,6 +2013,165 @@ function buscarAlumnos($conexion, $apellido = '', $nombre = '') {
     return $alumnos;
 }
 
+/**
+ * Busca personal por apellido y nombre.
+ */
+function buscarPersonal($conexion, $apellido = '', $nombre = '') {
+    $sql = "SELECT pe.legajo, pe.idPersona, pe.actual, pe.cargo, pe.tipoCargo,
+                   p.apellido, p.nombre, p.dni
+            FROM personal pe
+            INNER JOIN persona p ON pe.idPersona = p.idPersona
+            WHERE p.apellido LIKE ? AND p.nombre LIKE ?
+            ORDER BY
+                CASE
+                    WHEN p.apellido LIKE ? THEN 1
+                    ELSE 2
+                END,
+                p.apellido, p.nombre";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar la consulta (buscarPersonal): " . $conexion->error);
+        return [];
+    }
+
+    $paramApellidoLike = '%' . $apellido . '%';
+    $paramNombreLike = '%' . $nombre . '%';
+    $paramApellidoStarts = $apellido . '%';
+    $stmt->bind_param("sss", $paramApellidoLike, $paramNombreLike, $paramApellidoStarts);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $personal = [];
+    while ($row = $result->fetch_assoc()) {
+        $personal[] = $row;
+    }
+    $stmt->close();
+    return $personal;
+}
+
+/**
+ * Obtiene los datos completos de un legajo de personal.
+ */
+function obtenerDatosPersonal($conexion, $legajo) {
+    if (!$legajo) {
+        return null;
+    }
+
+    $sql = "SELECT pe.legajo, pe.idPersona, pe.estadoCivil, pe.tipoCargo, pe.cargo,
+                   pe.titulo, pe.legJunta, pe.legEscuela, pe.escalafD, pe.escalafE,
+                   pe.numReg, pe.apto, pe.certArt28, pe.incapac, pe.actual, pe.nivel,
+                   pe.fechaBaja, pe.tipoTitulo, pe.mailInst,
+                   p.apellido, p.nombre, p.dni, p.sexo, p.fechaNac AS fechaNacimiento,
+                   p.nacionalidad AS nacionalidadNacimiento, p.provincia AS provinciaNacimiento,
+                   p.ciudad AS localidadNacimiento, p.direccion AS domicilio, p.codigoPostal AS cp,
+                   p.FotoCarnet AS fotoURL, p.mail AS email, p.telefono, p.celular, p.cuilPre, p.cuilPost,
+                   p.telefonoEmergencia
+            FROM personal pe
+            INNER JOIN persona p ON pe.idPersona = p.idPersona
+            WHERE pe.legajo = ?";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerDatosPersonal: " . $conexion->error);
+        return null;
+    }
+    $stmt->bind_param("i", $legajo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_assoc();
+    $stmt->close();
+    return $data;
+}
+
+/**
+ * Inserta un registro en tabla personal y devuelve el legajo generado.
+ */
+function insertPersonal($conexion, $idPersona, $data) {
+    $sql = "INSERT INTO personal (
+                idPersona, estadoCivil, tipoCargo, cargo, titulo, legJunta, legEscuela,
+                escalafD, escalafE, numReg, apto, certArt28, incapac, actual, nivel,
+                fechaBaja, tipoTitulo, mailInst
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar insertPersonal: " . $conexion->error);
+        return false;
+    }
+
+    $stmt->bind_param(
+        "issssssssssssiisss",
+        $idPersona,
+        $data['estadoCivil'],
+        $data['tipoCargo'],
+        $data['cargo'],
+        $data['titulo'],
+        $data['legJunta'],
+        $data['legEscuela'],
+        $data['escalafD'],
+        $data['escalafE'],
+        $data['numReg'],
+        $data['apto'],
+        $data['certArt28'],
+        $data['incapac'],
+        $data['actual'],
+        $data['nivel'],
+        $data['fechaBaja'],
+        $data['tipoTitulo'],
+        $data['mailInst']
+    );
+
+    $success = $stmt->execute();
+    $id = $conexion->insert_id;
+    $stmt->close();
+    return $success ? $id : false;
+}
+
+/**
+ * Actualiza los datos de un registro en tabla personal por legajo.
+ */
+function updatePersonal($conexion, $legajo, $data) {
+    $sql = "UPDATE personal
+            SET estadoCivil = ?, tipoCargo = ?, cargo = ?, titulo = ?, legJunta = ?,
+                legEscuela = ?, escalafD = ?, escalafE = ?, numReg = ?, apto = ?,
+                certArt28 = ?, incapac = ?, actual = ?, nivel = ?, fechaBaja = ?,
+                tipoTitulo = ?, mailInst = ?
+            WHERE legajo = ?";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar updatePersonal: " . $conexion->error);
+        return false;
+    }
+
+    $stmt->bind_param(
+        "ssssssssssssiisssi",
+        $data['estadoCivil'],
+        $data['tipoCargo'],
+        $data['cargo'],
+        $data['titulo'],
+        $data['legJunta'],
+        $data['legEscuela'],
+        $data['escalafD'],
+        $data['escalafE'],
+        $data['numReg'],
+        $data['apto'],
+        $data['certArt28'],
+        $data['incapac'],
+        $data['actual'],
+        $data['nivel'],
+        $data['fechaBaja'],
+        $data['tipoTitulo'],
+        $data['mailInst'],
+        $legajo
+    );
+
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
 
 // NEW/MODIFIED: obtaining all student data
 function obtenerDatosAlumno($conexion, $idAlumno) {
