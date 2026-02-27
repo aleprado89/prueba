@@ -67,13 +67,10 @@ $html = '
         .header img { max-width: 500px; height: auto; }
         .container { width: 100%; }
         h3, h4 { text-align: center; margin: 5px 0; }
-        table { font-size: 10px; width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table { font-size: 8px; width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 4px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .columna1 { width: 20%; }
-        .columna2 { width: 50%; }
-        .columna3 { width: 20%; }
-        .columna4 { width: 10%; text-align: center; }
+        .text-center { text-align: center; }
         .fecha { text-align: right; font-size: 14px; margin-bottom: 20px; }
         .aprobada {  font-weight: bold; } /* Estilo para materia aprobada */
     </style>
@@ -88,30 +85,60 @@ $html = '
     <div class="container">
         <table>
             <tr>
-                <th class="columna1">Curso</th>
-                <th class="columna2">Materia</th>
-                <th class="columna3">Estado</th>
-                <th class="columna4">Final</th>
+                <th>Curso</th>
+                <th>Materia</th>
+                <th class="text-center">IE1</th>
+                <th class="text-center">IE2</th>
+                <th class="text-center">IE3</th>
+                <th class="text-center">IE4</th>
+                <th class="text-center">IE5</th>
+                <th class="text-center">IE6</th>
+                <th class="text-center">IE7</th>
+                <th class="text-center">IEFI</th>
+                <th class="text-center">RIE1</th>
+                <th class="text-center">RIE2</th>
+                <th class="text-center">RIE3</th>
+                <th class="text-center">RIE4</th>
+                <th class="text-center">RIE5</th>
+                <th class="text-center">RIE6</th>
+                <th class="text-center">RIE7</th>
+                <th class="text-center">RIEFI</th>
+                <th>Estado</th>
+                <th class="text-center">Final</th>
             </tr>';
 
             //RECORRER TABLA DE CALIFICACIONES
         
         $a = 0;
         $html2="";
-        while ($a < $cantidad) {        
-          $Materia = $listadoCalificaciones[$a]['Materia'];
-          $Curso = $listadoCalificaciones[$a]['Curso'];
-          $Estado = $listadoCalificaciones[$a]['Estado'];
-          $CalificacionFinal = $listadoCalificaciones[$a]['CalificacionFinal'];
-                        if (!$mostrarEstadoParcial)
-                            $listadoCalificaciones[$a]['Estado'] = '';
-          $html2=$html2.' <tr>
-                <td>'.$listadoCalificaciones[$a]['Curso'].'  </td>
-                <td>'.$listadoCalificaciones[$a]['Materia'].'</td>
-                <td>'.$listadoCalificaciones[$a]['Estado'].'</td>
-                <td>'.$listadoCalificaciones[$a]['CalificacionFinal'].'</td>
+        while ($a < $cantidad) {
+            if (!$mostrarEstadoParcial) {
+                $listadoCalificaciones[$a]['Estado'] = '';
+            }
+            $html2=$html2.' <tr>
+                <td>'.htmlspecialchars($listadoCalificaciones[$a]['Curso'] ?? '').'</td>
+                <td>'.htmlspecialchars($listadoCalificaciones[$a]['Materia'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n1'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n2'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n3'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n4'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n5'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n6'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n7'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['n8'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r1'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r2'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r3'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r4'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r5'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r6'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r7'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['r8'] ?? '').'</td>
+                <td>'.htmlspecialchars($listadoCalificaciones[$a]['Estado'] ?? '').'</td>
+                <td class="text-center">'.htmlspecialchars($listadoCalificaciones[$a]['CalificacionFinal'] ?? '').'</td>
             </tr>';
-            $a++;  }
+            $a++;
+        }
             $html=$html.$html2.'
         </table>
     </div>
