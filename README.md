@@ -1,239 +1,163 @@
-Dompdf
-======
+# Sistema de Información Pedagógica para Escuelas
 
-[![Build Status](https://github.com/dompdf/dompdf/actions/workflows/test.yml/badge.svg)](https://github.com/dompdf/dompdf/actions/workflows/test.yml)
-[![Latest Release](https://poser.pugx.org/dompdf/dompdf/v/stable.png)](https://packagist.org/packages/dompdf/dompdf)
-[![Total Downloads](https://poser.pugx.org/dompdf/dompdf/downloads.png)](https://packagist.org/packages/dompdf/dompdf)
-[![License](https://poser.pugx.org/dompdf/dompdf/license.png)](https://packagist.org/packages/dompdf/dompdf)
- 
-**Dompdf is an HTML to PDF converter**
+## Descripción del Proyecto
 
-At its heart, dompdf is (mostly) a [CSS 2.1](http://www.w3.org/TR/CSS2/) compliant
-HTML layout and rendering engine written in PHP. It is a style-driven renderer:
-it will download and read external stylesheets, inline style tags, and the style
-attributes of individual HTML elements. It also supports most presentational
-HTML attributes.
+Este es un sistema de información pedagógica desarrollado en PHP puro para la gestión educativa de instituciones escolares. El sistema permite la autogestión de alumnos, docentes y personal administrativo (secretarios), facilitando la administración de calificaciones, inscripciones, exámenes y reportes académicos.
 
-*This document applies to the latest stable code which may not reflect the current 
-release. For released code please
-[navigate to the appropriate tag](https://github.com/dompdf/dompdf/tags).*
+## Arquitectura del Sistema
 
-----
+### Subsistemas
 
-**Check out the [demo](http://eclecticgeek.com/dompdf/debug.php) and ask any
-question on [StackOverflow](https://stackoverflow.com/questions/tagged/dompdf) or
-in [Discussions](https://github.com/dompdf/dompdf/discussions).**
+El sistema está dividido en tres subsistemas principales:
 
-Follow us on [![Twitter](http://twitter-badges.s3.amazonaws.com/twitter-a.png)](http://www.twitter.com/dompdf).
+1. **Autogestión de Alumnos** (`inicio/login.php`)
+   - Acceso para estudiantes
+   - Consulta de calificaciones y asistencias
+   - Solicitudes de inscripción a materias y exámenes
+   - Gestión de datos personales
 
----
+2. **Autogestión de Docentes** (`inicio/login.php`)
+   - Acceso para profesores
+   - Carga de calificaciones y asistencias
+   - Gestión de actas de examen
+   - Consulta de materias asignadas
 
+3. **Sistema Principal Administrativo** (`inicio/loginAdmin.php`)
+   - Acceso para secretarios y personal administrativo
+   - Gestión completa de alumnos, docentes y cursos
+   - Administración de planes de estudio y materias
+   - Generación de reportes y estadísticas
 
+## Tecnologías Utilizadas
 
-## Features
+- **Backend**: PHP 7.1+ (puro, sin frameworks)
+- **Base de Datos**: MySQL
+- **Frontend**: HTML, CSS (Bootstrap + Bootswatch Materia), JavaScript (jQuery)
+- **Reportes**: Dompdf para generación de PDFs
+- **Estilos**: `css/estilos.css` + Bootswatch Materia
 
- * Handles most CSS 2.1 and a few CSS3 properties, including @import, @media &
-   @page rules
- * Supports most presentational HTML 4.0 attributes
- * Supports external stylesheets, either local or through http/ftp (via
-   fopen-wrappers)
- * Supports complex tables, including row & column spans, separate & collapsed
-   border models, individual cell styling
- * Image support (gif, png (8, 24 and 32 bit with alpha channel), bmp & jpeg)
- * No dependencies on external PDF libraries, thanks to the R&OS PDF class
- * Inline PHP support
- * Basic SVG support (see "Limitations" below)
- 
-## Requirements
+## Estructura del Proyecto
 
- * PHP version 7.1 or higher
- * DOM extension
- * MBString extension
- * php-font-lib
- * php-svg-lib
- 
-Note that some required dependencies may have further dependencies 
-(notably php-svg-lib requires sabberworm/php-css-parser).
-
-### Recommendations
-
- * GD (for image processing)
-   * Additionally, the IMagick or GMagick extension improves image processing performance for certain image types
- * OPcache (OPcache, XCache, APC, etc.): improves performance
-
-Visit the wiki for more information:
-https://github.com/dompdf/dompdf/wiki/Requirements
-
-## About Fonts & Character Encoding
-
-PDF documents internally support the following fonts: Helvetica, Times-Roman,
-Courier, Zapf-Dingbats, & Symbol. These fonts only support Windows ANSI
-encoding. In order for a PDF to display characters that are not available in
-Windows ANSI, you must supply an external font. Dompdf will embed any referenced
-font in the PDF so long as it has been pre-loaded or is accessible to dompdf and
-reference in CSS @font-face rules. See the
-[font overview](https://github.com/dompdf/dompdf/wiki/About-Fonts-and-Character-Encoding)
-for more information on how to use fonts.
-
-The [DejaVu TrueType fonts](https://dejavu-fonts.github.io/) have been pre-installed
-to give dompdf decent Unicode character coverage by default. To use the DejaVu
-fonts reference the font in your stylesheet, e.g. `body { font-family: DejaVu
-Sans; }` (for DejaVu Sans). The following DejaVu 2.34 fonts are available:
-DejaVu Sans, DejaVu Serif, and DejaVu Sans Mono.
-
-## Easy Installation
-
-### Install with composer
-
-To install with [Composer](https://getcomposer.org/), simply require the
-latest version of this package.
-
-```bash
-composer require dompdf/dompdf
+```
+/
+├── alumnos/          # Funcionalidades de autogestión de alumnos
+├── docentes/         # Funcionalidades de autogestión de docentes
+├── secretaria/       # Sistema administrativo principal
+├── reportes/         # Generación de reportes en PDF
+├── funciones/        # Utilidades y configuración
+│   ├── consultas.php # TODAS las consultas a base de datos
+│   ├── menu.php      # Sistema de menús
+│   └── ...
+├── inicio/           # Sistema de autenticación
+├── css/              # Estilos CSS
+├── js/               # JavaScript y jQuery
+├── img/              # Imágenes y logos
+└── vendor/           # Dependencias (Composer)
 ```
 
-Make sure that the autoload file from Composer is loaded.
+## Principios de Desarrollo
 
-```php
-// somewhere early in your project's loading, require the Composer autoloader
-// see: http://getcomposer.org/doc/00-intro.md
-require 'vendor/autoload.php';
-```
+### Metodología de Programación
 
-### Download and install
+- **Encapsulamiento de BD**: Todas las consultas MySQL están centralizadas en `funciones/consultas.php`
+- **Separación de Lógica**: Nunca se ejecutan consultas directas en archivos de presentación
+- **Sanitización de Parámetros**: Enfoque estricto en seguridad y validación de inputs
+- **Estética del Código**: Código legible, organizado y mantenible
+- **Páginas Single-File**: Cada página de usuario es un archivo PHP único que incluye HTML
 
-Download a packaged archive of dompdf and extract it into the 
-directory where dompdf will reside
+### Seguridad
 
- * You can download stable copies of dompdf from
-   https://github.com/dompdf/dompdf/releases
- * Or download a nightly (the latest, unreleased code) from
-   http://eclecticgeek.com/dompdf
+- Uso de prepared statements para todas las consultas
+- Validación y sanitización de todos los parámetros de entrada
+- Control de sesiones y autenticación
+- Prevención de inyección SQL y XSS
 
-Use the packaged release autoloader to load dompdf, libraries,
-and helper functions in your PHP:
+## Funcionalidades Principales
 
-```php
-// include autoloader
-require_once 'dompdf/autoload.inc.php';
-```
+### Para Alumnos
+- Consulta de calificaciones por materia y plan de estudio
+- Visualización de asistencias
+- Solicitudes de inscripción a materias y exámenes
+- Actualización de datos personales
 
-Note: packaged releases are named according using semantic
-versioning (_dompdf_MAJOR-MINOR-PATCH.zip_). So the 1.0.0 
-release would be dompdf_1-0-0.zip. This is the only download
-that includes the autoloader for Dompdf and all its dependencies.
+### Para Docentes
+- Carga de calificaciones y asistencias
+- Gestión de actas de examen
+- Consulta de alumnos por materia
+- Generación de reportes de asistencia
 
-### Install with git
+### Para Administración
+- Gestión completa de alumnos y docentes
+- Administración de planes de estudio y curricula
+- Matriculación de alumnos en cursos y materias
+- Sistema de equivalencias y convalidaciones
+- Generación de reportes académicos
+- Gestión de mesas de examen
 
-From the command line, switch to the directory where dompdf will
-reside and run the following commands:
+## Instalación y Configuración
 
-```sh
-git clone https://github.com/dompdf/dompdf.git
-cd dompdf/lib
+1. **Requisitos del Sistema**
+   - PHP 7.1 o superior
+   - MySQL 5.7+
+   - Servidor web (Apache/Nginx)
+   - Extensiones PHP: mysqli, mbstring, gd
 
-git clone https://github.com/PhenX/php-font-lib.git php-font-lib
-cd php-font-lib
-git checkout 0.5.1
-cd ..
-
-git clone https://github.com/PhenX/php-svg-lib.git php-svg-lib
-cd php-svg-lib
-git checkout v0.3.2
-cd ..
-
-git clone https://github.com/sabberworm/PHP-CSS-Parser.git php-css-parser
-cd php-css-parser
-git checkout 8.1.0
-```
-
-Require dompdf and it's dependencies in your PHP.
-For details see the [autoloader in the utils project](https://github.com/dompdf/utils/blob/master/autoload.inc.php).
-
-## Framework Integration
-
-* For Symfony: [nucleos/dompdf-bundle](https://github.com/nucleos/NucleosDompdfBundle)
-* For Laravel: [barryvdh/laravel-dompdf](https://github.com/barryvdh/laravel-dompdf)
-* For Redaxo: [PdfOut](https://github.com/FriendsOfREDAXO/pdfout)
-
-## Quick Start
-
-Just pass your HTML in to dompdf and stream the output:
-
-```php
-// reference the Dompdf namespace
-use Dompdf\Dompdf;
-
-// instantiate and use the dompdf class
-$dompdf = new Dompdf();
-$dompdf->loadHtml('hello world');
-
-// (Optional) Setup the paper size and orientation
-$dompdf->setPaper('A4', 'landscape');
-
-// Render the HTML as PDF
-$dompdf->render();
-
-// Output the generated PDF to Browser
-$dompdf->stream();
-```
-
-### Setting Options
-
-Set options during dompdf instantiation:
-
-```php
-use Dompdf\Dompdf;
-use Dompdf\Options;
-
-$options = new Options();
-$options->set('defaultFont', 'Courier');
-$dompdf = new Dompdf($options);
-```
-
-or at run time
-
-```php
-use Dompdf\Dompdf;
-
-$dompdf = new Dompdf();
-$options = $dompdf->getOptions();
-$options->setDefaultFont('Courier');
-$dompdf->setOptions($options);
-```
-
-See [Dompdf\Options](src/Options.php) for a list of available options.
-
-### Resource Reference Requirements
-
-In order to protect potentially sensitive information Dompdf imposes 
-restrictions on files referenced from the local file system or the web. 
-
-Files accessed through web-based protocols have the following requirements:
- * The Dompdf option "isRemoteEnabled" must be set to "true"
- * PHP must either have the curl extension enabled or the 
-   allow_url_fopen setting set to true
+2. **Instalación**
    
-Files accessed through the local file system have the following requirement:
- * The file must fall within the path(s) specified for the Dompdf "chroot" option
+```bash
+   # Clonar o descargar el proyecto
+   # Configurar base de datos MySQL
+   # Importar esquema de BD (no incluido en este repo)
+   # Configurar conexión en inicio/conexion.php
+   
+```
 
-## Limitations (Known Issues)
+3. **Configuración**
+   - Editar `inicio/conexion.php` con credenciales de BD
+   - Configurar rutas absolutas si es necesario
+   - Verificar permisos de escritura en directorios de uploads
 
- * Table cells are not pageable, meaning a table row must fit on a single page.
- * Elements are rendered on the active page when they are parsed.
- * Embedding "raw" SVG's (`<svg><path...></svg>`) isn't working yet, you need to
-   either link to an external SVG file, or use a DataURI like this:
-     ```php
-     $html = '<img src="data:image/svg+xml;base64,' . base64_encode($svg) . '" ...>';
-     ```
-     Watch https://github.com/dompdf/dompdf/issues/320 for progress
- * Does not support CSS flexbox.
- * Does not support CSS Grid.
- * A single Dompdf instance should not be used to render more than one HTML document
-   because persisted parsing and rendering artifacts can impact future renders.
----
+## Uso del Sistema
 
-[![Donate button](https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif)](http://goo.gl/DSvWf)
+### Acceso al Sistema
+- **Alumnos/Docentes**: `inicio/login.php`
+- **Administración**: `inicio/loginAdmin.php`
 
-*If you find this project useful, please consider making a donation.
-Any funds donated will be used to help further development on this project.)*
+### Navegación
+Cada subsistema tiene su propio menú de navegación definido en `funciones/menu.php` con funciones específicas para cada rol.
+
+## Desarrollo y Mantenimiento
+
+### Buenas Prácticas
+- Todas las consultas nuevas deben implementarse en `consultas.php`
+- Mantener consistencia en el estilo de código
+- Documentar funciones complejas
+- Probar cambios en entorno de desarrollo antes de producción
+
+### Estructura de Consultas
+```php
+function nombreFuncion($conexion, $param1, $param2) {
+    $consulta = "SELECT/INSERT/UPDATE...";
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param("tipos", $param1, $param2);
+    $stmt->execute();
+    // Procesar resultados
+    return $resultado;
+}
+```
+
+## Contribución
+
+Para contribuir al proyecto:
+1. Seguir los principios de desarrollo establecidos
+2. Mantener la estructura de consultas centralizadas
+3. Priorizar seguridad y estética del código
+4. Probar exhaustivamente antes de commits
+
+## Licencia
+
+Este proyecto es propiedad de la institución educativa. Consulta con el administrador del sistema para términos de uso.
+
+## Soporte
+
+Para soporte técnico o consultas sobre el sistema, contactar al equipo de desarrollo o al administrador del sistema educativo.
