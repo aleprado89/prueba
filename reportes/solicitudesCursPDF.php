@@ -185,11 +185,21 @@ try {
     $dompdf->setPaper('A4', 'portrait');
     $dompdf->render();
     
-    // Nombre de archivo seguro (eliminando espacios)
+    // 1. Limpiamos el nombre
     $cleanNombre = preg_replace('/[^a-zA-Z0-9]/', '_', $_SESSION['alu_apellido']);
-    $filename = 'solicitudesExam_' . $cleanNombre . '.pdf';
     
-    $dompdf->stream($filename, array('Attachment' => 0));
+    // 2. Agregamos un timestamp único para evitar la caché del celular (Cache-Busting)
+    $timestamp = date('Ymd_His');
+    $filename = 'solicitudesExam_' . $cleanNombre . '_' . $timestamp . '.pdf';
+    
+    // 3. Forzamos cabeceras HTTP para que el navegador móvil no guarde en caché la petición
+    header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
+    header("Pragma: no-cache"); // HTTP 1.0
+    header("Expires: 0"); // Proxies
+    
+    // 4. Cambiamos 'Attachment' a 1 para forzar la descarga del nuevo archivo
+    $dompdf->stream($filename, array('Attachment' => 1));
+
 } catch (Exception $e) {
     error_log("Error crítico generando PDF de solicitudes: " . $e->getMessage());
     echo 'Error al generar el PDF. Contacte al administrador del sistema.';
