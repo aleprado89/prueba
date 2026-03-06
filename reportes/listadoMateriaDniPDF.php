@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
@@ -55,14 +56,14 @@ $html = '
         <h3>Curso: ' . htmlspecialchars($nombreCurso) . '</h3>
         <h4>Materia: ' . htmlspecialchars($nombreMateria) . '</h4>
     </div>
-    <table>';
+    <table cellspacing="0" cellpadding="0">';
 
 foreach ($alumnos as $alumno) {
     // La única diferencia está aquí
     $html .= '
         <tr>
-            <td class="nombre-alumno">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . ' - DNI: ' . htmlspecialchars($alumno['dni']) . '</td>
-            <td class="renglon"></td>
+            <td class="nombre-alumno" style="border-bottom: 1.5px solid #000; height: 20px;">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . ' - DNI: ' . htmlspecialchars($alumno['dni']) . '</td>
+            <td class="renglon" style="border-bottom: 1.5px solid #000; height: 20px;">&nbsp;</td>
         </tr>';
 }
 
@@ -74,5 +75,9 @@ $html .= '
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
+if (ob_get_length()) { ob_end_clean(); }
 $dompdf->stream("listado_materia_dni.pdf", array("Attachment" => 0));
 ?>
+
+
+

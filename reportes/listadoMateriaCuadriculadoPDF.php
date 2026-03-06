@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
@@ -43,7 +44,7 @@ $html = '
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #000; padding: 5px; text-align: center; }
         .nombre-alumno { width: 25%; text-align: left; }
-        .cuadro { width: 2.3%; height: 20px; }
+        .cuadro { width: 2.3%; height: 22px; }
     </style>
 <link rel="icon" type="image/png" href="../img/icon.png">
 
@@ -56,12 +57,12 @@ $html = '
         <h5>Curso: ' . htmlspecialchars($nombreCurso) . '</h5>
         <h5>Materia: ' . htmlspecialchars($nombreMateria) . '</h5>
     </div>
-    <table>
+    <table border="1" cellspacing="0" cellpadding="0">
         <thead>
             <tr>
-                <th class="nombre-alumno">Apellido y Nombre</th>';
+                <th class="nombre-alumno" style="border: 1.2px solid #000;">Apellido y Nombre</th>';
 for ($i = 1; $i <= 31; $i++) {
-    $html .= '<th class="cuadro">' . $i . '</th>';
+    $html .= '<th class="cuadro" style="border: 1.2px solid #000;">' . $i . '</th>';
 }
 $html .= '
             </tr>
@@ -71,9 +72,9 @@ $html .= '
 foreach ($alumnos as $alumno) {
     $html .= '
             <tr>
-                <td class="nombre-alumno">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . '</td>';
+                <td class="nombre-alumno" style="border: 1.2px solid #000;">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . '</td>';
     for ($i = 1; $i <= 31; $i++) {
-        $html .= '<td class="cuadro">&nbsp;</td>';
+        $html .= '<td class="cuadro" style="border: 1.2px solid #000;">&nbsp;</td>';
     }
     $html .= '
             </tr>';
@@ -88,5 +89,9 @@ $html .= '
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'landscape');
 $dompdf->render();
+if (ob_get_length()) { ob_end_clean(); }
 $dompdf->stream("listado_materia_cuadriculado.pdf", array("Attachment" => 0));
 ?>
+
+
+

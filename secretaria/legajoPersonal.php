@@ -17,6 +17,27 @@ function limpiarFecha($valor) {
     return $valor === '' ? null : $valor;
 }
 
+function normalizarTipoTitulo($valor) {
+    $valor = trim((string)$valor);
+    if ($valor === '') {
+        return '0000';
+    }
+    if (preg_match('/^[01]{4}$/', $valor)) {
+        return $valor;
+    }
+    return '0000';
+}
+
+function tipoTituloDesdePost($post) {
+    $checks = isset($post['tipoTitulo']) && is_array($post['tipoTitulo']) ? $post['tipoTitulo'] : [];
+    $flags = ['terciario', 'universitario', 'magister', 'doctorado'];
+    $valor = '';
+    foreach ($flags as $flag) {
+        $valor .= in_array($flag, $checks, true) ? '1' : '0';
+    }
+    return $valor;
+}
+
 $legajo = isset($_GET['legajo']) ? (int)$_GET['legajo'] : 0;
 $mode = $legajo > 0 ? 'edit' : 'new';
 
@@ -67,6 +88,7 @@ if ($mode === 'edit') {
         exit;
     }
     $personalData = array_merge($personalData, $loaded);
+    $personalData['tipoTitulo'] = normalizarTipoTitulo($personalData['tipoTitulo'] ?? '');
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -96,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'tipoCargo' => limpiarTexto($_POST['tipoCargo'] ?? null),
         'cargo' => limpiarTexto($_POST['cargo'] ?? null),
         'titulo' => limpiarTexto($_POST['titulo'] ?? null),
-        'tipoTitulo' => limpiarTexto($_POST['tipoTitulo'] ?? null),
+        'tipoTitulo' => tipoTituloDesdePost($_POST),
         'legJunta' => limpiarTexto($_POST['legJunta'] ?? null),
         'legEscuela' => limpiarTexto($_POST['legEscuela'] ?? null),
         'escalafD' => limpiarFecha($_POST['escalafD'] ?? null),
@@ -248,10 +270,10 @@ if (isset($_SESSION['message_legajo_personal'])) {
                     <?php if ($mode === 'new'): ?>
                         Nuevo legajo de personal
                     <?php else: ?>
-                        Legajo Nro <?php echo htmlspecialchars((string)$personalData['legajo']); ?>
+                        Datos de personal
                     <?php endif; ?>
                 </h5>
-                <a href="buscarPersonal.php" class="btn btn-outline-secondary">Volver</a>
+                <a href="buscarPersonal.php" class="btn btn-outline-secondary text-dark">Volver</a>
             </div>
 
             <form method="POST" action="legajoPersonal.php<?php echo $mode === 'edit' ? '?legajo=' . urlencode((string)$personalData['legajo']) . '&mode=edit' : '?mode=new'; ?>">
@@ -263,6 +285,10 @@ if (isset($_SESSION['message_legajo_personal'])) {
                 <fieldset class="border p-3 mb-4">
                     <legend class="float-none w-auto px-2">Datos personales</legend>
                     <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Estado civil</label>
+                            <input type="text" class="form-control" name="estadoCivil" value="<?php echo htmlspecialchars((string)$personalData['estadoCivil']); ?>">
+                        </div>
                         <div class="col-md-4">
                             <label class="form-label">Apellido *</label>
                             <input type="text" class="form-control" name="apellido" required value="<?php echo htmlspecialchars((string)$personalData['apellido']); ?>">
@@ -336,15 +362,16 @@ if (isset($_SESSION['message_legajo_personal'])) {
                 </fieldset>
 
                 <fieldset class="border p-3 mb-4">
-                    <legend class="float-none w-auto px-2">Datos de personal</legend>
+                    <legend class="float-none w-auto px-2">Datos laborales</legend>
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label">Estado civil</label>
-                            <input type="text" class="form-control" name="estadoCivil" value="<?php echo htmlspecialchars((string)$personalData['estadoCivil']); ?>">
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label">Tipo cargo</label>
-                            <input type="text" class="form-control" name="tipoCargo" value="<?php echo htmlspecialchars((string)$personalData['tipoCargo']); ?>">
+                            <select class="form-select" name="tipoCargo">
+                                <option value="" <?php echo empty($personalData['tipoCargo']) ? 'selected' : ''; ?>>Seleccionar</option>
+                                <option value="Profesor" <?php echo ($personalData['tipoCargo'] ?? '') === 'Profesor' ? 'selected' : ''; ?>>Profesor</option>
+                                <option value="Personal Docente" <?php echo ($personalData['tipoCargo'] ?? '') === 'Personal Docente' ? 'selected' : ''; ?>>Personal Docente</option>
+                                <option value="Personal No Docente" <?php echo ($personalData['tipoCargo'] ?? '') === 'Personal No Docente' ? 'selected' : ''; ?>>Personal No Docente</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Cargo</label>
@@ -356,7 +383,23 @@ if (isset($_SESSION['message_legajo_personal'])) {
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Tipo titulo</label>
-                            <input type="text" class="form-control" name="tipoTitulo" value="<?php echo htmlspecialchars((string)$personalData['tipoTitulo']); ?>">
+                            <?php $tipoTituloValor = normalizarTipoTitulo($personalData['tipoTitulo'] ?? '0000'); ?>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="tipoTituloTerciario" name="tipoTitulo[]" value="terciario" <?php echo (isset($tipoTituloValor[0]) && $tipoTituloValor[0] === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="tipoTituloTerciario">Terciario</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="tipoTituloUniversitario" name="tipoTitulo[]" value="universitario" <?php echo (isset($tipoTituloValor[1]) && $tipoTituloValor[1] === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="tipoTituloUniversitario">Universitario</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="tipoTituloMagister" name="tipoTitulo[]" value="magister" <?php echo (isset($tipoTituloValor[2]) && $tipoTituloValor[2] === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="tipoTituloMagister">Magister</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="tipoTituloDoctorado" name="tipoTitulo[]" value="doctorado" <?php echo (isset($tipoTituloValor[3]) && $tipoTituloValor[3] === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="tipoTituloDoctorado">Doctorado</label>
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Mail institucional</label>
@@ -394,10 +437,6 @@ if (isset($_SESSION['message_legajo_personal'])) {
                             <label class="form-label">Incapacidad</label>
                             <input type="text" class="form-control" name="incapac" value="<?php echo htmlspecialchars((string)$personalData['incapac']); ?>">
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Nivel</label>
-                            <input type="number" class="form-control" name="nivel" value="<?php echo htmlspecialchars((string)$personalData['nivel']); ?>">
-                        </div>
                         <div class="col-md-3">
                             <label class="form-label">Fecha baja</label>
                             <input type="date" class="form-control" name="fechaBaja" value="<?php echo htmlspecialchars((string)$personalData['fechaBaja']); ?>">
@@ -417,7 +456,7 @@ if (isset($_SESSION['message_legajo_personal'])) {
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-floppy"></i> Guardar
                     </button>
-                    <a href="buscarPersonal.php" class="btn btn-outline-secondary">Cancelar</a>
+                    <a href="buscarPersonal.php" class="btn btn-outline-secondary text-dark">Cancelar</a>
                 </div>
             </form>
         </div>

@@ -1,10 +1,9 @@
 <?php
+ob_start();
 session_start();
 include '../vendor/autoload.php';
 include '../inicio/conexion.php';
-ob_start();
 include '../funciones/consultas.php';
-ob_end_clean();
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -166,10 +165,18 @@ $html .= '
 </html>';
         
 // Generar el PDF
- try {
-     $dompdf->loadHtml($html);
-     $dompdf->render();
- $dompdf->stream('calif_'.$nombreAlumno.'.pdf', array('Attachment' => 0));
- } catch (Exception $e) {
-     echo 'Error al generar el PDF: ' . $e->getMessage();
- }
+try {
+    $dompdf->loadHtml($html);
+    $dompdf->render();
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $dompdf->stream('calificaciones_materia_' . (int)$idMateria . '.pdf', array('Attachment' => 0));
+} catch (Exception $e) {
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+    echo 'Error al generar el PDF: ' . $e->getMessage();
+}

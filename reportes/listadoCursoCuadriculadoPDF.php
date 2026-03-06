@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
@@ -43,7 +44,7 @@ $html = '
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #000; padding: 5px; text-align: center; }
         .nombre-alumno { width: 25%; text-align: left; }
-        .cuadro { width: 2.3%; height: 20px; } /* Ancho para que quepan 31 */
+        .cuadro { width: 2.3%; height: 22px; } /* Ancho para que quepan 31 */
     </style>
 <link rel="icon" type="image/png" href="../img/icon.png">
 
@@ -55,12 +56,12 @@ $html = '
         <h5>Plan: ' . htmlspecialchars($nombrePlan) . '</h5>
         <h5>Curso: ' . htmlspecialchars($nombreCurso) . ' - Ciclo Lectivo: ' . htmlspecialchars($nombreCiclo) . '</h5>
     </div>
-    <table>
+    <table border="1" cellspacing="0" cellpadding="0">
         <thead>
             <tr>
-                <th class="nombre-alumno">Apellido y Nombre</th>';
+                <th class="nombre-alumno" style="border: 1.2px solid #000;">Apellido y Nombre</th>';
 for ($i = 1; $i <= 31; $i++) {
-    $html .= '<th class="cuadro">' . $i . '</th>';
+    $html .= '<th class="cuadro" style="border: 1.2px solid #000;">' . $i . '</th>';
 }
 $html .= '
             </tr>
@@ -70,9 +71,9 @@ $html .= '
 foreach ($alumnos as $alumno) {
     $html .= '
             <tr>
-                <td class="nombre-alumno">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . '</td>';
+                <td class="nombre-alumno" style="border: 1.2px solid #000;">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . '</td>';
     for ($i = 1; $i <= 31; $i++) {
-        $html .= '<td class="cuadro">&nbsp;</td>'; // Celda vacía
+        $html .= '<td class="cuadro" style="border: 1.2px solid #000;">&nbsp;</td>'; // Celda vacía
     }
     $html .= '
             </tr>';
@@ -87,5 +88,9 @@ $html .= '
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'landscape'); // Hoja apaisada para que quepan las columnas
 $dompdf->render();
+if (ob_get_length()) { ob_end_clean(); }
 $dompdf->stream("listado_curso_cuadriculado.pdf", array("Attachment" => 0));
 ?>
+
+
+

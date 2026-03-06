@@ -82,8 +82,9 @@
         <i class="bi bi-person-vcard"></i> Personal
     </a>
     <ul class="dropdown-menu shadow" aria-labelledby="navbarDropdownPersonal">
-        <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Legajos</h6></li>
-        <li><a class="dropdown-item ps-4" href="buscarPersonal.php">ABM de Legajos</a></li>
+        <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Datos de Personal</h6></li>
+        <li><a class="dropdown-item ps-4" href="buscarPersonal.php">Legajos</a></li>
+        <li><a class="dropdown-item ps-4" href="asignarDocenteMateria.php">Asignar docente a materia</a></li>
     </ul>
 </li>
 
@@ -95,6 +96,7 @@
         <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Filtrado</h6></li>
         <li><a class="dropdown-item ps-4" href="listadoPorCurso.php">Listado por Curso</a></li>
         <li><a class="dropdown-item ps-4" href="listadoPorMateria.php">Listado por Materia</a></li>
+        <li><a class="dropdown-item ps-4" href="listadoPersonal.php">Listado de Personal</a></li>
         
         <li><hr class="dropdown-divider"></li>
         
@@ -109,6 +111,9 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownColegio">
                         <li><a class="dropdown-item" href="../secretaria/editParametrosWeb.php">Parámetros Web</a></li>
+                        <?php if ((int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7): ?>
+                            <li><a class="dropdown-item" href="../secretaria/usuarios.php">Usuarios y Permisos</a></li>
+                        <?php endif; ?>
                     </ul>
                 </li>
             </ul>

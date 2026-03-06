@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
@@ -64,13 +65,13 @@ $html = '
         <h4>Curso: ' . htmlspecialchars($nombreCurso) . '</h4>
         <h5>Materia: ' . htmlspecialchars($nombreMateria) . '</h5>
     </div>
-    <table>';
+    <table cellspacing="0" cellpadding="0">';
 
 foreach ($alumnos as $alumno) {
     $html .= '
         <tr>
-            <td class="nombre-alumno">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . '</td>
-            <td class="renglon"></td>
+            <td class="nombre-alumno" style="border-bottom: 1.5px solid #000; height: 20px;">' . htmlspecialchars($alumno['apellido'] . ', ' . $alumno['nombre']) . '</td>
+            <td class="renglon" style="border-bottom: 1.5px solid #000; height: 20px;">&nbsp;</td>
         </tr>';
 }
 
@@ -82,5 +83,9 @@ $html .= '
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
+if (ob_get_length()) { ob_end_clean(); }
 $dompdf->stream("listado_materia_renglon.pdf", array("Attachment" => 0));
 ?>
+
+
+

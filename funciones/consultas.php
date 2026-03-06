@@ -1903,8 +1903,12 @@ function obtenerTodasLasMaterias($conn, $idCicloLectivo, $idPlan, $idCurso = nul
     return [];
   }
 
-  // Usar call_user_func_array para bind_param con un array de parámetros dinámico
-  call_user_func_array([$stmt, 'bind_param'], array_merge([$types], $params));
+  // bind_param dinámico: los valores deben enviarse por referencia
+  $bindArgs = [$types];
+  foreach ($params as $idx => $valor) {
+    $bindArgs[] = &$params[$idx];
+  }
+  call_user_func_array([$stmt, 'bind_param'], $bindArgs);
 
   $stmt->execute();
   $result = $stmt->get_result();
@@ -2051,6 +2055,38 @@ function buscarPersonal($conexion, $apellido = '', $nombre = '') {
 }
 
 /**
+ * Obtiene personal para listados (solo activos o todo).
+ */
+function obtenerPersonalParaListado($conexion, $soloActivos = true) {
+    $sql = "SELECT pe.legajo, pe.actual, pe.cargo, p.apellido, p.nombre, p.dni
+            FROM personal pe
+            INNER JOIN persona p ON pe.idPersona = p.idPersona";
+
+    if ($soloActivos) {
+        $sql .= " WHERE pe.actual = 1";
+    }
+
+    $sql .= " ORDER BY p.apellido, p.nombre";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerPersonalParaListado: " . $conexion->error);
+        return [];
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+
+    $stmt->close();
+    return $rows;
+}
+
+/**
  * Obtiene los datos completos de un legajo de personal.
  */
 function obtenerDatosPersonal($conexion, $legajo) {
@@ -2091,8 +2127,8 @@ function insertPersonal($conexion, $idPersona, $data) {
     $sql = "INSERT INTO personal (
                 idPersona, estadoCivil, tipoCargo, cargo, titulo, legJunta, legEscuela,
                 escalafD, escalafE, numReg, apto, certArt28, incapac, actual, nivel,
-                fechaBaja, tipoTitulo, mailInst
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                fechaBaja, tipoTitulo, mailInst, registroModificacion, registroNuevo
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)";
 
     $stmt = $conexion->prepare($sql);
     if (!$stmt) {
@@ -2136,7 +2172,7 @@ function updatePersonal($conexion, $legajo, $data) {
             SET estadoCivil = ?, tipoCargo = ?, cargo = ?, titulo = ?, legJunta = ?,
                 legEscuela = ?, escalafD = ?, escalafE = ?, numReg = ?, apto = ?,
                 certArt28 = ?, incapac = ?, actual = ?, nivel = ?, fechaBaja = ?,
-                tipoTitulo = ?, mailInst = ?
+                tipoTitulo = ?, mailInst = ?, registroModificacion = 1
             WHERE legajo = ?";
 
     $stmt = $conexion->prepare($sql);
@@ -2170,6 +2206,126 @@ function updatePersonal($conexion, $legajo, $data) {
     $success = $stmt->execute();
     $stmt->close();
     return $success;
+}
+
+/**
+ * Obtiene personal activo (docentes) usando legajo de personal.
+ */
+function obtenerPersonalActivoLegajo($conexion) {
+    $sql = "SELECT pe.legajo, p.apellido, p.nombre, p.dni
+            FROM personal pe
+            INNER JOIN persona p ON p.idPersona = pe.idPersona
+            WHERE pe.actual = 1
+            ORDER BY p.apellido, p.nombre";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerPersonalActivoLegajo: " . $conexion->error);
+        return [];
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    $stmt->close();
+    return $rows;
+}
+
+/**
+ * Obtiene asignaciones de docentes para una materia.
+ */
+function obtenerAsignacionesProfesorMateria($conexion, $idMateria) {
+    $sql = "SELECT pm.idProfXMat, pm.idMateria, pm.idPersonal, pm.tipo,
+                   pm.registroNuevo, pm.registroModificacion,
+                   p.apellido, p.nombre, p.dni
+            FROM profesorxmateria pm
+            INNER JOIN personal pe ON pe.legajo = pm.idPersonal
+            INNER JOIN persona p ON p.idPersona = pe.idPersona
+            WHERE pm.idMateria = ?
+            ORDER BY
+                CASE pm.tipo
+                    WHEN 'Titular' THEN 1
+                    WHEN 'Suplente' THEN 2
+                    WHEN 'Equipo Docente' THEN 3
+                    ELSE 4
+                END,
+                p.apellido, p.nombre";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerAsignacionesProfesorMateria: " . $conexion->error);
+        return [];
+    }
+
+    $stmt->bind_param("i", $idMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    $stmt->close();
+    return $rows;
+}
+
+/**
+ * Inserta asignacion en profesorxmateria.
+ */
+function insertProfesorMateria($conexion, $idMateria, $idPersonal, $tipo) {
+    $sql = "INSERT INTO profesorxmateria
+            (idMateria, idPersonal, tipo, registroModificacion, registroNuevo)
+            VALUES (?, ?, ?, 0, 1)";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar insertProfesorMateria: " . $conexion->error);
+        return false;
+    }
+
+    $stmt->bind_param("iis", $idMateria, $idPersonal, $tipo);
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
+}
+
+/**
+ * Actualiza asignacion en profesorxmateria.
+ */
+function updateProfesorMateria($conexion, $idProfXMat, $idPersonal, $tipo) {
+    $sql = "UPDATE profesorxmateria
+            SET idPersonal = ?, tipo = ?, registroModificacion = 1
+            WHERE idProfXMat = ?";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar updateProfesorMateria: " . $conexion->error);
+        return false;
+    }
+
+    $stmt->bind_param("isi", $idPersonal, $tipo, $idProfXMat);
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
+}
+
+/**
+ * Elimina asignacion en profesorxmateria.
+ */
+function deleteProfesorMateria($conexion, $idProfXMat) {
+    $sql = "DELETE FROM profesorxmateria WHERE idProfXMat = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar deleteProfesorMateria: " . $conexion->error);
+        return false;
+    }
+    $stmt->bind_param("i", $idProfXMat);
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
 }
 
 
@@ -4806,4 +4962,372 @@ function actualizarEstadoSolicitudCursadoWeb($conn, $idMatriculacionWeb, $estado
         return $res;
     }
     return false;
+}
+
+/**
+ * Obtiene todos los usuarios administrativos.
+ */
+function obtenerUsuariosAdmin($conexion) {
+    $sql = "SELECT idusuarios, nombreUsuario, tipoPermiso, idnivel
+            FROM usuarios
+            ORDER BY nombreUsuario ASC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerUsuariosAdmin: " . $conexion->error);
+        return [];
+    }
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $rows = [];
+    while ($row = $res->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    $stmt->close();
+    return $rows;
+}
+
+/**
+ * Obtiene un usuario administrativo por ID.
+ */
+function obtenerUsuarioAdminPorId($conexion, $idUsuario) {
+    $sql = "SELECT idusuarios, nombreUsuario, tipoPermiso, idnivel
+            FROM usuarios
+            WHERE idusuarios = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerUsuarioAdminPorId: " . $conexion->error);
+        return null;
+    }
+    $stmt->bind_param("i", $idUsuario);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res->fetch_assoc();
+    $stmt->close();
+    return $row ?: null;
+}
+
+/**
+ * Verifica si existe un nombre de usuario.
+ */
+function existeNombreUsuarioAdmin($conexion, $nombreUsuario, $excludeId = null) {
+    $sql = "SELECT COUNT(*) AS cantidad FROM usuarios WHERE nombreUsuario = ?";
+    if ($excludeId !== null) {
+        $sql .= " AND idusuarios <> ?";
+    }
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar existeNombreUsuarioAdmin: " . $conexion->error);
+        return true;
+    }
+
+    if ($excludeId !== null) {
+        $stmt->bind_param("si", $nombreUsuario, $excludeId);
+    } else {
+        $stmt->bind_param("s", $nombreUsuario);
+    }
+
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res->fetch_assoc();
+    $stmt->close();
+    return ((int)$row['cantidad']) > 0;
+}
+
+/**
+ * Crea usuario forzando reglas de negocio:
+ * tipoPermiso = 0, idnivel = 6.
+ */
+function crearUsuarioAdmin($conexion, $nombreUsuario, $clave) {
+    $tipoPermiso = "0";
+    $idNivel = 6;
+    $sql = "INSERT INTO usuarios (nombreUsuario, clave, tipoPermiso, idnivel)
+            VALUES (?, ?, ?, ?)";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar crearUsuarioAdmin: " . $conexion->error);
+        return false;
+    }
+    $stmt->bind_param("sssi", $nombreUsuario, $clave, $tipoPermiso, $idNivel);
+    $ok = $stmt->execute();
+    $nuevoId = $conexion->insert_id;
+    $stmt->close();
+    return $ok ? $nuevoId : false;
+}
+
+/**
+ * Actualiza usuario administrativo.
+ * Si $nuevaClave viene vacia, mantiene la clave actual.
+ */
+function actualizarUsuarioAdmin($conexion, $idUsuario, $nombreUsuario, $nuevaClave = '') {
+    if ($nuevaClave !== '') {
+        $sql = "UPDATE usuarios
+                SET nombreUsuario = ?, clave = ?
+                WHERE idusuarios = ?";
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            error_log("Error al preparar actualizarUsuarioAdmin(con clave): " . $conexion->error);
+            return false;
+        }
+        $stmt->bind_param("ssi", $nombreUsuario, $nuevaClave, $idUsuario);
+    } else {
+        $sql = "UPDATE usuarios
+                SET nombreUsuario = ?
+                WHERE idusuarios = ?";
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            error_log("Error al preparar actualizarUsuarioAdmin(sin clave): " . $conexion->error);
+            return false;
+        }
+        $stmt->bind_param("si", $nombreUsuario, $idUsuario);
+    }
+
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
+}
+
+/**
+ * Elimina usuario administrativo.
+ */
+function eliminarUsuarioAdmin($conexion, $idUsuario) {
+    $conexion->begin_transaction();
+    try {
+        $sqlPerm = "DELETE FROM llavesxform WHERE idusuario = ?";
+        $stmtPerm = $conexion->prepare($sqlPerm);
+        if (!$stmtPerm) {
+            throw new Exception("No se pudo limpiar permisos del usuario.");
+        }
+        $stmtPerm->bind_param("i", $idUsuario);
+        $stmtPerm->execute();
+        $stmtPerm->close();
+
+        $sql = "DELETE FROM usuarios WHERE idusuarios = ?";
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            throw new Exception("No se pudo eliminar el usuario.");
+        }
+        $stmt->bind_param("i", $idUsuario);
+        $stmt->execute();
+        $stmt->close();
+
+        $conexion->commit();
+        return true;
+    } catch (Exception $e) {
+        $conexion->rollback();
+        error_log("Error en eliminarUsuarioAdmin: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Obtiene formularios disponibles.
+ */
+function obtenerFormulariosPermisos($conexion) {
+    $sql = "SELECT idformulario, formulario
+            FROM formularios
+            ORDER BY formulario ASC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerFormulariosPermisos: " . $conexion->error);
+        return [];
+    }
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $rows = [];
+    while ($row = $res->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    $stmt->close();
+    return $rows;
+}
+
+/**
+ * Obtiene llaves generales.
+ */
+function obtenerLlavesGenerales($conexion) {
+    $sql = "SELECT idllavegral, llavesgenerales
+            FROM llavesgenerales
+            ORDER BY idllavegral ASC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerLlavesGenerales: " . $conexion->error);
+        return [];
+    }
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $rows = [];
+    while ($row = $res->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    $stmt->close();
+    return $rows;
+}
+
+/**
+ * Obtiene llaves especificas por formulario.
+ */
+function obtenerLlavesPorFormulario($conexion, $idFormulario) {
+    $sql = "SELECT idllave, llave, idformulario
+            FROM llaves
+            WHERE idformulario = ?
+            ORDER BY llave ASC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerLlavesPorFormulario: " . $conexion->error);
+        return [];
+    }
+    $stmt->bind_param("i", $idFormulario);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $rows = [];
+    while ($row = $res->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    $stmt->close();
+    return $rows;
+}
+
+/**
+ * Devuelve la configuracion de permisos de un usuario para un formulario.
+ */
+function obtenerPermisosUsuarioFormulario($conexion, $idUsuario, $idFormulario) {
+    $sql = "SELECT idllavegral, idllave
+            FROM llavesxform
+            WHERE idusuario = ? AND idformulario = ?";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerPermisosUsuarioFormulario: " . $conexion->error);
+        return ['idllavegral' => 0, 'llaves' => []];
+    }
+    $stmt->bind_param("ii", $idUsuario, $idFormulario);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    $modo = 0;
+    $llaves = [];
+    while ($row = $res->fetch_assoc()) {
+        $idLlaveGral = (int)$row['idllavegral'];
+        if ($idLlaveGral === 1) {
+            $modo = 1;
+        } elseif ($idLlaveGral === 2 && $modo !== 1) {
+            $modo = 2;
+        } elseif ($idLlaveGral === 3 && $modo !== 1 && $modo !== 2) {
+            $modo = 3;
+        }
+
+        if (!empty($row['idllave'])) {
+            $llaves[] = (int)$row['idllave'];
+        }
+    }
+
+    $stmt->close();
+    return ['idllavegral' => $modo, 'llaves' => array_values(array_unique($llaves))];
+}
+
+/**
+ * Guarda permisos para un usuario/formulario.
+ * Primero limpia permisos previos y luego inserta la nueva configuracion.
+ */
+function guardarPermisosUsuarioFormulario($conexion, $idUsuario, $idFormulario, $idLlaveGral, $idsLlaves = []) {
+    $conexion->begin_transaction();
+    try {
+        $sqlDelete = "DELETE FROM llavesxform WHERE idusuario = ? AND idformulario = ?";
+        $stmtDelete = $conexion->prepare($sqlDelete);
+        if (!$stmtDelete) {
+            throw new Exception("No se pudo preparar el borrado de permisos.");
+        }
+        $stmtDelete->bind_param("ii", $idUsuario, $idFormulario);
+        $stmtDelete->execute();
+        $stmtDelete->close();
+
+        if ((int)$idLlaveGral === 1 || (int)$idLlaveGral === 2) {
+            $sqlInsert = "INSERT INTO llavesxform (idusuario, idformulario, idllave, idllavegral)
+                          VALUES (?, ?, NULL, ?)";
+            $stmtInsert = $conexion->prepare($sqlInsert);
+            if (!$stmtInsert) {
+                throw new Exception("No se pudo preparar la insercion de permisos.");
+            }
+            $stmtInsert->bind_param("iii", $idUsuario, $idFormulario, $idLlaveGral);
+            $stmtInsert->execute();
+            $stmtInsert->close();
+        } elseif ((int)$idLlaveGral === 3) {
+            $sqlInsertEsp = "INSERT INTO llavesxform (idusuario, idformulario, idllave, idllavegral)
+                             VALUES (?, ?, ?, 3)";
+            $stmtInsertEsp = $conexion->prepare($sqlInsertEsp);
+            if (!$stmtInsertEsp) {
+                throw new Exception("No se pudo preparar la insercion de llaves especificas.");
+            }
+
+            foreach ($idsLlaves as $idLlave) {
+                $idLlave = (int)$idLlave;
+                if ($idLlave <= 0) {
+                    continue;
+                }
+                $stmtInsertEsp->bind_param("iii", $idUsuario, $idFormulario, $idLlave);
+                $stmtInsertEsp->execute();
+            }
+            $stmtInsertEsp->close();
+        }
+
+        $conexion->commit();
+        return true;
+    } catch (Exception $e) {
+        $conexion->rollback();
+        error_log("Error en guardarPermisosUsuarioFormulario: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Obtiene una vista resumida de permisos por usuario para la grilla.
+ */
+function obtenerResumenPermisosUsuarios($conexion) {
+    $usuarios = obtenerUsuariosAdmin($conexion);
+    if (empty($usuarios)) {
+        return [];
+    }
+
+    $sql = "SELECT
+                x.idusuario,
+                f.formulario,
+                CASE
+                    WHEN SUM(CASE WHEN x.idllavegral = 1 THEN 1 ELSE 0 END) > 0 THEN 'Total'
+                    WHEN SUM(CASE WHEN x.idllavegral = 2 THEN 1 ELSE 0 END) > 0 THEN 'Lectura'
+                    WHEN SUM(CASE WHEN x.idllavegral = 3 THEN 1 ELSE 0 END) > 0 THEN 'Especifica'
+                    ELSE 'Sin acceso'
+                END AS modalidad
+            FROM llavesxform x
+            INNER JOIN formularios f ON f.idformulario = x.idformulario
+            GROUP BY x.idusuario, x.idformulario, f.formulario
+            ORDER BY f.formulario ASC";
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerResumenPermisosUsuarios: " . $conexion->error);
+        foreach ($usuarios as &$u) {
+            $u['resumenPermisos'] = 'Sin permisos configurados';
+        }
+        return $usuarios;
+    }
+
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $resumenPorUsuario = [];
+    while ($row = $res->fetch_assoc()) {
+        $idU = (int)$row['idusuario'];
+        if (!isset($resumenPorUsuario[$idU])) {
+            $resumenPorUsuario[$idU] = [];
+        }
+        $resumenPorUsuario[$idU][] = $row['formulario'] . ': ' . $row['modalidad'];
+    }
+    $stmt->close();
+
+    foreach ($usuarios as &$u) {
+        $idU = (int)$u['idusuarios'];
+        $u['resumenPermisos'] = !empty($resumenPorUsuario[$idU])
+            ? implode(' | ', $resumenPorUsuario[$idU])
+            : 'Sin permisos configurados';
+    }
+
+    return $usuarios;
 }
