@@ -111,6 +111,10 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownColegio">
                         <li><a class="dropdown-item" href="../secretaria/editParametrosWeb.php">Parámetros Web</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Parámetros</h6></li>
+                        <li><a class="dropdown-item ps-4" href="../secretaria/parametrosPlanesEstudio.php">Planes de estudio</a></li>
+                        <li><a class="dropdown-item ps-4" href="../secretaria/parametrosCursos.php">Cursos</a></li>
                         <?php if ((int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7): ?>
                             <li><a class="dropdown-item" href="../secretaria/usuarios.php">Usuarios y Permisos</a></li>
                         <?php endif; ?>
@@ -137,3 +141,4 @@
     </div>
 </nav>
 <link rel="stylesheet" href="../css/estilos.css">
+

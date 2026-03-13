@@ -2768,6 +2768,432 @@ function obtenerPlanesDeEstudio($conexion) {
   $stmt->close();
   return $planes;
 }
+
+function obtenerPlanesDeEstudioPorNivel($conexion, $idNivel = 6) {
+  $sql = "SELECT idPlan, idNivel, numero, nombre, cursado, resolucion, registroNuevo, registroModificacion
+          FROM plandeestudio
+          WHERE idNivel = ?
+          ORDER BY CAST(numero AS UNSIGNED), numero, nombre";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar obtenerPlanesDeEstudioPorNivel: " . $conexion->error);
+      return [];
+  }
+
+  $stmt->bind_param("i", $idNivel);
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar obtenerPlanesDeEstudioPorNivel: " . $stmt->error);
+      $stmt->close();
+      return [];
+  }
+
+  $result = $stmt->get_result();
+  $planes = [];
+  while ($row = $result->fetch_assoc()) {
+      $planes[] = $row;
+  }
+  $stmt->close();
+  return $planes;
+}
+
+function crearPlanDeEstudio($conexion, $numero, $nombre, $cursado, $resolucion = null, $idNivel = 6) {
+  $sql = "INSERT INTO plandeestudio (idNivel, numero, nombre, cursado, resolucion, registroNuevo, registroModificacion)
+          VALUES (?, ?, ?, ?, ?, 1, 0)";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar crearPlanDeEstudio: " . $conexion->error);
+      return false;
+  }
+
+  $stmt->bind_param("issss", $idNivel, $numero, $nombre, $cursado, $resolucion);
+  $ok = $stmt->execute();
+  if (!$ok) {
+      error_log("Error al ejecutar crearPlanDeEstudio: " . $stmt->error);
+  }
+  $stmt->close();
+  return $ok;
+}
+
+function actualizarPlanDeEstudio($conexion, $idPlan, $numero, $nombre, $cursado, $resolucion = null, $idNivel = 6) {
+  $sql = "UPDATE plandeestudio
+          SET idNivel = ?, numero = ?, nombre = ?, cursado = ?, resolucion = ?, registroModificacion = 1
+          WHERE idPlan = ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar actualizarPlanDeEstudio: " . $conexion->error);
+      return false;
+  }
+
+  $stmt->bind_param("issssi", $idNivel, $numero, $nombre, $cursado, $resolucion, $idPlan);
+  $ok = $stmt->execute();
+  if (!$ok) {
+      error_log("Error al ejecutar actualizarPlanDeEstudio: " . $stmt->error);
+  }
+  $stmt->close();
+  return $ok;
+}
+
+function eliminarPlanDeEstudio($conexion, $idPlan) {
+  if (planDeEstudioTieneCursos($conexion, $idPlan)) {
+      return false;
+  }
+
+  $sql = "DELETE FROM plandeestudio WHERE idPlan = ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar eliminarPlanDeEstudio: " . $conexion->error);
+      return false;
+  }
+
+  $stmt->bind_param("i", $idPlan);
+  $ok = $stmt->execute();
+  if (!$ok) {
+      error_log("Error al ejecutar eliminarPlanDeEstudio: " . $stmt->error);
+  }
+  $stmt->close();
+  return $ok;
+}
+
+function planDeEstudioTieneCursos($conexion, $idPlan) {
+  $sql = "SELECT COUNT(*) AS total FROM curso WHERE idPlanEstudio = ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar planDeEstudioTieneCursos: " . $conexion->error);
+      return true;
+  }
+
+  $stmt->bind_param("i", $idPlan);
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar planDeEstudioTieneCursos: " . $stmt->error);
+      $stmt->close();
+      return true;
+  }
+
+  $result = $stmt->get_result();
+  $row = $result ? $result->fetch_assoc() : null;
+  $stmt->close();
+
+  return ((int)($row['total'] ?? 0) > 0);
+}
+
+function obtenerCiclosLectivos($conexion) {
+  $sql = "SELECT idciclolectivo, anio FROM ciclolectivo ORDER BY anio DESC";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar obtenerCiclosLectivos: " . $conexion->error);
+      return [];
+  }
+
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar obtenerCiclosLectivos: " . $stmt->error);
+      $stmt->close();
+      return [];
+  }
+
+  $result = $stmt->get_result();
+  $rows = [];
+  while ($row = $result->fetch_assoc()) {
+      $rows[] = $row;
+  }
+  $stmt->close();
+  return $rows;
+}
+
+function obtenerTurnosCursos($conexion) {
+  $sql = "SELECT idTurnoCurso, nombre FROM turnoscursos ORDER BY nombre ASC";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar obtenerTurnosCursos: " . $conexion->error);
+      return [];
+  }
+
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar obtenerTurnosCursos: " . $stmt->error);
+      $stmt->close();
+      return [];
+  }
+
+  $result = $stmt->get_result();
+  $rows = [];
+  while ($row = $result->fetch_assoc()) {
+      $rows[] = $row;
+  }
+  $stmt->close();
+  return $rows;
+}
+
+function obtenerDivisiones($conexion) {
+  $sql = "SELECT idDivision, nombre FROM division ORDER BY nombre ASC";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar obtenerDivisiones: " . $conexion->error);
+      return [];
+  }
+
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar obtenerDivisiones: " . $stmt->error);
+      $stmt->close();
+      return [];
+  }
+
+  $result = $stmt->get_result();
+  $rows = [];
+  while ($row = $result->fetch_assoc()) {
+      $rows[] = $row;
+  }
+  $stmt->close();
+  return $rows;
+}
+
+function obtenerCursosPredeterminadosPorNivel($conexion, $idNivel = 6) {
+  $sql = "SELECT idcursopredeterminado, nombre
+          FROM cursospredeterminado
+          WHERE idNivel = ?
+          ORDER BY idcursopredeterminado ASC";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar obtenerCursosPredeterminadosPorNivel: " . $conexion->error);
+      return [];
+  }
+
+  $stmt->bind_param("i", $idNivel);
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar obtenerCursosPredeterminadosPorNivel: " . $stmt->error);
+      $stmt->close();
+      return [];
+  }
+
+  $result = $stmt->get_result();
+  $rows = [];
+  while ($row = $result->fetch_assoc()) {
+      $rows[] = $row;
+  }
+  $stmt->close();
+  return $rows;
+}
+
+function obtenerCursosPorNivel($conexion, $idNivel = 6, $idCiclo = 0) {
+  $sql = "SELECT c.idCurso, c.idNivel, c.nombre, c.idciclo, c.idPlanEstudio, c.idTurnoCurso, c.cursoPrincipal,
+                 c.idcursopredeterminado, c.idDivision, c.registroNuevo, c.registroModificacion,
+                 cl.anio AS anioCiclo,
+                 pe.nombre AS nombrePlan,
+                 tc.nombre AS nombreTurno,
+                 d.nombre AS nombreDivision,
+                 cp.nombre AS nombreCursoPredeterminado
+          FROM curso c
+          INNER JOIN ciclolectivo cl ON cl.idciclolectivo = c.idciclo
+          INNER JOIN plandeestudio pe ON pe.idPlan = c.idPlanEstudio
+          INNER JOIN turnoscursos tc ON tc.idTurnoCurso = c.idTurnoCurso
+          INNER JOIN division d ON d.idDivision = c.idDivision
+          INNER JOIN cursospredeterminado cp ON cp.idcursopredeterminado = c.idcursopredeterminado
+          WHERE c.idNivel = ?";
+  $types = "i";
+  $params = [$idNivel];
+
+  if ((int)$idCiclo > 0) {
+      $sql .= " AND c.idciclo = ?";
+      $types .= "i";
+      $params[] = (int)$idCiclo;
+  }
+
+  $sql .= "
+          ORDER BY cl.anio DESC, pe.nombre ASC, cp.idcursopredeterminado ASC, c.idCurso ASC";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar obtenerCursosPorNivel: " . $conexion->error);
+      return [];
+  }
+
+  $bindValues = [];
+  $bindValues[] = &$types;
+  foreach ($params as $k => $v) {
+      $bindValues[] = &$params[$k];
+  }
+  call_user_func_array([$stmt, 'bind_param'], $bindValues);
+
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar obtenerCursosPorNivel: " . $stmt->error);
+      $stmt->close();
+      return [];
+  }
+
+  $result = $stmt->get_result();
+  $rows = [];
+  while ($row = $result->fetch_assoc()) {
+      $rows[] = $row;
+  }
+  $stmt->close();
+  return $rows;
+}
+
+function generarNombreCurso($conexion, $idCursoPredeterminado, $idDivision, $idTurnoCurso) {
+  $sql = "SELECT cp.nombre AS nombrePredeterminado, d.nombre AS nombreDivision, tc.nombre AS nombreTurno
+          FROM cursospredeterminado cp
+          INNER JOIN division d ON d.idDivision = ?
+          INNER JOIN turnoscursos tc ON tc.idTurnoCurso = ?
+          WHERE cp.idcursopredeterminado = ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar generarNombreCurso: " . $conexion->error);
+      return '';
+  }
+
+  $stmt->bind_param("iii", $idDivision, $idTurnoCurso, $idCursoPredeterminado);
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar generarNombreCurso: " . $stmt->error);
+      $stmt->close();
+      return '';
+  }
+
+  $result = $stmt->get_result();
+  $row = $result ? $result->fetch_assoc() : null;
+  $stmt->close();
+
+  if (!$row) {
+      return '';
+  }
+
+  return trim(($row['nombrePredeterminado'] ?? '') . ' ' . ($row['nombreDivision'] ?? '') . ' ' . ($row['nombreTurno'] ?? ''));
+}
+
+function existeCursoPrincipalReferente($conexion, $idPlanEstudio, $idCursoPredeterminado, $idCursoExcluir = 0) {
+  $sql = "SELECT COUNT(*) AS total
+          FROM curso
+          WHERE idNivel = 6
+            AND idPlanEstudio = ?
+            AND idcursopredeterminado = ?
+            AND cursoPrincipal = 1
+            AND idCurso <> ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar existeCursoPrincipalReferente: " . $conexion->error);
+      return true;
+  }
+
+  $stmt->bind_param("iii", $idPlanEstudio, $idCursoPredeterminado, $idCursoExcluir);
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar existeCursoPrincipalReferente: " . $stmt->error);
+      $stmt->close();
+      return true;
+  }
+
+  $result = $stmt->get_result();
+  $row = $result ? $result->fetch_assoc() : null;
+  $stmt->close();
+  return ((int)($row['total'] ?? 0) > 0);
+}
+
+function crearCurso($conexion, $idCiclo, $idPlanEstudio, $idTurnoCurso, $idDivision, $idCursoPredeterminado, $cursoPrincipal, &$error = '') {
+  $nombreCurso = generarNombreCurso($conexion, $idCursoPredeterminado, $idDivision, $idTurnoCurso);
+  if ($nombreCurso === '') {
+      $error = 'No se pudo generar el nombre del curso con los datos seleccionados.';
+      return false;
+  }
+
+  if ((int)$cursoPrincipal === 1 && existeCursoPrincipalReferente($conexion, $idPlanEstudio, $idCursoPredeterminado, 0)) {
+      $error = 'Ya existe un curso referente para ese plan y curso predeterminado.';
+      return false;
+  }
+
+  $idNivel = 6;
+  $sql = "INSERT INTO curso
+          (idNivel, nombre, idciclo, idPlanEstudio, idTurnoCurso, cursoPrincipal, idcursopredeterminado, idDivision, registroModificacion, registroNuevo)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1)";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      $error = 'Error al preparar alta de curso.';
+      error_log("Error en preparar crearCurso: " . $conexion->error);
+      return false;
+  }
+
+  $stmt->bind_param("isiiiiii", $idNivel, $nombreCurso, $idCiclo, $idPlanEstudio, $idTurnoCurso, $cursoPrincipal, $idCursoPredeterminado, $idDivision);
+  $ok = $stmt->execute();
+  if (!$ok) {
+      $error = 'Error al crear curso: ' . $stmt->error;
+      error_log("Error al ejecutar crearCurso: " . $stmt->error);
+  }
+  $stmt->close();
+  return $ok;
+}
+
+function actualizarCurso($conexion, $idCurso, $idCiclo, $idPlanEstudio, $idTurnoCurso, $idDivision, $idCursoPredeterminado, $cursoPrincipal, &$error = '') {
+  $nombreCurso = generarNombreCurso($conexion, $idCursoPredeterminado, $idDivision, $idTurnoCurso);
+  if ($nombreCurso === '') {
+      $error = 'No se pudo generar el nombre del curso con los datos seleccionados.';
+      return false;
+  }
+
+  if ((int)$cursoPrincipal === 1 && existeCursoPrincipalReferente($conexion, $idPlanEstudio, $idCursoPredeterminado, $idCurso)) {
+      $error = 'Ya existe un curso referente para ese plan y curso predeterminado.';
+      return false;
+  }
+
+  $idNivel = 6;
+  $sql = "UPDATE curso
+          SET idNivel = ?, nombre = ?, idciclo = ?, idPlanEstudio = ?, idTurnoCurso = ?, cursoPrincipal = ?,
+              idcursopredeterminado = ?, idDivision = ?, registroModificacion = 1
+          WHERE idCurso = ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      $error = 'Error al preparar actualizacion de curso.';
+      error_log("Error en preparar actualizarCurso: " . $conexion->error);
+      return false;
+  }
+
+  $stmt->bind_param("isiiiiiii", $idNivel, $nombreCurso, $idCiclo, $idPlanEstudio, $idTurnoCurso, $cursoPrincipal, $idCursoPredeterminado, $idDivision, $idCurso);
+  $ok = $stmt->execute();
+  if (!$ok) {
+      $error = 'Error al actualizar curso: ' . $stmt->error;
+      error_log("Error al ejecutar actualizarCurso: " . $stmt->error);
+  }
+  $stmt->close();
+  return $ok;
+}
+
+function eliminarCurso($conexion, $idCurso, &$error = '') {
+  if (cursoTieneMaterias($conexion, $idCurso)) {
+      $error = 'No se puede eliminar el curso porque tiene materias creadas.';
+      return false;
+  }
+
+  $sql = "DELETE FROM curso WHERE idCurso = ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      $error = 'Error al preparar eliminacion de curso.';
+      error_log("Error en preparar eliminarCurso: " . $conexion->error);
+      return false;
+  }
+
+  $stmt->bind_param("i", $idCurso);
+  $ok = $stmt->execute();
+  if (!$ok) {
+      $error = 'No se pudo eliminar el curso. Puede tener registros relacionados.';
+      error_log("Error al ejecutar eliminarCurso: " . $stmt->error);
+  }
+  $stmt->close();
+  return $ok;
+}
+
+function cursoTieneMaterias($conexion, $idCurso) {
+  $sql = "SELECT COUNT(*) AS total FROM materiaterciario WHERE idCurso = ?";
+  $stmt = $conexion->prepare($sql);
+  if (!$stmt) {
+      error_log("Error en preparar cursoTieneMaterias: " . $conexion->error);
+      return true;
+  }
+
+  $stmt->bind_param("i", $idCurso);
+  if (!$stmt->execute()) {
+      error_log("Error al ejecutar cursoTieneMaterias: " . $stmt->error);
+      $stmt->close();
+      return true;
+  }
+
+  $result = $stmt->get_result();
+  $row = $result ? $result->fetch_assoc() : null;
+  $stmt->close();
+  return ((int)($row['total'] ?? 0) > 0);
+}
 // Nueva función para actualizar matriculación de plan/curso
 function actualizarMatriculacionPlan($conexion, $idMatriculacion, $data) {
     $sql = "UPDATE matriculacion SET idNivel=?, idCurso=?, idAlumno=?, fechaMatriculacion=?, anio=?, estado=?, tarde=?, idPlanDeEstudio=?, pagoMatricula=?, pagoMonto=?, certificadoSalud=?, fechaBajaMatriculacion=?, certificadoTrabajo=?
@@ -3766,6 +4192,51 @@ function checkMatriculacionMateriaExiste($conexion, $idAlumno, $idMateria) {
     $row = $result->fetch_assoc();
     $stmt->close();
     return $row['count'] > 0;
+}
+
+/**
+ * Obtiene los ciclos lectivos en los que el alumno ya estuvo matriculado
+ * en la misma materia (comparando por idUnicoMateria).
+ *
+ * Se utiliza principalmente para:
+ * - Detectar si ya está inscripto en el mismo ciclo lectivo (para rechazar).
+ * - Permitir inscripción como recursante en un ciclo distinto.
+ *
+ * @param mysqli $conexion
+ * @param int $idAlumno
+ * @param int $idMateria (PK de la materia que se intenta inscribir)
+ * @return int[] Arreglo de idCicloLectivo existentes (puede incluir 0 para presistema/equivalencias)
+ */
+function obtenerCiclosMatriculacionMateria($conexion, $idAlumno, $idMateria) {
+    $sql = "SELECT DISTINCT mm.idCicloLectivo
+            FROM matriculacionmateria mm
+            JOIN materiaterciario mt ON mm.idMateria = mt.idMateria
+            WHERE mm.idAlumno = ?
+              AND mt.idUnicoMateria = (
+                  SELECT m_inner.idUnicoMateria
+                  FROM materiaterciario m_inner
+                  WHERE m_inner.idMateria = ?
+              )";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerCiclosMatriculacionMateria: " . $conexion->error);
+        return [];
+    }
+
+    $stmt->bind_param("ii", $idAlumno, $idMateria);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $ciclos = [];
+    while ($row = $result->fetch_assoc()) {
+        if (isset($row['idCicloLectivo'])) {
+            $ciclos[] = (int)$row['idCicloLectivo'];
+        }
+    }
+
+    $stmt->close();
+    return $ciclos;
 }
 
 /**

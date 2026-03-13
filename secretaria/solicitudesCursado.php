@@ -166,9 +166,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
 
                         if ($accion === 'ACEPTAR') {
-                            if (checkMatriculacionMateriaExiste($conn, $datosOrig['idAlumno'], $datosOrig['idMateria'])) {
-                                actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 2, "Ya estaba inscripto previamente.");
-                                $detallesError[] = "<b>$nombreAlumno:</b> Ya inscripto. Solicitud marcada procesada.";
+                            // Verificar inscripciones previas por ciclo lectivo usando idUnicoMateria
+                            $ciclosExistentes = obtenerCiclosMatriculacionMateria(
+                                $conn,
+                                (int)$datosOrig['idAlumno'],
+                                (int)$datosOrig['idMateria']
+                            );
+                            $yaEnMismoCiclo = in_array($idCiclo, $ciclosExistentes, true);
+
+                            // Si ya tiene una inscripción en el mismo ciclo lectivo seleccionado,
+                            // la solicitud se RECHAZA (estado = 3).
+                            if ($yaEnMismoCiclo) {
+                                actualizarEstadoSolicitudCursadoWeb($conn, $idWeb, 3, "Ya estaba inscripto en este ciclo lectivo.");
+                                $detallesError[] = "<b>$nombreAlumno:</b> Ya inscripto en este ciclo lectivo. Solicitud rechazada.";
                                 $procesadosExito++;
                                 continue;
                             }
