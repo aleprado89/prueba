@@ -109,6 +109,9 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
 
             $idInscripcionExamen = $data['idInscripcionExamen'];
             $examen = " ";
+            $fechaExamenFmt = '';
+            $libroEx = '';
+            $folioEx = '';
 
             if ($idInscripcionExamen == null || $idInscripcionExamen == 0) {
 
@@ -128,20 +131,39 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
 
                             $fechaMax = $ex['Fecha'];
                             $examen = $ex['Calificacion'];
+                            $libroEx = isset($ex['Libro']) ? trim((string)$ex['Libro']) : '';
+                            $folioEx = isset($ex['Folio']) ? trim((string)$ex['Folio']) : '';
+                            if (!empty($ex['Fecha'])) {
+                                $fechaExamenFmt = date('d/m/Y', strtotime($ex['Fecha']));
+                            }
                         }
                     }
                 }
 
             } else {
 
-                $consultaExamen = "SELECT calificacion FROM inscripcionexamenes WHERE idInscripcion = ?";
+                $consultaExamen = "SELECT ie.calificacion, ie.libro, ie.folio, fe.fecha AS fechaExamen
+                    FROM inscripcionexamenes ie
+                    LEFT JOIN fechasexamenes fe ON ie.idFechaExamen = fe.idFechaExamen
+                    WHERE ie.idInscripcion = ?";
                 $stmtExamen = $conexion->prepare($consultaExamen);
                 $stmtExamen->bind_param("i", $idInscripcionExamen);
                 $stmtExamen->execute();
-                $ex = $stmtExamen->get_result();
-                $examen = $ex->fetch_assoc()["calificacion"] ?? "";
+                $exRes = $stmtExamen->get_result();
+                $rowEx = $exRes ? $exRes->fetch_assoc() : null;
+                $stmtExamen->close();
+                if ($rowEx) {
+                    $examen = $rowEx['calificacion'] ?? "";
+                    $libroEx = isset($rowEx['libro']) ? trim((string)$rowEx['libro']) : '';
+                    $folioEx = isset($rowEx['folio']) ? trim((string)$rowEx['folio']) : '';
+                    if (!empty($rowEx['fechaExamen'])) {
+                        $fechaExamenFmt = date('d/m/Y', strtotime($rowEx['fechaExamen']));
+                    }
+                } else {
+                    $examen = '';
+                }
 
-                if (empty($examen)) {
+                if ($examen === null || $examen === '' || trim((string)$examen) === '') {
                     $examenes = buscarExamenes($conexion, $idAlumno, $data['idMateria']);
                     $fechaMax = null;
                     foreach ($examenes as $ex) {
@@ -150,7 +172,38 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
 
                             $fechaMax = $ex['Fecha'];
                             $examen = $ex['Calificacion'];
+                            $libroEx = isset($ex['Libro']) ? trim((string)$ex['Libro']) : '';
+                            $folioEx = isset($ex['Folio']) ? trim((string)$ex['Folio']) : '';
+                            if (!empty($ex['Fecha'])) {
+                                $fechaExamenFmt = date('d/m/Y', strtotime($ex['Fecha']));
+                            }
                         }
+                    }
+                }
+            }
+
+            // PreSistema / Equivalencia / Pase: suelen tener registro en inscripcionexamenes (p. ej. idCondicion 0)
+            // aunque calificacionesterciario.idInscripcionExamen sea NULL (equivalencia) o falte fecha si idFechaExamen=0.
+            if (
+                ($data['estadoCursado'] == "Aprobación PreSistema" ||
+                 $data['estadoCursado'] == "Aprobación por Equivalencia" ||
+                 $data['estadoCursado'] == "Aprobación por Pase") &&
+                ($libroEx === '' || $folioEx === '' || $fechaExamenFmt === '')
+            ) {
+                $extraIe = obtenerLibroFolioFechaInscripcionExamenAlumnoMateria(
+                    $conexion,
+                    (int)$idAlumno,
+                    (int)$data['idMateria']
+                );
+                if ($extraIe) {
+                    if ($libroEx === '' && $extraIe['libro'] !== '') {
+                        $libroEx = $extraIe['libro'];
+                    }
+                    if ($folioEx === '' && $extraIe['folio'] !== '') {
+                        $folioEx = $extraIe['folio'];
+                    }
+                    if ($fechaExamenFmt === '' && $extraIe['fechaExamenFmt'] !== '') {
+                        $fechaExamenFmt = $extraIe['fechaExamenFmt'];
                     }
                 }
             }
@@ -194,6 +247,9 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
                 'Asistencia'        => $data['asistencia'],
                 'Estado'            => $data['estadoCursado'],
                 'CalificacionFinal' => $examen,
+                'FechaExamenFinal'  => $fechaExamenFmt,
+                'LibroExamen'       => $libroEx,
+                'FolioExamen'       => $folioEx,
                 'idDivision'        => $data['idDivision'],
                 'materiaAprobada'   => $data['materiaAprobada']
             ];
@@ -205,7 +261,54 @@ function buscarMaterias($conexion, $idAlumno, $idPlan)
     return $listadoCalificaciones;
 }
 
+/**
+ * Obtiene libro, folio y fecha de examen desde inscripcionexamenes para un alumno y materia (PK).
+ * Usado cuando la aprobación es PreSistema / Equivalencia / Pase y el enlace por idInscripcionExamen
+ * no está en calificacionesterciario o no alcanza para mostrar libro/folio (p. ej. equivalencia con id NULL).
+ *
+ * @return array{libro: string, folio: string, fechaExamenFmt: string}|null
+ */
+function obtenerLibroFolioFechaInscripcionExamenAlumnoMateria($conexion, $idAlumno, $idMateria) {
+    $sql = "SELECT ie.libro, ie.folio, fe.fecha AS fechaExamen
+            FROM inscripcionexamenes ie
+            LEFT JOIN fechasexamenes fe ON ie.idFechaExamen = fe.idFechaExamen
+            WHERE ie.idAlumno = ? AND ie.idMateria = ?
+            ORDER BY ie.idInscripcion DESC
+            LIMIT 1";
 
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar obtenerLibroFolioFechaInscripcionExamenAlumnoMateria: " . $conexion->error);
+        return null;
+    }
+
+    $stmt->bind_param("ii", $idAlumno, $idMateria);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res ? $res->fetch_assoc() : null;
+    $stmt->close();
+
+    if (!$row) {
+        return null;
+    }
+
+    $libro = isset($row['libro']) ? trim((string)$row['libro']) : '';
+    $folio = isset($row['folio']) ? trim((string)$row['folio']) : '';
+    $fechaFmt = '';
+    if (!empty($row['fechaExamen'])) {
+        $fechaFmt = date('d/m/Y', strtotime($row['fechaExamen']));
+    }
+
+    if ($libro === '' && $folio === '' && $fechaFmt === '') {
+        return null;
+    }
+
+    return [
+        'libro' => $libro,
+        'folio' => $folio,
+        'fechaExamenFmt' => $fechaFmt
+    ];
+}
 
 //Datos cursado de materia de un alumno
 function cursadoMateria($conexion, $idMateria, $idAlumno)
@@ -498,6 +601,8 @@ where inscripcionexamenes.idAlumno = ? and materiaterciario.idUnicoMateria =
     while ($data = mysqli_fetch_array($exam)) {
       $listadoExamenes[$i]['Fecha'] = $data['fecha'];
       $listadoExamenes[$i]['Calificacion'] = $data['calificacion'];
+      $listadoExamenes[$i]['Libro'] = isset($data['libro']) ? $data['libro'] : '';
+      $listadoExamenes[$i]['Folio'] = isset($data['folio']) ? $data['folio'] : '';
       $i++;
     }
   }
@@ -528,6 +633,8 @@ where inscripcionexamenes.idAlumno = ? and materiaterciario.idUnicoMateria =
     while ($data = mysqli_fetch_array($matriculacion)) {
       $listadoExamenes[$i]['Fecha'] = $data['fecha'];
       $listadoExamenes[$i]['Calificacion'] = $data['calificacion'];
+      $listadoExamenes[$i]['Libro'] = '';
+      $listadoExamenes[$i]['Folio'] = '';
       $i++;
     }
   }

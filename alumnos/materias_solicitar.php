@@ -2,7 +2,8 @@
 <html lang="es">
 
 <?php
-session_start(); 
+ob_start();
+session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
@@ -55,6 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $redirectUrl = "materias_solicitar.php?idMateria=" . urlencode($idMateriaPost) . 
                        "&nombreMateria=" . urlencode($nombreMateriaRaw) . 
                        "&nombreCurso=" . urlencode($nombreCursoRaw);
+        ob_end_clean();
         header("Location: " . $redirectUrl);
         exit();
     }
@@ -68,6 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $redirectUrl = "materias_solicitar.php?idMateria=" . urlencode($idMateria) . 
                        "&nombreMateria=" . urlencode($nombreMateriaRaw) . 
                        "&nombreCurso=" . urlencode($nombreCursoRaw);
+        ob_end_clean();
         header("Location: " . $redirectUrl);
         exit();
     }
