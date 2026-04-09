@@ -4,13 +4,11 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-
-if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: ../inicio/loginAdmin.php');
-    exit;
-}
+define('ID_FORMULARIO_SECRETARIA', 33);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 $mensaje = '';
 $tipoMensaje = 'info';
@@ -106,7 +104,6 @@ foreach ($cursos as $curso) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parametros - Cursos</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -406,9 +403,8 @@ foreach ($cursos as $curso) {
 </div>
 
 <?php include '../funciones/footer.html'; ?>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script src="../funciones/sessionControl.js"></script>
 <script>
 const referentesPorPlanPred = <?php echo json_encode($referentesPorPlanPred, JSON_UNESCAPED_UNICODE); ?>;

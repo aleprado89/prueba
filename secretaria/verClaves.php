@@ -4,14 +4,14 @@
  * Solo personal de secretaria autenticado.
  */
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
+include '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 41);
+require_once '../funciones/requerirPermisoFormulario.php';
+include '../funciones/password_web.php';
 include '../inicio/variablesParticulares.php';
 include '../funciones/parametrosWeb.php';
-
-if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: ../inicio/loginAdmin.php');
-    exit;
-}
 
 if (empty($_SESSION['nombreColegio']) && !empty($datosColegio[0]['nombreColegio'])) {
     $_SESSION['nombreColegio'] = $datosColegio[0]['nombreColegio'];
@@ -29,13 +29,14 @@ if (empty($_SESSION['nombreColegio']) && !empty($datosColegio[0]['nombreColegio'
 $clave = '';
 $dniPost = '';
 $mensaje = '';
+$claveEsHash = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dni'])) {
     $dniPost = trim((string) $_POST['dni']);
     if ($dniPost === '') {
         $mensaje = 'Ingrese un DNI.';
     } else {
-        $clave = '';
+        $claveRaw = '';
         $sqlAlu = 'SELECT pass.password FROM passwords_alumnos pass
             INNER JOIN alumnosterciario a ON pass.idAlumno = a.idAlumno
             INNER JOIN persona p ON a.idPersona = p.idPersona
@@ -46,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dni'])) {
             $stmt->execute();
             $res = $stmt->get_result();
             if ($res && $row = $res->fetch_assoc()) {
-                $clave = (string) $row['password'];
+                $claveRaw = (string) $row['password'];
             }
             $stmt->close();
         }
-        if ($clave === '') {
+        if ($claveRaw === '') {
             $sqlDoc = 'SELECT pass.password FROM passwords pass
                 INNER JOIN personal ON pass.legajo = personal.legajo
                 INNER JOIN persona ON personal.idPersona = persona.idPersona
@@ -61,13 +62,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dni'])) {
                 $stmt2->execute();
                 $res2 = $stmt2->get_result();
                 if ($res2 && $row2 = $res2->fetch_assoc()) {
-                    $clave = (string) $row2['password'];
+                    $claveRaw = (string) $row2['password'];
                 }
                 $stmt2->close();
             }
         }
-        if ($clave === '') {
+        if ($claveRaw === '') {
             $mensaje = 'No se encontro clave de alumno ni docente para ese DNI.';
+        } elseif (password_web_is_hashed($claveRaw)) {
+            $claveEsHash = true;
+            $clave = '';
+            $mensaje = 'La contrasena esta guardada de forma segura (hash). No se puede mostrar el texto. Indique al usuario que use Cambiar clave en el portal o la recuperacion por correo.';
+        } else {
+            $clave = $claveRaw;
         }
     }
 }
@@ -113,7 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dni'])) {
           <div class="mb-3">
             <label for="clave" class="form-label">Contraseña registrada (acceso web)</label>
             <input type="text" class="form-control font-monospace" id="clave" readonly
-                   value="<?php echo htmlspecialchars($clave, ENT_QUOTES, 'UTF-8'); ?>">
+                   value="<?php echo htmlspecialchars($clave, ENT_QUOTES, 'UTF-8'); ?>"
+                   placeholder="<?php echo $claveEsHash ? 'No disponible (hash)' : ''; ?>">
           </div>
           <button type="submit" class="btn btn-primary">Buscar</button>
         </form>

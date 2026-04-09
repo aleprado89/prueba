@@ -11,6 +11,7 @@ use PHPMailer\PHPMailer\Exception;
 require 'vendor/autoload.php';
 require 'configMail.php';
 include 'inicio/conexion.php';
+require_once __DIR__ . '/funciones/password_web.php';
 
 $dni = isset($_POST['dni']) ? trim((string) $_POST['dni']) : '';
 if ($dni === '') {
@@ -71,6 +72,11 @@ if ($contraseña === null) {
 
 if ($contraseña === null) {
     echo 'Si es su primer ingreso, consulte la contrasena inicial en su institucion.';
+    exit;
+}
+
+if (password_web_is_hashed($contraseña)) {
+    echo 'Su cuenta tiene una contrasena almacenada de forma segura. No puede enviarse por correo. Use la opcion Cambiar clave en el portal o consulte en secretaria.';
     exit;
 }
 

@@ -168,9 +168,8 @@ if (!$skip_session_clear) {
 </div>
 
 <!-- Bootstrap JS y jQuery -->
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 
 <!-- JavaScript para mostrar el modal si hay un mensaje de login -->
 <script>

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/password_web.php';
+
 /**
  * Obtiene los parámetros de configuración del colegio (fechas, turnos, etc).
  * @param mysqli $conn La conexión a la base de datos.
@@ -1601,6 +1603,42 @@ function obtenerAsistenciaDeMateriaParaAlumno($conexion, $idAlumno, $idMateria, 
         }
     }
     return $attendance_data;
+}
+
+/**
+ * Asistencia mensual por alumno para PDF (una fila por materia).
+ * $columnas debe contener solo columnas d1..d31 con alias "asis".
+ */
+function obtenerAsistenciaAlumnoPDF($conexion, $columnas, $idAlumno, $mes, $idCicloLectivo) {
+  if (!preg_match('/^asis\.d([1-9]|[12][0-9]|3[01])(,asis\.d([1-9]|[12][0-9]|3[01]))*$/', $columnas)) {
+    error_log("Columnas invalidas en obtenerAsistenciaAlumnoPDF");
+    return [];
+  }
+
+  $consulta = "SELECT mat.nombre AS nombreMateria, $columnas
+               FROM asistenciaterciario asis
+               INNER JOIN materiaterciario mat ON mat.idMateria = asis.idMateria
+               WHERE asis.idAlumno = ? AND asis.mes = ? AND asis.idCicloLectivo = ?
+               ORDER BY mat.nombre";
+
+  $stmt = $conexion->prepare($consulta);
+  if (!$stmt) {
+    error_log("Error al preparar obtenerAsistenciaAlumnoPDF: " . $conexion->error);
+    return [];
+  }
+
+  $stmt->bind_param("iii", $idAlumno, $mes, $idCicloLectivo);
+  $stmt->execute();
+  $resultado = $stmt->get_result();
+  $lista = [];
+
+  if ($resultado) {
+    while ($data = $resultado->fetch_assoc()) {
+      $lista[] = $data;
+    }
+  }
+  $stmt->close();
+  return $lista;
 }
 
 
@@ -5628,6 +5666,7 @@ function existeNombreUsuarioAdmin($conexion, $nombreUsuario, $excludeId = null) 
 function crearUsuarioAdmin($conexion, $nombreUsuario, $clave) {
     $tipoPermiso = "0";
     $idNivel = 6;
+    $hash = password_web_hash($clave);
     $sql = "INSERT INTO usuarios (nombreUsuario, clave, tipoPermiso, idnivel)
             VALUES (?, ?, ?, ?)";
     $stmt = $conexion->prepare($sql);
@@ -5635,7 +5674,7 @@ function crearUsuarioAdmin($conexion, $nombreUsuario, $clave) {
         error_log("Error al preparar crearUsuarioAdmin: " . $conexion->error);
         return false;
     }
-    $stmt->bind_param("sssi", $nombreUsuario, $clave, $tipoPermiso, $idNivel);
+    $stmt->bind_param("sssi", $nombreUsuario, $hash, $tipoPermiso, $idNivel);
     $ok = $stmt->execute();
     $nuevoId = $conexion->insert_id;
     $stmt->close();
@@ -5648,6 +5687,7 @@ function crearUsuarioAdmin($conexion, $nombreUsuario, $clave) {
  */
 function actualizarUsuarioAdmin($conexion, $idUsuario, $nombreUsuario, $nuevaClave = '') {
     if ($nuevaClave !== '') {
+        $hash = password_web_hash($nuevaClave);
         $sql = "UPDATE usuarios
                 SET nombreUsuario = ?, clave = ?
                 WHERE idusuarios = ?";
@@ -5656,7 +5696,7 @@ function actualizarUsuarioAdmin($conexion, $idUsuario, $nombreUsuario, $nuevaCla
             error_log("Error al preparar actualizarUsuarioAdmin(con clave): " . $conexion->error);
             return false;
         }
-        $stmt->bind_param("ssi", $nombreUsuario, $nuevaClave, $idUsuario);
+        $stmt->bind_param("ssi", $nombreUsuario, $hash, $idUsuario);
     } else {
         $sql = "UPDATE usuarios
                 SET nombreUsuario = ?
@@ -5730,6 +5770,31 @@ function obtenerFormulariosPermisos($conexion) {
 }
 
 /**
+ * Formularios de secretaría con pantalla v3 lista para permisos.
+ * Lee todos los nombres desde la tabla formularios (obtenerFormulariosPermisos) y filtra por whitelist.
+ * Excluye id 14 (obsoleto; usar 70).
+ */
+function obtenerFormulariosPermisosV3($conexion) {
+    require_once __DIR__ . '/formulariosSecretaria.php';
+    $allowed = formulariosSecretariaV3Ids();
+    $all = obtenerFormulariosPermisos($conexion);
+    $out = [];
+    foreach ($all as $row) {
+        $id = (int)$row['idformulario'];
+        if ($id === 14) {
+            continue;
+        }
+        if (in_array($id, $allowed, true)) {
+            $out[] = $row;
+        }
+    }
+    usort($out, function ($a, $b) {
+        return strcmp((string)$a['formulario'], (string)$b['formulario']);
+    });
+    return $out;
+}
+
+/**
  * Obtiene llaves generales.
  */
 function obtenerLlavesGenerales($conexion) {
@@ -5791,25 +5856,122 @@ function obtenerPermisosUsuarioFormulario($conexion, $idUsuario, $idFormulario) 
     $stmt->execute();
     $res = $stmt->get_result();
 
-    $modo = 0;
+    $has1 = false;
+    $has2 = false;
+    $has3 = false;
     $llaves = [];
     while ($row = $res->fetch_assoc()) {
         $idLlaveGral = (int)$row['idllavegral'];
         if ($idLlaveGral === 1) {
-            $modo = 1;
-        } elseif ($idLlaveGral === 2 && $modo !== 1) {
-            $modo = 2;
-        } elseif ($idLlaveGral === 3 && $modo !== 1 && $modo !== 2) {
-            $modo = 3;
-        }
-
-        if (!empty($row['idllave'])) {
-            $llaves[] = (int)$row['idllave'];
+            $has1 = true;
+        } elseif ($idLlaveGral === 2) {
+            $has2 = true;
+        } elseif ($idLlaveGral === 3) {
+            $has3 = true;
+            if (!empty($row['idllave'])) {
+                $llaves[] = (int)$row['idllave'];
+            }
         }
     }
 
     $stmt->close();
-    return ['idllavegral' => $modo, 'llaves' => array_values(array_unique($llaves))];
+
+    if ($has1) {
+        return ['idllavegral' => 1, 'llaves' => []];
+    }
+    if ($has3) {
+        return ['idllavegral' => 3, 'llaves' => array_values(array_unique($llaves))];
+    }
+    if ($has2) {
+        return ['idllavegral' => 2, 'llaves' => []];
+    }
+    return ['idllavegral' => 0, 'llaves' => []];
+}
+
+/**
+ * Resuelve permiso efectivo de un usuario sobre un formulario (varias filas llavesxform con gral=3 permitidas).
+ *
+ * @return array{tiene_acceso:bool, acceso_total:bool, solo_lectura:bool, modo_especifico:bool, llaves:int[]}
+ */
+function resolverPermisoFormularioUsuario($conexion, $idUsuario, $idFormulario) {
+    $p = obtenerPermisosUsuarioFormulario($conexion, $idUsuario, $idFormulario);
+    $modo = (int)$p['idllavegral'];
+    $llaves = isset($p['llaves']) && is_array($p['llaves']) ? $p['llaves'] : [];
+    return [
+        'tiene_acceso' => $modo > 0,
+        'acceso_total' => $modo === 1,
+        'solo_lectura' => $modo === 2,
+        'modo_especifico' => $modo === 3,
+        'llaves' => $llaves,
+    ];
+}
+
+/**
+ * Usuario de sesión secretaría tiene acceso al formulario (incl. tipoPermiso 7 bypass).
+ */
+function usuarioTieneAccesoFormularioSecretaria($conexion, $idFormulario) {
+    if ((int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7) {
+        return true;
+    }
+    require_once __DIR__ . '/formulariosSecretaria.php';
+    if (!in_array((int)$idFormulario, formulariosSecretariaV3Ids(), true)) {
+        return false;
+    }
+    $idUsuario = (int)($_SESSION['sec_id'] ?? 0);
+    if ($idUsuario <= 0) {
+        return false;
+    }
+    $r = resolverPermisoFormularioUsuario($conexion, $idUsuario, $idFormulario);
+    return $r['tiene_acceso'];
+}
+
+/**
+ * Modo solo lectura para la sesión actual (sin bypass admin).
+ */
+function usuarioFormularioSecretariaEsSoloLectura($conexion, $idFormulario) {
+    if ((int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7) {
+        return false;
+    }
+    $idUsuario = (int)($_SESSION['sec_id'] ?? 0);
+    if ($idUsuario <= 0) {
+        return true;
+    }
+    $r = resolverPermisoFormularioUsuario($conexion, $idUsuario, $idFormulario);
+    return $r['solo_lectura'];
+}
+
+/**
+ * Llave específica (tabla llaves) permitida para la sesión, o acceso total.
+ */
+/**
+ * Para menu_secretaria.php: si no hay $conn o consultas no cargada, muestra el ítem (fallback).
+ */
+function secretariaMenuMuestraFormulario($conexion, $idFormulario) {
+    if (!isset($conexion) || !($conexion instanceof mysqli)) {
+        return true;
+    }
+    if (!function_exists('usuarioTieneAccesoFormularioSecretaria')) {
+        return true;
+    }
+    return usuarioTieneAccesoFormularioSecretaria($conexion, $idFormulario);
+}
+
+function usuarioTieneLlaveEspecificaSecretaria($conexion, $idFormulario, $idLlave) {
+    if ((int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7) {
+        return true;
+    }
+    $idUsuario = (int)($_SESSION['sec_id'] ?? 0);
+    if ($idUsuario <= 0) {
+        return false;
+    }
+    $r = resolverPermisoFormularioUsuario($conexion, $idUsuario, $idFormulario);
+    if ($r['acceso_total']) {
+        return true;
+    }
+    if ($r['modo_especifico']) {
+        return in_array((int)$idLlave, $r['llaves'], true);
+    }
+    return false;
 }
 
 /**

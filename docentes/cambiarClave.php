@@ -2,7 +2,8 @@
 // Inicia la sesión
 session_start();
 include '../inicio/conexion.php';
-include '../funciones/parametrosWeb.php'; 
+include '../funciones/password_web.php';
+include '../funciones/parametrosWeb.php';
 include '../funciones/verificarSesion.php';
 // Verifica si el usuario ha iniciado sesión
 if (!isset($_SESSION['doc_legajo'])) {
@@ -19,9 +20,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Verifica si las claves son iguales y tienen un mínimo de 4 caracteres
     if ($claveNueva == $claveNuevaConfirmar && strlen($claveNueva) >= 4) {
-        // Actualiza el registro de la tabla passwords
-        $sql = "UPDATE passwords SET password = '$claveNueva' WHERE legajo = '".$_SESSION['doc_legajo']."'";
-        $conn->query($sql);
+        $hash = password_web_hash($claveNueva);
+        $legajo = (int) $_SESSION['doc_legajo'];
+        $sql = 'UPDATE passwords SET password = ? WHERE legajo = ?';
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param('si', $hash, $legajo);
+            $stmt->execute();
+            $stmt->close();
+        }
 
         // Cierra la conexión a la base de datos
         $conn->close();
@@ -54,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <script src="../js/bootstrap.min.js"></script> 
+    <script src="../js/bootstrap.bundle.js"></script>
 
   <style>
     .alert {
@@ -118,9 +125,8 @@ $usuarioActual = $usuarioDocente ?: $usuarioAlumno;
     <script src="../funciones/sessionControl.js"></script>
 
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-  <script src="../js/jquery-3.7.1.min.js"></script>
-  <script src="../js/popper.min.js"></script>
-  <script src="../js/bootstrap.min.js"></script>
+  <script src="../js/jquery-3.7.1.js"></script>
+  <script src="../js/bootstrap.bundle.js"></script>
 
 <?php include '../funciones/footer.html'; ?>
 

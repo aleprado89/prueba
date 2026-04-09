@@ -6,6 +6,7 @@
 // ==============================================================================
 
 include_once '../funciones/verificarSesion.php';
+include_once '../funciones/requerirSecretaria.php';
 
 // Configuración de errores
 ini_set('display_errors', 1);
@@ -14,6 +15,8 @@ error_reporting(E_ALL & ~E_DEPRECATED);
 
 include_once '../inicio/conexion.php';
 include_once '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 11);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 // Inicializar variable para control de correlatividades
 $materiasAdeuda = ''; 
@@ -152,7 +155,6 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscripción masiva - Secretaría</title>
     
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css"> 
     <link rel="stylesheet" href="../css/estilos.css">
     
@@ -348,8 +350,8 @@ try {
 
     <?php include '../funciones/footer.html'; ?>
 
-    <script src="../js/jquery-3.7.1.min.js"></script>
-    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/jquery-3.7.1.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
     <script src="../funciones/sessionControl.js"></script>
 
     <script>

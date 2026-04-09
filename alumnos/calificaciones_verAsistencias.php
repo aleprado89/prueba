@@ -61,7 +61,7 @@ $num_dias_mes_seleccionado = ($mesSeleccionado && $anioCiclo != 'N/A') ? cal_day
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <script src="../js/bootstrap.min.js"></script>
+  <script src="../js/bootstrap.bundle.js"></script>
   <!-- Ya no se necesita el estilo personalizado attendance-table -->
 <link rel="icon" type="image/png" href="../img/icon.png">
 
@@ -149,9 +149,8 @@ $num_dias_mes_seleccionado = ($mesSeleccionado && $anioCiclo != 'N/A') ? cal_day
 </div>
 
 <script src="../funciones/sessionControl.js"></script>
-<script src="../js/jquery-3.7.1.slim.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 
 <?php include '../funciones/footer.html'; ?>
 

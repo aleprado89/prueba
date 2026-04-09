@@ -2,16 +2,13 @@
 ob_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-session_start();
 
-// Redirigir al login si el usuario no está autenticado como secretario
-if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: ../inicio/loginAdmin.php');
-    exit;
-}
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 5);
+require_once '../funciones/requerirPermisoFormulario.php';
 include '../funciones/analisisestado.php';
 
 $sec_nombre = $_SESSION['sec_nombreUsuario'];
@@ -103,9 +100,6 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cargar calificaciones (Secretaría)</title>
-<!-- Bootstrap CSS -->
-<link rel="stylesheet" href="../css/bootstrap.min.css">
-<!-- Bootstrap CSS from material folder -->
 <link rel="stylesheet" href="../css/material/bootstrap.min.css">
 <link rel="stylesheet" href="../css/estilos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -149,9 +143,8 @@ th.text-center {
 
 </div>
 <script src="../funciones/sessionControl.js"></script>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script>
 var idMateria_js = "<?php echo htmlspecialchars($idMateria ?? ''); ?>";
 </script>

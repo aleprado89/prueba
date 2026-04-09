@@ -1,6 +1,7 @@
 <?php
 // Incluir el script de verificación de sesión
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 // --- NUEVO INCLUDE PARA CONTROL DE CORRELATIVIDAD ---
 include '../funciones/controlCorrelatividad.php';
 
@@ -12,6 +13,8 @@ error_reporting(E_ALL);
 // Incluir la conexión a la base de datos y consultas
 include '../inicio/conexion.php'; // Asegúrate de que esta ruta sea correcta
 include '../funciones/consultas.php'; // Asegúrate de que esta ruta sea correcta
+define('ID_FORMULARIO_SECRETARIA', 2);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 // --- Lógica para manejar peticiones AJAX ---
 if (isset($_GET['ajax_action'])) {
@@ -281,7 +284,6 @@ $today = date('Y-m-d');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inscripción a materias - Secretaría</title>
-  <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -450,9 +452,8 @@ $today = date('Y-m-d');
 </div>
 
 <!-- Scripts de JavaScript -->
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script src="../funciones/sessionControl.js"></script>
 
 <!-- Scripts para lógica de la página -->

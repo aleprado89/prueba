@@ -5,8 +5,11 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 9);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 // --- MANEJO DE SOLICITUDES AJAX PARA DROPDOWNS ---
 if (isset($_GET['ajax'])) {
@@ -131,7 +134,6 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de equivalencias - Secretaría</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -418,9 +420,8 @@ $equivalencias = obtenerEquivalenciasAlumno($conn, $idAlumno); // 🔹 FUNCIÓN 
 
     <?php include '../funciones/footer.html'; ?>
 
-    <script src="../js/jquery-3.7.1.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/jquery-3.7.1.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
     <script src="../funciones/sessionControl.js"></script>
 
     <script>

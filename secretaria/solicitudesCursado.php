@@ -8,12 +8,15 @@
 
 ob_start();
 include_once '../funciones/verificarSesion.php';
+include_once '../funciones/requerirSecretaria.php';
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL & ~E_DEPRECATED);
 
 include_once '../inicio/conexion.php';
 include_once '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 71);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 $materiasAdeuda = '';
 include_once '../funciones/controlCorrelatividad.php';
@@ -251,7 +254,6 @@ ob_end_flush();
 <head>
     <meta charset="UTF-8">
     <title>Sistemas Escolares - Solicitudes de cursado</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -410,8 +412,8 @@ ob_end_flush();
     </div>
 </div>
 
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script>
 $(document).ready(function() {
     const $selCiclo = $('#selectCiclo');

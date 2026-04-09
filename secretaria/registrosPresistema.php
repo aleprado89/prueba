@@ -1,6 +1,7 @@
 <?php
 // Incluir el script de verificación de sesión
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
@@ -10,6 +11,8 @@ error_reporting(E_ALL);
 // Incluir la conexión a la base de datos y consultas
 include '../inicio/conexion.php'; // Asegúrate de que esta ruta sea correcta
 include '../funciones/consultas.php'; // Asegúrate de que esta ruta sea correcta
+define('ID_FORMULARIO_SECRETARIA', 7);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 // --- Lógica para manejar peticiones AJAX ---
 if (isset($_GET['ajax_action'])) {
@@ -71,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // La transacción se inicia DESPUÉS de la validación
     $transaccionActiva = false;
     try {
-        $action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING);
+        $action = trim((string)filter_input(INPUT_POST, 'action', FILTER_UNSAFE_RAW));
 
         if ($action == 'create_presistema') {
             
@@ -132,8 +135,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $conn->begin_transaction();
             $transaccionActiva = true;
 
-            $condicionTipo = filter_input(INPUT_POST, 'condicionTipo', FILTER_SANITIZE_STRING);
-            $fechaObtencion = filter_input(INPUT_POST, 'fechaObtencion', FILTER_SANITIZE_STRING);
+            $condicionTipo = trim((string)filter_input(INPUT_POST, 'condicionTipo', FILTER_UNSAFE_RAW));
+            $fechaObtencion = trim((string)filter_input(INPUT_POST, 'fechaObtencion', FILTER_UNSAFE_RAW));
 
             if ($condicionTipo == 'Regular') {
                 $turnos = filter_input(INPUT_POST, 'turnosTranscurridos', FILTER_VALIDATE_INT) ?: 0;
@@ -145,10 +148,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Registros de regularidad presistema creados exitosamente.";
             
             } elseif ($condicionTipo == 'Aprobado') {
-                $calificacion = filter_input(INPUT_POST, 'calificacion', FILTER_SANITIZE_STRING);
+                $calificacion = trim((string)filter_input(INPUT_POST, 'calificacion', FILTER_UNSAFE_RAW));
                 $idCondicionExamen = filter_input(INPUT_POST, 'condicionExamen', FILTER_VALIDATE_INT);
-                $libro = filter_input(INPUT_POST, 'libro', FILTER_SANITIZE_STRING);
-                $folio = filter_input(INPUT_POST, 'folio', FILTER_SANITIZE_STRING);
+                $libro = trim((string)filter_input(INPUT_POST, 'libro', FILTER_UNSAFE_RAW));
+                $folio = trim((string)filter_input(INPUT_POST, 'folio', FILTER_UNSAFE_RAW));
 
                 if (empty($calificacion) || empty($idCondicionExamen)) {
                     throw new Exception("Para 'Aprobado', la calificación y la condición de examen son obligatorias.");
@@ -173,9 +176,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $idMatriculacionMateria = filter_input(INPUT_POST, 'editIdMatriculacion', FILTER_VALIDATE_INT);
             $idCalificacion = filter_input(INPUT_POST, 'editIdCalificacion', FILTER_VALIDATE_INT);
             $idInscripcion = filter_input(INPUT_POST, 'editIdInscripcion', FILTER_VALIDATE_INT);
-            $nuevoCondicionTipo = filter_input(INPUT_POST, 'editCondicionTipo', FILTER_SANITIZE_STRING);
-            $fechaObtencion = filter_input(INPUT_POST, 'editFechaObtencion', FILTER_SANITIZE_STRING);
-            $estadoOriginal = filter_input(INPUT_POST, 'editEstadoOriginal', FILTER_SANITIZE_STRING);
+            $nuevoCondicionTipo = trim((string)filter_input(INPUT_POST, 'editCondicionTipo', FILTER_UNSAFE_RAW));
+            $fechaObtencion = trim((string)filter_input(INPUT_POST, 'editFechaObtencion', FILTER_UNSAFE_RAW));
+            $estadoOriginal = trim((string)filter_input(INPUT_POST, 'editEstadoOriginal', FILTER_UNSAFE_RAW));
 
             $detalles = obtenerDetallesPresistema($conn, $idMatriculacionMateria);
             if (!$detalles) throw new Exception("No se encontró el registro a actualizar.");
@@ -190,10 +193,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Registro actualizado a 'Regular' exitosamente.";
             
             } elseif ($nuevoCondicionTipo == 'Aprobado') {
-                $calificacion = filter_input(INPUT_POST, 'editCalificacion', FILTER_SANITIZE_STRING);
+                $calificacion = trim((string)filter_input(INPUT_POST, 'editCalificacion', FILTER_UNSAFE_RAW));
                 $idCondicionExamen = filter_input(INPUT_POST, 'editCondicionExamen', FILTER_VALIDATE_INT);
-                $libro = filter_input(INPUT_POST, 'editLibro', FILTER_SANITIZE_STRING);
-                $folio = filter_input(INPUT_POST, 'editFolio', FILTER_SANITIZE_STRING);
+                $libro = trim((string)filter_input(INPUT_POST, 'editLibro', FILTER_UNSAFE_RAW));
+                $folio = trim((string)filter_input(INPUT_POST, 'editFolio', FILTER_UNSAFE_RAW));
 
                 if (empty($calificacion) || empty($idCondicionExamen)) {
                     throw new Exception("Para 'Aprobado', la calificación y la condición de examen son obligatorias.");
@@ -276,7 +279,6 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registros presistema - Secretaría</title>
-  <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -635,9 +637,8 @@ $registrosPresistema = obtenerRegistrosPresistema($conn, $idAlumno);
 </div>
 
 
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script src="../funciones/sessionControl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 

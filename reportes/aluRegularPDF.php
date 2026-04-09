@@ -21,6 +21,12 @@ $apellido = htmlspecialchars($_GET['apellido']);
 $dni      = htmlspecialchars($_GET['dni']);
 assertReporteAlumnoOsecretariaPorIdAlumno($idAlumno);
 
+if (!empty($_SESSION['sec_nombreUsuario']) && !usuarioTieneAccesoFormularioSecretaria($conn, 8)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    die('Acceso denegado');
+}
+
 // Buscar carrera (plan/es) asociada al alumno
 $planes = buscarPlanes($conn, $idAlumno);
 $carrera = !empty($planes) ? $planes[0]['Plan'] : 'Carrera no registrada';

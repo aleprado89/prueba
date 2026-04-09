@@ -6,7 +6,8 @@ error_reporting(E_ALL);
 
 // Incluir la conexión a la base de datos
 // 'conexion.php' está en la misma carpeta 'inicio' que 'loginResultAdmin.php'
-include 'conexion.php'; 
+include 'conexion.php';
+include '../funciones/password_web.php';
 
 // Verificar que la conexión a la base de datos sea válida
 if (!isset($conn) || !($conn instanceof mysqli)) {
@@ -18,7 +19,7 @@ if (!isset($conn) || !($conn instanceof mysqli)) {
 
 // Recoger el nombre de usuario y la contraseña del formulario
 $username = trim($_POST['username'] ?? '');
-$password = trim($_POST['password'] ?? '');
+$password = (string) ($_POST['password'] ?? '');
 
 // Validar que los campos no estén vacíos
 if (empty($username) || empty($password)) {
@@ -56,12 +57,7 @@ function verificarAccesoSecretario($username, $password, $conn) {
     if ($result->num_rows === 1) {
         $row = $result->fetch_assoc();
 
-        // **IMPORTANTE**: Comparación de contraseña.
-        // Si las contraseñas están hashadas con password_hash(), usa password_verify($password, $row['clave']).
-        // Si están en texto plano, usa $password == $row['clave'].
-        if ($password == $row['clave']) { // Comparación para texto plano
-        // O si las contraseñas están hasheadas (MÁS SEGURO):
-        // if (password_verify($password, $row['clave'])) {
+        if (password_web_verify($password, $row['clave'])) {
             return $row; // Devuelve los datos del usuario si el login es exitoso
         } else {
             return false; // Contraseña incorrecta
@@ -75,6 +71,12 @@ function verificarAccesoSecretario($username, $password, $conn) {
 $userData = verificarAccesoSecretario($username, $password, $conn);
 
 if ($userData) {
+    if (!password_web_is_hashed($userData['clave'])) {
+        if (!password_web_upgrade_usuario_admin($conn, (int) $userData['idusuarios'], $password)) {
+            error_log('No se pudo migrar clave admin a hash (posible columna corta usuarios.clave).');
+        }
+    }
+
     // --- LOGIN EXITOSO ---
 
     // 1. Limpiar TODAS las variables de sesión anteriores (CRUCIAL para evitar mezcla de sesiones)

@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg " data-bs-theme="light">
     <div class="container ">
       <div class="d-flex flex-column align-items-center centrarlogomenu ">
-        <img src="<?php echo $_SESSION['logo']; ?>" class="est-logo img-fluid mx-auto" alt="logo">
+        <img src="<?php echo htmlspecialchars($_SESSION['logo'] ?? '../img/icon.png', ENT_QUOTES, 'UTF-8'); ?>" class="est-logo img-fluid mx-auto" alt="logo">
       </div>
       <button class="navbar-toggler margenbottom ms-auto" type="button" data-bs-toggle="collapse"
         data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
@@ -91,8 +91,7 @@ function verificarPeriodoActas() {
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
 <script src="../js/jquery-3.7.1.js"></script>
- <script src="../js/bootstrap.min.js"></script> 
- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
   
   <script> //cargo el parametro en el hipervinculo
     function cargarParametro(parametro) {
@@ -115,8 +114,10 @@ function verificarFechaActasVolantes() {
         if (periodoActasAbierto == 'abierto') {
             window.location.href = 'mesasExamenProf.php';
         } else {
-            $('#inscModal').modal('show');
-            $('#mensajeModal').text("La carga de actas está cerrada. Los períodos de carga de actas están definidos por secretaria.");
+            document.getElementById('mensajeModal').textContent = "La carga de actas está cerrada. Los períodos de carga de actas están definidos por secretaria.";
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+              new bootstrap.Modal(document.getElementById('inscModal')).show();
+            }
         }
     }
 

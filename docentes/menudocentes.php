@@ -188,9 +188,8 @@ include '../funciones/verificarSesion.php';?>
   <script src="../funciones/sessionControl.js"></script>
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-<script src="../js/jquery-3.7.1.min.js"></script>
- <script src="../js/bootstrap.min.js"></script>
- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 
 <script>
         /////COMIENZA FUNCION PARA VERIFICAR SI ESTA ABIERTA CARGA DE ACTAS

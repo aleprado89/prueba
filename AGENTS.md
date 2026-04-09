@@ -22,14 +22,15 @@ inicio/loginAdmin.php ──→ inicio/loginResultAdmin.php ──→ secretaria
 **Alumnos/Docentes** (`login.php` → `loginResult.php`):
 - Login por DNI + password
 - Tablas: `passwords_alumnos` (alumnos por `idAlumno`), `passwords` (docentes por `legajo`)
-- Password default alumnos: su DNI (se crea registro en `passwords_alumnos` si no existe)
-- Password default docentes: variable `$CLAVE_DOCENTE_POR_DEFECTO` o campo `colegio.docenteModifica`
+- Password default alumnos: su DNI (se crea registro en `passwords_alumnos` si no existe; se guarda con `password_hash`)
+- Password default docentes: variable `$CLAVE_DOCENTE_POR_DEFECTO` o campo `colegio.docenteModifica` (almacenamiento hasheado en altas nuevas)
+- Verificacion unificada: `password_web_verify()` / migracion automatica a hash en login (`loginResult.php`)
 - Funciones: `verificarAccesoAlumno()`, `verificarAccesoDocente()`, `verificarAccesoAlumnoYDocente()`
 - Si es ambos (alumno y docente): redirige a `seleccionar_rol.php`
 
 **Secretaria** (`loginAdmin.php` → `loginResultAdmin.php`):
 - Login por `nombreUsuario` + `clave` (tabla `usuarios`)
-- Comparacion de password en texto plano: `$password == $row['clave']`
+- Verificacion con `password_web_verify()` en `funciones/password_web.php`: acepta hash bcrypt (`password_hash`) y claves legadas en texto plano; tras login exitoso con texto plano se reemplaza por hash (`password_web_upgrade_usuario_admin()`).
 - Post-login: `session_regenerate_id(true)`, setea variables `sec_*`
 
 ### Patron de Includes (orden estandar)
@@ -38,6 +39,7 @@ Todo archivo PHP de pagina sigue este orden:
 
 ```php
 include '../funciones/verificarSesion.php';  // 1. Siempre primero
+include '../funciones/requerirSecretaria.php'; // solo en carpetas secretaria/ (exige sec_nombreUsuario)
 include '../inicio/conexion.php';            // 2. Conexion BD
 include '../funciones/consultas.php';        // 3. Funciones de consulta
 // Opcionales segun necesidad:
@@ -158,6 +160,8 @@ Autorizacion: cada script incluye `verificarSesion.php` y `verificarAccesoReport
 | `controlCorrelatividad.php` | Control de correlatividades para inscripciones (12 funciones) |
 | `verificarSesion.php` | Verificacion de sesion, redireccion, respuesta 401 AJAX |
 | `verificarAccesoReporte.php` | Chequeos de rol para `reportes/*.php` (secretaria, alumno, docente/materia) |
+| `password_web.php` | Hash/verificacion de contrasenas web (compatibilidad texto plano legado) |
+| `requerirSecretaria.php` | Obliga sesion de secretaria; incluir despues de `verificarSesion.php` en `secretaria/` |
 | `cerrarsesion.php` | Destruye sesion, limpia cookies, redirige |
 | `parametrosWeb.php` | Carga parametros del colegio desde BD (usa `obtenerParametrosColegio()`) |
 | `menu.php` | Navbar para alumnos |

@@ -1,0 +1,53 @@
+name: PHPUnit
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, mbstring, dom, json
+          coverage: none
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare database
+        env:
+          MYSQL_PWD: root
+        run: |
+          mysql -h127.0.0.1 -uroot -e "DROP DATABASE IF EXISTS sesystem_test; CREATE DATABASE sesystem_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+          sed 's/sesystem_prueba/sesystem_test/g' shema_sistemasescolares.sql | mysql -h127.0.0.1 -uroot
+          mysql -h127.0.0.1 -uroot sesystem_test < tests/fixtures/seed_minimal.sql
+
+      - name: Run PHPUnit
+        env:
+          SESYSTEM_TEST_MODE: '1'
+          SESYSTEM_DB_HOST: '127.0.0.1'
+          SESYSTEM_DB_USER: 'root'
+          SESYSTEM_DB_PASSWORD: 'root'
+          SESYSTEM_DB_NAME: 'sesystem_test'
+        run: vendor/bin/phpunit
