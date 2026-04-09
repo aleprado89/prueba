@@ -197,6 +197,18 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action']) && $_GET['acti
                 $conn->begin_transaction();
                 $delete_success = true;
 
+                if (!marcarSolicitudCursadoEliminada(
+                    $conn,
+                    (int)$matriculacion_materia_data['idAlumno'],
+                    (int)$matriculacion_materia_data['idMateria'],
+                    (int)$matriculacion_materia_data['idCicloLectivo'],
+                    "Solicitud aceptada pero inscripción eliminada"
+                )) {
+                    $message = "Error al actualizar el estado de la solicitud web de cursado.";
+                    $message_type = 'danger';
+                    $delete_success = false;
+                }
+
                 if (!eliminarAsistenciaMateria($conn, $matriculacion_materia_data['idAlumno'], $matriculacion_materia_data['idMateria'], $matriculacion_materia_data['idCicloLectivo'])) {
                     $message = "Error al eliminar registros de asistencia para la materia.";
                     $message_type = 'danger';

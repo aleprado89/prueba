@@ -699,13 +699,11 @@ and inscripcionexamenes_web.idcicloLectivo = ? order by inscripcionexamenes_web.
           $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
           break;
         case 3:
+        case 5:
           $listadoSolicitudesExamenes[$i]['Estado'] = "Rechazada";
           break;
         case 4:
           $listadoSolicitudesExamenes[$i]['Estado'] = "Cancelada";
-          break;
-        case 5:
-          $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
           break;
       }
       $listadoSolicitudesExamenes[$i]['Observaciones'] = $data['observaciones'];
@@ -748,13 +746,11 @@ and fechasexamenes.idTurno = ?";
           $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
           break;
         case 3:
+        case 5:
           $listadoSolicitudesExamenes[$i]['Estado'] = "Rechazada";
           break;
         case 4:
           $listadoSolicitudesExamenes[$i]['Estado'] = "Cancelada";
-          break;
-        case 5:
-          $listadoSolicitudesExamenes[$i]['Estado'] = "Aprobada";
           break;
       }
       $listadoSolicitudesExamenes[$i]['Observaciones'] = $data['observaciones'];
@@ -1016,10 +1012,10 @@ function buscarSolicitudesMateria($conexion, $idAlumno, $idPlan, $idCicloLectivo
           $listadoSolicitudesMateria[$i]['Estado'] = "Pendiente";
           break;
         case '2':
-        case '5':
           $listadoSolicitudesMateria[$i]['Estado'] = "Aprobada";
           break;
         case '3':
+        case '5':
           $listadoSolicitudesMateria[$i]['Estado'] = "Rechazada";
           break;
         case '4':
@@ -1062,10 +1058,10 @@ function existeSolicitudMateria($conexion, $idAlumno, $idMateria, $idCicloLectiv
           $listadoSolicitudesMateria[$i]['Estado'] = "Pendiente";
           break;
         case '2':
-        case '5':
           $listadoSolicitudesMateria[$i]['Estado'] = "Aprobada";
           break;
         case '3':
+        case '5':
           $listadoSolicitudesMateria[$i]['Estado'] = "Rechazada";
           break;
         case '4':
@@ -1192,6 +1188,34 @@ function cancelarCursado($conexion, $idMatriculacionWeb)
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
+}
+
+/**
+ * Marca como rechazada (estado 5) una solicitud web de cursado ya aceptada,
+ * cuando su inscripción en matriculacionmateria fue eliminada desde secretaría.
+ */
+function marcarSolicitudCursadoEliminada($conexion, $idAlumno, $idMateria, $idCicloLectivo, $observacion = "Solicitud aceptada pero inscripción eliminada")
+{
+    $sql = "UPDATE matriculacionmateria_web
+            SET estado = 5,
+                observaciones = ?,
+                fechhora_proces = NOW()
+            WHERE idAlumno = ?
+              AND idMateria = ?
+              AND idCicloLectivo = ?
+              AND estado = 2";
+
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log("Error al preparar marcarSolicitudCursadoEliminada: " . $conexion->error);
+        return false;
+    }
+
+    $stmt->bind_param("siii", $observacion, $idAlumno, $idMateria, $idCicloLectivo);
+    $success = $stmt->execute();
+    $stmt->close();
+
+    return $success;
 }
 
 //levantar ciclos lectivos
@@ -3977,30 +4001,92 @@ function obtenerInscripcionesTurno($conexion, $idAlumno, $idTurno, $idCicloLecti
  * @return array ['success' => bool, 'message' => string]
  */
 function eliminarInscripcionExamen($conexion, $idInscripcion) {
-    // Usamos prepared statements para seguridad
-    $sql = "DELETE FROM inscripcionexamenes WHERE idInscripcion = ?";
-    $stmt = $conexion->prepare($sql);
-    
-    if (!$stmt) {
-        error_log("Error al preparar (eliminarInscripcionExamen): " . $conexion->error);
-        return ['success' => false, 'message' => 'Error al preparar la solicitud de eliminación.'];
+    $idInscripcion = (int)$idInscripcion;
+    if ($idInscripcion <= 0) {
+        return ['success' => false, 'message' => 'ID de inscripción inválido.'];
     }
-    
-    $stmt->bind_param("i", $idInscripcion);
-    
-    if ($stmt->execute()) {
-        if ($stmt->affected_rows > 0) {
-            $stmt->close();
-            return ['success' => true, 'message' => 'Inscripción eliminada con éxito.'];
-        } else {
-            $stmt->close();
+
+    $conexion->begin_transaction();
+
+    try {
+        // 1) Leer datos de la inscripción real para vincular posible solicitud web
+        $sqlDatos = "SELECT idAlumno, idMateria, idCicloLectivo, idFechaExamen
+                     FROM inscripcionexamenes
+                     WHERE idInscripcion = ?";
+        $stmtDatos = $conexion->prepare($sqlDatos);
+        if (!$stmtDatos) {
+            throw new Exception('Error al preparar la consulta de datos de inscripción.');
+        }
+        $stmtDatos->bind_param("i", $idInscripcion);
+        $stmtDatos->execute();
+        $resDatos = $stmtDatos->get_result();
+        $inscripcion = $resDatos->fetch_assoc();
+        $stmtDatos->close();
+
+        if (!$inscripcion) {
+            $conexion->rollback();
             return ['success' => false, 'message' => 'No se encontró la inscripción para eliminar (ID: ' . $idInscripcion . ').'];
         }
-    } else {
-        $error_msg = $stmt->error;
-        $stmt->close();
-        error_log("Error al ejecutar (eliminarInscripcionExamen): " . $error_msg);
-        return ['success' => false, 'message' => 'Error al eliminar la inscripción: ' . $error_msg];
+
+        // 2) Si existe solicitud web aceptada para la misma inscripción, marcar estado=5
+        $observacion = "Solicitud aceptada pero inscripción eliminada";
+        $sqlWeb = "UPDATE inscripcionexamenes_web
+                   SET estado = 5,
+                       observaciones = ?,
+                       fechhora_proces = NOW()
+                   WHERE idAlumno = ?
+                     AND idMateria = ?
+                     AND idCicloLectivo = ?
+                     AND idFechaExamen = ?
+                     AND estado = 2";
+        $stmtWeb = $conexion->prepare($sqlWeb);
+        if (!$stmtWeb) {
+            throw new Exception('Error al preparar la actualización de solicitud web.');
+        }
+        $stmtWeb->bind_param(
+            "siiii",
+            $observacion,
+            $inscripcion['idAlumno'],
+            $inscripcion['idMateria'],
+            $inscripcion['idCicloLectivo'],
+            $inscripcion['idFechaExamen']
+        );
+        if (!$stmtWeb->execute()) {
+            $errorWeb = $stmtWeb->error;
+            $stmtWeb->close();
+            throw new Exception('Error al actualizar solicitud web: ' . $errorWeb);
+        }
+        $stmtWeb->close();
+
+        // 3) Eliminar inscripción
+        $sqlDelete = "DELETE FROM inscripcionexamenes WHERE idInscripcion = ?";
+        $stmtDelete = $conexion->prepare($sqlDelete);
+        if (!$stmtDelete) {
+            throw new Exception('Error al preparar la eliminación de inscripción.');
+        }
+        $stmtDelete->bind_param("i", $idInscripcion);
+
+        if (!$stmtDelete->execute()) {
+            $errorDelete = $stmtDelete->error;
+            $stmtDelete->close();
+            throw new Exception('Error al eliminar la inscripción: ' . $errorDelete);
+        }
+
+        $filasEliminadas = $stmtDelete->affected_rows;
+        $stmtDelete->close();
+
+        if ($filasEliminadas <= 0) {
+            $conexion->rollback();
+            return ['success' => false, 'message' => 'No se pudo eliminar la inscripción (ID: ' . $idInscripcion . ').'];
+        }
+
+        $conexion->commit();
+        return ['success' => true, 'message' => 'Inscripción eliminada con éxito.'];
+
+    } catch (Throwable $e) {
+        $conexion->rollback();
+        error_log("Error en eliminarInscripcionExamen: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Error al eliminar la inscripción: ' . $e->getMessage()];
     }
 }
 /**
