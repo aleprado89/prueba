@@ -1,9 +1,10 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 include '../inicio/conexion.php';
-// No es necesario ob_start/ob_end_clean si solo se incluyen archivos PHP sin salida
 include '../funciones/consultas.php';
 require_once '../vendor/autoload.php';
+include '../funciones/verificarAccesoReporte.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -30,6 +31,7 @@ if (isset($_GET['idAlumno'])) {
 } else {
     die("Error: No se ha especificado un alumno.");
 }
+assertReporteAlumnoOsecretariaPorIdAlumno((int) $idAlumno);
 if (isset($_GET['nombreAlumno'])) {
     $nombreAlumno = $_GET['nombreAlumno'];
 } elseif (isset($_SESSION['alu_apellido'], $_SESSION['alu_nombre'])) {

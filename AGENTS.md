@@ -53,7 +53,7 @@ include '../funciones/menu_secretaria.php';  // secretaria
 include '../funciones/footer.html';
 ```
 
-Reportes PDF agregan `require_once '../vendor/autoload.php'` antes de otros includes.
+Reportes PDF: `define('VERIFICAR_SESION_SIN_SCRIPT', true);` → `verificarSesion.php` → `conexion.php` → `consultas.php` → `verificarAccesoReporte.php` → `assertReporte*(...)`; luego `require_once '../vendor/autoload.php'` y Dompdf.
 
 ---
 
@@ -92,7 +92,7 @@ Reportes PDF agregan `require_once '../vendor/autoload.php'` antes de otros incl
 | `mesasExamenProf.php` | Mesas de examen asignadas al docente |
 | `actuaDatosDoc.php` | Actualizar datos personales |
 | `cambiarClave.php` | Cambiar password |
-| `verClaves.php` | Ver/gestionar claves |
+| `verClaves.php` | Redirige a `secretaria/verClaves.php` (consulta solo desde secretaria) |
 
 ### `secretaria/` - Sistema Administrativo
 
@@ -126,10 +126,13 @@ Reportes PDF agregan `require_once '../vendor/autoload.php'` antes de otros incl
 | `parametrosPlanesEstudio.php` | ABM de planes de estudio |
 | `editParametrosWeb.php` | Editar parametros web (fechas inscripcion, turnos) |
 | `usuarios.php` | ABM de usuarios administrativos y permisos |
+| `verClaves.php` | Consulta de claves web (alumno/docente) por DNI — solo secretaria |
 
 ### `reportes/` - Generacion de PDF
 
 Todos generan PDF via Dompdf. Patron de nombre: `[tipo][formato]PDF.php`
+
+Autorizacion: cada script incluye `verificarSesion.php` y `verificarAccesoReporte.php` (funciones `assertReporte*`). Antes de incluir `verificarSesion.php` en salida PDF, definir `VERIFICAR_SESION_SIN_SCRIPT` para no inyectar el bloque `<script>` de `window.usuarioActual` en el stream del PDF.
 
 | Archivo | Contenido |
 |---------|-----------|
@@ -154,6 +157,7 @@ Todos generan PDF via Dompdf. Patron de nombre: `[tipo][formato]PDF.php`
 | `analisisestado.php` | Calculo de estado de cursado (6 funciones, ~3580 lineas) |
 | `controlCorrelatividad.php` | Control de correlatividades para inscripciones (12 funciones) |
 | `verificarSesion.php` | Verificacion de sesion, redireccion, respuesta 401 AJAX |
+| `verificarAccesoReporte.php` | Chequeos de rol para `reportes/*.php` (secretaria, alumno, docente/materia) |
 | `cerrarsesion.php` | Destruye sesion, limpia cookies, redirige |
 | `parametrosWeb.php` | Carga parametros del colegio desde BD (usa `obtenerParametrosColegio()`) |
 | `menu.php` | Navbar para alumnos |

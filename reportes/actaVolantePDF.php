@@ -1,5 +1,6 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 // Ajusta la ruta al autoload de Composer si es necesario
 include '../vendor/autoload.php';
 include '../inicio/conexion.php';
@@ -8,6 +9,7 @@ include '../inicio/conexion.php';
 ob_start();
 include '../funciones/consultas.php';
 ob_end_clean();
+include '../funciones/verificarAccesoReporte.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -22,6 +24,9 @@ if (!isset($_GET['idFechaExamen']) || empty($_GET['idFechaExamen'])) {
 
 $idFechaExamen = (int)$_GET['idFechaExamen'];
 $condicionFiltro = $_GET['condicion'] ?? ''; // Recibimos 'Regular', 'Libre', etc.
+
+$idMateriaActa = obtenerIdMateriaPorFechaExamen($conn, $idFechaExamen);
+assertReporteDocenteOsecretariaPorIdMateria($conn, $idMateriaActa);
 
 // Validación estricta: No permitimos imprimir sin filtrar por condición
 if (empty($condicionFiltro) || $condicionFiltro == 'todos') {

@@ -1,9 +1,11 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
+include '../funciones/verificarAccesoReporte.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -17,6 +19,7 @@ $idAlumno = intval($_GET['idAlumno']);
 $nombre   = htmlspecialchars($_GET['nombre']);
 $apellido = htmlspecialchars($_GET['apellido']);
 $dni      = htmlspecialchars($_GET['dni']);
+assertReporteAlumnoOsecretariaPorIdAlumno($idAlumno);
 
 // Buscar carrera (plan/es) asociada al alumno
 $planes = buscarPlanes($conn, $idAlumno);

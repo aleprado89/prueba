@@ -1,9 +1,11 @@
 <?php
 ob_start();
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 include '../vendor/autoload.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/verificarAccesoReporte.php';
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -23,6 +25,8 @@ $ciclolectivo=buscarnombreCiclo($conn,$idciclolectivo);
 $plan = $_GET['plan'];
 //$materia = $_SESSION['materia'];
 $membrete=$_SESSION['membrete'];
+
+assertReporteDocenteOsecretariaPorIdMateria($conn, (int) $idMateria);
 
 $alumnosCalif = obtenerCalificacionesMateriaPDF($conn, $idMateria);
 

@@ -5,7 +5,7 @@ session_start();
 
 // Redirigir al login si el usuario no está autenticado como secretario
 if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: loginAdmin.php');
+    header('Location: ../inicio/loginAdmin.php');
     exit;
 }
 include '../funciones/verificarSesion.php';

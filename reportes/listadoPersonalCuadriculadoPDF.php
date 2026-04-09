@@ -1,9 +1,12 @@
 <?php
 ob_start();
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/verificarAccesoReporte.php';
+assertReporteSecretaria();
 
 use Dompdf\Dompdf;
 

@@ -1448,7 +1448,16 @@ function obtenerAsistenciaMateria($conexion, $idMateria, $mes, $dia, $idCicloLec
 
 //actualizar calificaciones docente
 function actualizarCalifDocente($conexion, $idCalif, $columna, $valor){
-  $consulta = "UPDATE calificacionesterciario SET registroModificacion=1, $columna = ? WHERE idCalificacion = ?";
+  $allowed = array(
+    'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8',
+    'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8',
+    'examenIntegrador'
+  );
+  if (!in_array($columna, $allowed, true)) {
+    return 'Error: columna no permitida';
+  }
+
+  $consulta = "UPDATE calificacionesterciario SET registroModificacion=1, `$columna` = ? WHERE idCalificacion = ?";
 
   $stmt = mysqli_prepare($conexion, $consulta);
   mysqli_stmt_bind_param($stmt, "si", $valor, $idCalif);

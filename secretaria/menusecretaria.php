@@ -7,7 +7,7 @@ include '../funciones/verificarSesion.php';
 //session_start();
 
 if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: loginAdmin.php');
+    header('Location: ../inicio/loginAdmin.php');
     exit;
 }
 

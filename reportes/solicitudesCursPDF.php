@@ -1,5 +1,6 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 
 // Inclusión de dependencias
 include '../vendor/autoload.php';
@@ -10,6 +11,8 @@ ob_start();
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
 ob_end_clean();
+include '../funciones/verificarAccesoReporte.php';
+assertReporteSoloAlumno();
 
 use Dompdf\Dompdf;
 use Dompdf\Options;

@@ -85,6 +85,8 @@
         <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Datos de Personal</h6></li>
         <li><a class="dropdown-item ps-4" href="buscarPersonal.php">Legajos</a></li>
         <li><a class="dropdown-item ps-4" href="asignarDocenteMateria.php">Asignar docente a materia</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item ps-4" href="verClaves.php"><i class="bi bi-key"></i> Consultar claves (web)</a></li>
     </ul>
 </li>
 

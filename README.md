@@ -26,6 +26,7 @@ Sistema web de gestion educativa para instituciones escolares, desarrollado en P
 │   ├── analisisestado.php      # Calculo de estados de cursado
 │   ├── controlCorrelatividad.php # Control de correlatividades
 │   ├── verificarSesion.php     # Control de sesion y autenticacion
+│   ├── verificarAccesoReporte.php # Autorizacion por rol en reportes PDF
 │   ├── menu.php / menu_docente.php / menu_secretaria.php
 │   ├── parametrosWeb.php       # Parametros dinamicos desde BD
 │   └── cerrarsesion.php        # Logout
@@ -41,6 +42,7 @@ Sistema web de gestion educativa para instituciones escolares, desarrollado en P
 ├── js/               # jQuery, Bootstrap JS, Chart.js
 ├── img/              # Logos y membretes
 ├── vendor/           # Dependencias Composer (Dompdf, PHPMailer)
+├── index.php         # Redireccion a inicio/login.php
 ├── configMail.php    # Configuracion SMTP
 └── shema_sistemasescolares.sql  # Esquema de BD
 ```
@@ -70,6 +72,8 @@ Sistema web de gestion educativa para instituciones escolares, desarrollado en P
 4. **Orden de includes**: `verificarSesion.php` → `conexion.php` → `consultas.php` → archivos adicionales
 5. **Paginas single-file**: cada pagina es un archivo PHP unico (logica + HTML)
 6. **Sanitizacion**: validar y sanitizar todos los inputs
+
+La consulta de claves de acceso web (`secretaria/verClaves.php`) esta restringida a usuarios de secretaria; la URL antigua en `docentes/` redirige alli.
 
 ## Documentacion Tecnica para Agentes
 

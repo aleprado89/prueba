@@ -7,7 +7,12 @@ include '../funciones/verificarSesion.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 // 1. INCLUSIÓN NECESARIA PARA CALCULAR EL ESTADO
-include '../funciones/analisisestado.php'; 
+include '../funciones/analisisestado.php';
+
+if (!isset($_SESSION['sec_nombreUsuario'])) {
+    header('Location: ../inicio/loginAdmin.php');
+    exit;
+}
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
