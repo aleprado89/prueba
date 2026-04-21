@@ -2110,9 +2110,7 @@ function analisis_estado(
             $sinAsist = "t";
         }
 
-        //ASIGNATURA
-
-        if ($tipoMateria == 3) {
+        if ($tipoMateria == 3 || $tipoMateria == 2 || $tipoMateria == 1) {
 
             //ASISTENCIA
 
@@ -2137,6 +2135,7 @@ function analisis_estado(
 
             if ($p1 < $cReg && $p1 >= 0) {
                 $recuperatorio = "t";
+                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cReg) {
@@ -2163,6 +2162,7 @@ function analisis_estado(
 
             if ($p2 < $cReg && $p2 >= 0) {
                 $recuperatorio = "t";
+                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cReg) {
@@ -2189,6 +2189,7 @@ function analisis_estado(
 
             if ($p3 < $cReg && $p3 >= 0) {
                 $recuperatorio = "t";
+                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cReg) {
@@ -2215,6 +2216,7 @@ function analisis_estado(
 
             if ($p4 < $cReg && $p4 >= 0) {
                 $recuperatorio = "t";
+                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cReg) {
@@ -2241,6 +2243,7 @@ function analisis_estado(
 
             if ($p5 < $cReg && $p5 >= 0) {
                 $recuperatorio = "t";
+                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cReg) {
@@ -2267,6 +2270,7 @@ function analisis_estado(
 
             if ($p6 < $cReg && $p6 >= 0) {
                 $recuperatorio = "t";
+                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cReg) {
@@ -2293,6 +2297,7 @@ function analisis_estado(
 
             if ($p7 < $cReg && $p7 >= 0) {
                 $recuperatorio = "t";
+                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cReg) {
@@ -2315,39 +2320,12 @@ function analisis_estado(
                         $regular = "f";
                     }
                 }
-            }
-
-            if ($p8 < $cReg && $p8 >= 0) {
-                $recuperatorio = "t";
-                if ($primerRec == "t" && $primerRecUsado == "f") {
-                    $primerRecUsado = "t";
-                    if ($r1 < $cReg) {
-                        if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                            $segundoRecUsado = "t";
-                            if ($r2 < $cReg) {
-                                $regular = "f";
-                            }
-                        } else {
-                            $regular = "f";
-                        }
-                    }
-                } else {
-                    if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                        $segundoRecUsado = "t";
-                        if ($r2 < $cReg) {
-                            $regular = "f";
-                        }
-                    } else {
-                        $regular = "f";
-                    }
-                }
-            }
+            }            
 
             //PROMOCION
 
             if ($p1 < $cProm && $p1 >= 0) {
                 $recuperatorio = "t";
-                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cProm) {
@@ -2374,7 +2352,6 @@ function analisis_estado(
 
             if ($p2 < $cProm && $p2 >= 0) {
                 $recuperatorio = "t";
-                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cProm) {
@@ -2401,7 +2378,6 @@ function analisis_estado(
 
             if ($p3 < $cProm && $p3 >= 0) {
                 $recuperatorio = "t";
-                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cProm) {
@@ -2428,7 +2404,6 @@ function analisis_estado(
 
             if ($p4 < $cProm && $p4 >= 0) {
                 $recuperatorio = "t";
-                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cProm) {
@@ -2455,7 +2430,6 @@ function analisis_estado(
 
             if ($p5 < $cProm && $p5 >= 0) {
                 $recuperatorio = "t";
-                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cProm) {
@@ -2482,7 +2456,6 @@ function analisis_estado(
 
             if ($p6 < $cProm && $p6 >= 0) {
                 $recuperatorio = "t";
-                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cProm) {
@@ -2509,7 +2482,6 @@ function analisis_estado(
 
             if ($p7 < $cProm && $p7 >= 0) {
                 $recuperatorio = "t";
-                $aprobado = "f";
                 if ($primerRec == "t" && $primerRecUsado == "f") {
                     $primerRecUsado = "t";
                     if ($r1 < $cProm) {
@@ -2537,175 +2509,11 @@ function analisis_estado(
             if ($p8 < $cTrab && $p8 >= 0) {
                 $recuperatorio = "t";
                 $aprobado = "f";
-                if ($primerRec == "t" && $primerRecUsado == "f") {
-                    $primerRecUsado = "t";
-                    if ($r1 < $cTrab) {
-                        if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                            $segundoRecUsado = "t";
-                            if ($r2 < $cTrab) {
-                                $aprobado = "f";
-                            }
-                        } else {
-                            $aprobado = "f";
-                        }
-                    }
-                } else {
-                    if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                        $segundoRecUsado = "t";
-                        if ($r2 < $cTrab) {
-                            $aprobado = "f";
-                        }
-                    } else {
-                        $aprobado = "f";
-                    }
-                }
             }
-        }
-
-        //TALLER Y SEMINARIO		
-
-        if ($tipoMateria == 1 || $tipoMateria == 2) {
-
-            //ASISTENCIA
-
-            if ($trabaja == 0) {
-                if ($asistencia < $aReg) {
-                    $asistOblig = "f";
-                }
-                if ($asistencia < $aProm) {
-                    $asistProm = "f";
-                }
-            }
-            if ($trabaja == 1) {
-                if ($asistencia < $aRegRed) {
-                    $asistOblig = "f";
-                }
-                if ($asistencia < $aPromRed) {
-                    $asistProm = "f";
-                }
-            }
-
-            //REGULARIDAD
-
-            $instanciasAp = 0;
-            if ($p1 >= $cReg && $p1 >= 0) {
-                $instanciasAp++;
-            }
-
-            if ($p2 >= $cReg && $p2 >= 0) {
-                $instanciasAp++;
-            }
-
-            if ($p3 >= $cReg && $p3 >= 0) {
-                $instanciasAp++;
-            }
-
-            if ($p4 >= $cReg && $p4 >= 0) {
-                $instanciasAp++;
-            }
-
-            if ($p5 >= $cReg && $p5 >= 0) {
-                $instanciasAp++;
-            }
-
-            if ($p6 >= $cReg && $p6 >= 0) {
-                $instanciasAp++;
-            }
-
-            if ($p7 >= $cReg && $p7 >= 0) {
-                $instanciasAp++;
-            }
-
-            if ($instanciasAp <= 0) {
-                $regular = "f";
-            }
-
-            if ($p8 < $cReg && $p8 >= 0) {
-                $recuperatorio = "t";
-                if ($primerRec == "t" && $primerRecUsado == "f") {
-                    $primerRecUsado = "t";
-                    if ($r1 < $cReg) {
-                        if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                            $segundoRecUsado = "t";
-                            if ($r2 < $cReg) {
-                                $regular = "f";
-                            }
-                        } else {
-                            $regular = "f";
-                        }
-                    }
-                } else {
-                    if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                        $segundoRecUsado = "t";
-                        if ($r2 < $cReg) {
-                            $regular = "f";
-                        }
-                    } else {
-                        $regular = "f";
-                    }
-                }
-            }
-
-            //PROMOCION
-
-            if ($p1 < $cProm && $p1 >= 0) {
-                $aprobado = "f";
-            }
-
-            if ($p2 < $cProm && $p2 >= 0) {
-                $aprobado = "f";
-            }
-
-            if ($p3 < $cProm && $p3 >= 0) {
-                $aprobado = "f";
-            }
-
-            if ($p4 < $cProm && $p4 >= 0) {
-                $aprobado = "f";
-            }
-
-            if ($p5 < $cProm && $p5 >= 0) {
-                $aprobado = "f";
-            }
-
-            if ($p6 < $cProm && $p6 >= 0) {
-                $aprobado = "f";
-            }
-
-            if ($p7 < $cProm && $p7 >= 0) {
-                $aprobado = "f";
-            }
-
-            if ($p8 < $cTrab && $p8 >= 0) {
-                $recuperatorio = "t";
-                $aprobado = "f";
-                if ($primerRec == "t" && $primerRecUsado == "f") {
-                    $primerRecUsado = "t";
-                    if ($r1 < $cTrab) {
-                        if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                            $segundoRecUsado = "t";
-                            if ($r2 < $cTrab) {
-                                $aprobado = "f";
-                            }
-                        } else {
-                            $aprobado = "f";
-                        }
-                    }
-                } else {
-                    if ($segundoRec == "t" && $segundoRecUsado == "f") {
-                        $segundoRecUsado = "t";
-                        if ($r2 < $cTrab) {
-                            $aprobado = "f";
-                        }
-                    } else {
-                        $aprobado = "f";
-                    }
-                }
-            }
-        }
+        }        
 
         //Salida Analisis Tipo Materia 3
-        if ($tipoMateria == 3)   //Asignatura
+        if ($tipoMateria == 3 || $tipoMateria == 2 || $tipoMateria == 1)   //Asignatura
         {
 
             if ($regular == "f" || $asistOblig == "f")   //Libre
@@ -2751,54 +2559,6 @@ function analisis_estado(
             }
 
         }
-
-        //Salida Analisis Tipo Materia 1 2
-        if ($tipoMateria == 1 || $tipoMateria == 2)   //Taller Seminario
-        {
-
-            if ($regular == "f" || $asistOblig == "f")   //Recursa
-            {
-                $salida = 10;
-                $wanalisis = "Recursa";
-            }
-
-            if ($regular == "t" && $asistOblig == "t")    //Coloquio
-            {
-                $salida = 2;
-                $wanalisis = "Coloquio";
-            }
-
-            if ($regular == "f" && $sinAsist == "t")      //Recursa S/Asist
-            {
-                $salida = 12;
-                $wanalisis = "Recursa - S/Asist";
-            }
-
-            if ($regular == "t" && $sinAsist == "t")      //Coloquio S/Asist
-            {
-                $salida = 5;
-                $wanalisis = "Coloquio - S/Asist";
-            }
-
-            if ($aprobado == "t" && $asistProm == "t")      //Promoción
-            {
-                $salida = 14;
-                $wanalisis = "Promoción";
-            }
-
-            if ($aprobado == "t" && $sinAsist == "t")      //Promoción S/Asist
-            {
-                $salida = 15;
-                $wanalisis = "Promoción - S/Asist";
-            }
-
-            if ($sinCalif == "t")       //S/Calif
-            {
-                $salida = 6;
-                $wanalisis = "Sin Calificaciones";
-            }
-        }
-
 
     } elseif ($cod_col == "iess") {			//////////IESS//////////
 
