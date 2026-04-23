@@ -100,12 +100,11 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cargar calificaciones</title>
-<link rel="stylesheet" href="../css/bootstrap.min.css">
 <link rel="stylesheet" href="../css/material/bootstrap.min.css">
 <link rel="stylesheet" href="../css/estilos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <link rel="icon" type="image/png" href="../img/icon.png">
 </head>
 <body>
@@ -137,9 +136,8 @@ $alumnosCalif = obtenerCalificacionesMateria($conn, $idMateria);
 
 </div>
 <script src="../funciones/sessionControl.js"></script>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script>
 var idMateria = "<?php echo htmlspecialchars($idMateria); ?>";
 var curso = "<?php echo htmlspecialchars($curso); ?>";

@@ -1,6 +1,7 @@
 <?php
 // Incluir el script de verificación de sesión
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
@@ -10,6 +11,8 @@ error_reporting(E_ALL);
 // Incluir la conexión a la base de datos y consultas
 include '../inicio/conexion.php'; // Asegúrate de que esta ruta sea correcta
 include '../funciones/consultas.php'; // Asegúrate de que esta ruta sea correcta
+define('ID_FORMULARIO_SECRETARIA', 1);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 // --- Lógica para manejar peticiones AJAX ---
 if (isset($_GET['ajax_action'])) {
@@ -165,7 +168,6 @@ $today = date('Y-m-d');
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Matriculación - Secretaría</title>
   <!-- Incluir Bootstrap CSS -->
-  <link rel="stylesheet" href="../css/bootstrap.min.css">
   <!-- Incluir tema Material Design -->
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <!-- Incluir tu archivo CSS general -->
@@ -398,9 +400,8 @@ $today = date('Y-m-d');
 </div>
 
 <!-- Scripts de JavaScript -->
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script src="../funciones/sessionControl.js"></script>
 
 <!-- Scripts para lógica de la página -->

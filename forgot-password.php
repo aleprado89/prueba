@@ -1,81 +1,102 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+/**
+ * Recuperacion de contrasena por correo (docente o alumno terciario).
+ */
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
-
 require 'configMail.php';
+include 'inicio/conexion.php';
+require_once __DIR__ . '/funciones/password_web.php';
 
-  // Incluye la conexión a la base de datos
-  include 'inicio/conexion.php';
+$dni = isset($_POST['dni']) ? trim((string) $_POST['dni']) : '';
+if ($dni === '') {
+    echo 'No se recibio el DNI.';
+    exit;
+}
 
-  // Obtiene el DNI del usuario
-  $dni = $_POST['dni'];
-  // Busca el correo electrónico del usuario con el DNI proporcionado
-  $sql = "SELECT mail FROM persona WHERE dni = '$dni'";
-  $resultado = $conn->query($sql);
-  $fila = $resultado->fetch_assoc();
-  // Si se encuentra el usuario, busca y envia la contraseña x mail
-  if ($fila) {
-    $email = $fila['mail'];
+$stmtMail = $conn->prepare('SELECT mail, nombre FROM persona WHERE dni = ? LIMIT 1');
+if (!$stmtMail) {
+    echo 'No se pudo procesar la solicitud. Intente mas tarde.';
+    exit;
+}
+$stmtMail->bind_param('s', $dni);
+$stmtMail->execute();
+$rowPersona = $stmtMail->get_result()->fetch_assoc();
+$stmtMail->close();
 
-    // Busca la contraseña del usuario
-    $sql = "SELECT * FROM persona p 
-            INNER JOIN personal per ON p.idPersona = per.idPersona 
-            INNER JOIN passwords pass ON per.legajo = pass.legajo 
-            WHERE p.dni = '$dni'";
-    $resultado = $conn->query($sql);
-    $fila = $resultado->fetch_assoc();
+if (!$rowPersona || empty($rowPersona['mail'])) {
+    echo 'No se encontro un correo de recuperacion para ese DNI.';
+    exit;
+}
 
-    if ($fila) {
-      // Es docente
-      $contraseña = $fila['password'];
-      $nombre = $fila['nombre'];
-    } else {
-      // Es alumno
-      $sql = "SELECT * FROM persona p 
-              INNER JOIN alumnosterciario a ON p.idPersona = a.idPersona 
-              INNER JOIN passwords_alumnos pass ON a.idAlumno = pass.idAlumno 
-              WHERE p.dni = '$dni'";
-      $resultado = $conn->query($sql);
-      $fila = $resultado->fetch_assoc();
-      if ($fila) {
-        $contraseña = $fila['password'];
-        $nombre = $fila['nombre'];
-      } else {
-        // No se encontró un registro en passwords ni en passwords_alumnos
-        echo "Si es su primer ingreso, consulte la contraseña inicial en su institución.";
-        exit;
-      }
+$email = $rowPersona['mail'];
+$nombre = $rowPersona['nombre'];
+
+$contraseña = null;
+$sqlDoc = 'SELECT pass.password FROM passwords pass
+    INNER JOIN personal per ON pass.legajo = per.legajo
+    INNER JOIN persona p ON per.idPersona = p.idPersona
+    WHERE p.dni = ? LIMIT 1';
+$stmtDoc = $conn->prepare($sqlDoc);
+if ($stmtDoc) {
+    $stmtDoc->bind_param('s', $dni);
+    $stmtDoc->execute();
+    $r = $stmtDoc->get_result()->fetch_assoc();
+    if ($r && isset($r['password'])) {
+        $contraseña = (string) $r['password'];
     }
+    $stmtDoc->close();
+}
 
-    // Envía el correo electrónico
-    $mail = new PHPMailer(true);
-    $mail->CharSet = 'UTF-8';
-    $mail->isSMTP();
-    $mail->Host = MAIL_HOST;
-    $mail->Port = MAIL_PORT;
-    $mail->SMTPAuth = true;
-    $mail->Username = MAIL_USER;
-    $mail->Password = MAIL_PASSWORD;
-    $mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
-    $mail->addAddress($email, $nombre);
-    $mail->Subject = 'Recuperación de contraseña';
-    $mail->Body = 'Hola, su contraseña es: ' . $contraseña;
-
-    try {
-        $mail->send();
-        echo 'Se envió un mail con su contraseña a su dirección de correro de recuperación. Si no le llega es probable que su correo de recuperación no esté cargado o sea incorrecto. En ese caso consulte en su institución.';
-    } catch (Exception $e) {
-        echo 'Error al enviar el correo electrónico de recuperación de contraseña: ' . $e->getMessage().' Consulte su clave en la institución.';
+if ($contraseña === null) {
+    $sqlAlu = 'SELECT pass.password FROM passwords_alumnos pass
+        INNER JOIN alumnosterciario a ON pass.idAlumno = a.idAlumno
+        INNER JOIN persona p ON a.idPersona = p.idPersona
+        WHERE p.dni = ? LIMIT 1';
+    $stmtAlu = $conn->prepare($sqlAlu);
+    if ($stmtAlu) {
+        $stmtAlu->bind_param('s', $dni);
+        $stmtAlu->execute();
+        $r2 = $stmtAlu->get_result()->fetch_assoc();
+        if ($r2 && isset($r2['password'])) {
+            $contraseña = (string) $r2['password'];
+        }
+        $stmtAlu->close();
     }
-   
-  } else {
-    // Devuelve un mensaje de error
-    echo "No se encontró el usuario con el DNI proporcionado.";
-  }
-?>
+}
+
+if ($contraseña === null) {
+    echo 'Si es su primer ingreso, consulte la contrasena inicial en su institucion.';
+    exit;
+}
+
+if (password_web_is_hashed($contraseña)) {
+    echo 'Su cuenta tiene una contrasena almacenada de forma segura. No puede enviarse por correo. Use la opcion Cambiar clave en el portal o consulte en secretaria.';
+    exit;
+}
+
+$mail = new PHPMailer(true);
+$mail->CharSet = 'UTF-8';
+$mail->isSMTP();
+$mail->Host = MAIL_HOST;
+$mail->Port = MAIL_PORT;
+$mail->SMTPAuth = true;
+$mail->Username = MAIL_USER;
+$mail->Password = MAIL_PASSWORD;
+$mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
+$mail->addAddress($email, $nombre);
+$mail->Subject = 'Recuperacion de contrasena';
+$mail->Body = 'Hola, su contrasena es: ' . $contraseña;
+
+try {
+    $mail->send();
+    echo 'Se envio un mail con su contrasena a su direccion de correo de recuperacion. Si no le llega es probable que su correo no este cargado o sea incorrecto. En ese caso consulte en su institucion.';
+} catch (Exception $e) {
+    error_log('forgot-password mail: ' . $e->getMessage());
+    echo 'No se pudo enviar el correo en este momento. Consulte su clave en la institucion.';
+}

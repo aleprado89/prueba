@@ -68,7 +68,8 @@ $_SESSION['active_user_identifier'] = $usuarioActualIdentifier;
 // --- Paso de la variable SESSION al cliente para JavaScript ---
 // Esto solo se ejecuta si la página se está cargando inicialmente (no es una petición AJAX)
 // y se utiliza para que el JavaScript de la página sepa quién está logueado.
-if (!$is_ajax_request) {
+// En reportes PDF u otras salidas binarias: define('VERIFICAR_SESION_SIN_SCRIPT', true) antes de incluir este archivo.
+if (!$is_ajax_request && !defined('VERIFICAR_SESION_SIN_SCRIPT')) {
 ?>
 <script>
     // Asigna el identificador del usuario activo a una variable global en JavaScript

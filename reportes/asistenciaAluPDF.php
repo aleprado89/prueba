@@ -1,10 +1,12 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 include '../vendor/autoload.php';
 include '../inicio/conexion.php';
 ob_start();
 include '../funciones/consultas.php';
 ob_end_clean();
+include '../funciones/verificarAccesoReporte.php';
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -22,6 +24,8 @@ $idCiclo = filter_var($_GET['idCiclo'], FILTER_SANITIZE_NUMBER_INT);
 $mes = filter_var($_GET['mes'], FILTER_SANITIZE_NUMBER_INT);
 $plan_nombre = htmlspecialchars($_GET['plan_nombre'], ENT_QUOTES, 'UTF-8');
 $nombre_alumno = htmlspecialchars($_GET['nombre_alumno'], ENT_QUOTES, 'UTF-8'); // Passed from calificaciones.php
+
+assertReporteAlumnoOsecretariaPorIdAlumno((int) $idAlumno);
 
 // Buscamos el año del ciclo lectivo para el PDF
 $ciclolectivo_anio = buscarnombreCiclo($conn, $idCiclo);
@@ -106,7 +110,7 @@ $html = '
         <table style="width: 100%;">
             <tr>
                 <td style="width: 20%; text-align: center;">
-                    <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo" style="max-width: 100px;">
+                    <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo" style="max-width: 176px;">
                 </td>
                 <td style="width: 80%; font-size: 12px; padding-left: 3px; box-sizing: border-box;">
                     <div style="padding-left: 10px;">

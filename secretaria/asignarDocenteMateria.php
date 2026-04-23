@@ -1,7 +1,10 @@
 <?php
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 24);
+require_once '../funciones/requerirPermisoFormulario.php';
 include '../funciones/parametrosWeb.php';
 
 ini_set('display_errors', 1);
@@ -222,7 +225,6 @@ foreach ($asignaciones as $asignacionRow) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asignar docente a materia</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -425,9 +427,8 @@ foreach ($asignaciones as $asignacionRow) {
 </div>
 
 <?php include '../funciones/footer.html'; ?>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script src="../funciones/sessionControl.js"></script>
 </body>
 </html>

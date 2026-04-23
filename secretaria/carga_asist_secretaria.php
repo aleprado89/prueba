@@ -1,16 +1,13 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-session_start();
 
-// Redirigir al login si el usuario no está autenticado como secretario
-if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: loginAdmin.php');
-    exit;
-}
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 6);
+require_once '../funciones/requerirPermisoFormulario.php';
 include '../funciones/analisisestado.php';
 
 $sec_nombre = $_SESSION['sec_nombreUsuario'];
@@ -112,7 +109,6 @@ if (empty($idMateria) || empty($ciclolectivo_id) || empty($plan_id)) {
   <meta charset="UTF-8">
   <title>Cargar Asistencias (Secretaría)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -180,9 +176,8 @@ if (empty($idMateria) || empty($ciclolectivo_id) || empty($plan_id)) {
 <?php include '../funciones/footer.html'; ?>
 
 <script src="../funciones/sessionControl.js"></script>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 
 <script>
 $(document).ready(function () {

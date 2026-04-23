@@ -1,9 +1,12 @@
 <?php
 ob_start();
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
+include '../funciones/verificarAccesoReporte.php';
+assertReporteSecretaria();
 
 use Dompdf\Dompdf;
 
@@ -30,7 +33,7 @@ $html = '
         @page { margin: 20px; }
         body { font-family: Arial, sans-serif; font-size: 8pt; }
         .header { text-align: center; margin-bottom: 15px; }
-        .header img { max-width: 100%; height: 70px; }
+        .header img { max-width: 100%; height: 123px; }
         .title { text-align: center; }
         h4, h5, h2 { margin: 2px 0; font-size: 10pt; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }

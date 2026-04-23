@@ -1,9 +1,11 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 require_once '../vendor/autoload.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
+include '../funciones/verificarAccesoReporte.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -17,6 +19,13 @@ $idAlumno = intval($_GET['idAlumno']);
 $nombre   = htmlspecialchars($_GET['nombre']);
 $apellido = htmlspecialchars($_GET['apellido']);
 $dni      = htmlspecialchars($_GET['dni']);
+assertReporteAlumnoOsecretariaPorIdAlumno($idAlumno);
+
+if (!empty($_SESSION['sec_nombreUsuario']) && !usuarioTieneAccesoFormularioSecretaria($conn, 8)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    die('Acceso denegado');
+}
 
 // Buscar carrera (plan/es) asociada al alumno
 $planes = buscarPlanes($conn, $idAlumno);
@@ -74,7 +83,7 @@ $html = "
     <style>
         body { font-family: Arial, sans-serif; font-size: 12pt; margin: 40px; }
         .header { text-align: center; margin-bottom: 40px; }
-        .header img { height: 80px; }
+        .header img { height: 141px; }
         .title { text-align: center; margin-bottom: 30px; }
         .footer { margin-top: 80px; text-align: center; font-size: 10pt; }
         .firma { margin-top: 60px; text-align: center; }

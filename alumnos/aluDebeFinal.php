@@ -16,7 +16,7 @@ $nombreAlumno = $_SESSION['alu_apellido'] . ", " . $_SESSION['alu_nombre'];
 $listadoPlanes = array();
 $listadoPlanes = buscarPlanes($conn, $idAlumno);
 $cantidad = count($listadoPlanes);
-$cursadosFinalizados=selectCursadoFinalizadoByIdPlan($conn,$idAlumno,$listadoPlanes[0]['idPlan']);
+$cursadosFinalizados=selectCursadoFinalizadoByIdPlan($conn,$idAlumno);
 $_SESSION['idP']=$listadoPlanes[0]['idPlan'];
 $anio=$datosColegio[0]['anioautoweb'];//toma el primer registro de colegio para sacar el anioautoweb
 $_SESSION['anio']=$anio;
@@ -56,13 +56,11 @@ if (isset($idPlan)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alumnos que solo adeudan finales</title>
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Bootstrap JS (necesario para el navvar) -->
-    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
 <link rel="icon" type="image/png" href="../img/icon.png">
 
 </head>
@@ -166,9 +164,8 @@ if (isset($idPlan)) {
     </div>
         <script src="../funciones/sessionControl.js"></script>
     <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-    <script src="../js/jquery-3.7.1.slim.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/jquery-3.7.1.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
     <?php include '../funciones/footer.html'; ?>
 
     </body>
