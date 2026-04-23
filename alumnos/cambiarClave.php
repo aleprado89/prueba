@@ -2,7 +2,8 @@
 // Inicia la sesión
 session_start();
 include '../inicio/conexion.php';
-include '../funciones/parametrosWeb.php'; 
+include '../funciones/password_web.php';
+include '../funciones/parametrosWeb.php';
 include '../funciones/verificarSesion.php';
 
 // Verifica si el alumno ha iniciado sesión
@@ -20,9 +21,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Verifica si las claves son iguales y tienen un mínimo de 4 caracteres
     if ($claveNueva == $claveNuevaConfirmar && strlen($claveNueva) >= 4) {
-        // Actualiza el registro de la tabla passwords_alumnos
-        $sql = "UPDATE passwords_alumnos SET password = '$claveNueva' WHERE idAlumno = '".$_SESSION['alu_idAlumno']."'";
-        $conn->query($sql);
+        $hash = password_web_hash($claveNueva);
+        $idAlu = (int) $_SESSION['alu_idAlumno'];
+        $sql = 'UPDATE passwords_alumnos SET password = ? WHERE idAlumno = ?';
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param('si', $hash, $idAlu);
+            $stmt->execute();
+            $stmt->close();
+        }
 
         // Cierra la conexión a la base de datos
         $conn->close();
@@ -105,9 +112,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
     <script src="../funciones/sessionControl.js"></script>
   <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-  <script src="../js/jquery-3.7.1.min.js"></script>
-  <script src="../js/popper.min.js"></script>
-  <script src="../js/bootstrap.min.js"></script>
+  <script src="../js/jquery-3.7.1.js"></script>
+  <script src="../js/bootstrap.bundle.js"></script>
 
 <?php include '../funciones/footer.html'; ?>
 

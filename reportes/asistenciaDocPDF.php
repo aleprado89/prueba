@@ -1,10 +1,12 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 include '../vendor/autoload.php';
 include '../inicio/conexion.php';
 ob_start();
 include '../funciones/consultas.php';
 ob_end_clean();
+include '../funciones/verificarAccesoReporte.php';
 use Dompdf\Dompdf;
 use Dompdf\Options;
 // Crear una instancia de Dompdf
@@ -24,6 +26,8 @@ $plan = htmlspecialchars($_GET['plan'], ENT_QUOTES, 'UTF-8');
 $materia = htmlspecialchars($_GET['materia'], ENT_QUOTES, 'UTF-8');
 $curso = htmlspecialchars($_GET['curso'], ENT_QUOTES, 'UTF-8');
 $membrete=$_SESSION['membrete'];
+
+assertReporteDocenteOsecretariaPorIdMateria($conn, (int) $idMateria);
 
 $nombreMes = array(
   1 => 'Enero',
@@ -113,7 +117,11 @@ th {
 
 th:first-child { /* Establece un ancho mayor para la columna "Alumno" */
   width: 150px;
-}  
+}
+    .header img {
+      max-width: 878px;
+      height: auto;
+    }
   </style>
 <link rel="icon" type="image/png" href="../img/icon.png">
 

@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg " data-bs-theme="light">
     <div class="container ">
       <div class="d-flex flex-column align-items-center centrarlogomenu ">
-        <img src="<?php echo $_SESSION['logo']; ?>" class="est-logo img-fluid mx-auto" alt="logo">
+        <img src="<?php echo htmlspecialchars($_SESSION['logo'] ?? '../img/icon.png', ENT_QUOTES, 'UTF-8'); ?>" class="est-logo img-fluid mx-auto" alt="logo">
       </div>
       <button class="navbar-toggler margenbottom ms-auto" type="button" data-bs-toggle="collapse"
         data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
@@ -12,23 +12,21 @@
       <div class="collapse navbar-collapse" id="navbarColor01">
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <a class="nav-link " href="menudocentes.php">Inicio
-
-            </a>
+            <a class="nav-link" href="menudocentes.php">Inicio</a>
           </li>
           <li class="nav-item active">
-          <a class="nav-link" href="#" onclick="cargarParametro('carga_calif.php')">Carga de calificaciones</a>              <span class="visually-hidden">(current)</span>
-            </a>
+            <a class="nav-link" href="#" onclick="cargarParametro('carga_calif.php')">Carga de calificaciones</a>
+            <span class="visually-hidden">(current)</span>
           </li>
           <li class="nav-item">
-          <a class="nav-link" href="#" onclick="cargarParametro('carga_asist.php')">Carga de asistencias</a>          </li>
+            <a class="nav-link" href="#" onclick="cargarParametro('carga_asist.php')">Carga de asistencias</a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="#" onclick="verificarFechaActasVolantes()">Carga de actas</a>
           </li>
           <li class="nav-item active">
-          <a class="nav-link" href="actuaDatosDoc.php" >Datos Personales</a>
-                        <span class="visually-hidden">(current)</span>
-            </a>
+            <a class="nav-link" href="actuaDatosDoc.php">Datos Personales</a>
+            <span class="visually-hidden">(current)</span>
           </li>
         </ul>
         <ul class="ms-auto" style="list-style-type: none;">
@@ -70,16 +68,21 @@
 <?php
 // Verifica si el período de actas está abierto
 function verificarPeriodoActas() {
-    $fechaActual = date('Y-m-d');
-    include '../inicio/conexion.php';
-    $sql = "SELECT cargaActaVolDesde,cargaActaVolHasta FROM colegio WHERE cargaActaVolDesde <= '$fechaActual' AND cargaActaVolHasta >= '$fechaActual'";
-    $resultado = $conn->query($sql);
-    if ($resultado->num_rows > 0) {
-        return true;
-    } else {
+    global $conn;
+    if (!$conn instanceof mysqli) {
         return false;
     }
-    mysqli_close($conn);
+    $fechaActual = date('Y-m-d');
+    $sql = 'SELECT 1 FROM colegio WHERE cargaActaVolDesde <= ? AND cargaActaVolHasta >= ? LIMIT 1';
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return false;
+    }
+    $stmt->bind_param('ss', $fechaActual, $fechaActual);
+    $stmt->execute();
+    $ok = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    return $ok;
 }
 ?>
 
@@ -87,9 +90,8 @@ function verificarPeriodoActas() {
        <!--           FUNCIONES     y SCRIPTS        -->
 
 <!-- Bootstrap JS y jQuery (necesario para el modal) -->
-<script src="../js/jquery-3.7.1.min.js"></script>
- <script src="../js/bootstrap.min.js"></script> 
- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
   
   <script> //cargo el parametro en el hipervinculo
     function cargarParametro(parametro) {
@@ -112,8 +114,10 @@ function verificarFechaActasVolantes() {
         if (periodoActasAbierto == 'abierto') {
             window.location.href = 'mesasExamenProf.php';
         } else {
-            $('#inscModal').modal('show');
-            $('#mensajeModal').text("La carga de actas está cerrada. Los períodos de carga de actas están definidos por secretaria.");
+            document.getElementById('mensajeModal').textContent = "La carga de actas está cerrada. Los períodos de carga de actas están definidos por secretaria.";
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+              new bootstrap.Modal(document.getElementById('inscModal')).show();
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 <?php
 // Incluir el script de verificación de sesión
 include_once '../funciones/verificarSesion.php';
+include_once '../funciones/requerirSecretaria.php';
 
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
@@ -10,6 +11,8 @@ error_reporting(E_ALL & ~E_DEPRECATED); // Ignorar deprecated para JSON limpio
 // Incluir la conexión a la base de datos y consultas
 include_once '../inicio/conexion.php';
 include_once '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 11);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 // Incluir control de correlatividad
 $materiasAdeuda = ''; // Es crucial inicializarla ANTES de incluir el archivo
@@ -182,7 +185,6 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscribir alumno a examen - Secretaría</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -421,9 +423,8 @@ try {
 
     <?php include '../funciones/footer.html'; ?>
 
-    <script src="../js/jquery-3.7.1.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/jquery-3.7.1.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
     <script src="../funciones/sessionControl.js"></script>
 
     <script>

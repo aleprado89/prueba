@@ -1,6 +1,7 @@
 <?php
 // Incluir el script de verificación de sesión
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 
 // Habilitar reporte de errores
 ini_set('display_errors', 1);
@@ -11,15 +12,18 @@ error_reporting(E_ALL);
 include '../inicio/conexion.php';
 include '../funciones/consultas.php'; // Asegúrate de que esta ruta sea correcta
 
+$redirect_origin = $_GET['origin'] ?? 'legajo';
+if ($redirect_origin === 'certificadoRegular') {
+    define('ID_FORMULARIO_SECRETARIA', 8);
+    require_once __DIR__ . '/../funciones/requerirPermisoFormulario.php';
+}
+
 $message = '';
 $message_type = '';
 
 // 1. Sanitización de entradas (¡Bien hecho con el null coalescing!)
 $apellido_busqueda = $_GET['apellido_busqueda'] ?? '';
 $nombre_busqueda = $_GET['nombre_busqueda'] ?? '';
-
-// Captura el parámetro 'origin' si viene en la URL. Por defecto, será 'legajo'.
-$redirect_origin = $_GET['origin'] ?? 'legajo';
 
 // 2. Inicializar $alumnos como un array vacío.
 $alumnos = [];
@@ -60,7 +64,6 @@ if (isset($_GET['search_submitted'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscar alumno - Secretaría</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -207,9 +210,8 @@ if (isset($_GET['search_submitted'])) {
             </div>
         </div>
         <?php include '../funciones/footer.html'; ?>
-    </div> <script src="../js/jquery-3.7.1.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
+    </div> <script src="../js/jquery-3.7.1.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
     <script src="../funciones/sessionControl.js"></script>
 
     <script>

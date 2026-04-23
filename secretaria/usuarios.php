@@ -4,13 +4,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
-
-if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: ../inicio/loginAdmin.php');
-    exit;
-}
+require_once '../funciones/formulariosSecretaria.php';
 
 $mensaje = '';
 $tipoMensaje = 'info';
@@ -121,8 +118,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (int)($_SESSION['sec_tipoPermiso'] 
             $tipoMensaje = 'warning';
         } else {
             $todoOk = true;
+            $idsPermitidos = formulariosSecretariaV3Ids();
             foreach ($modosPorFormulario as $idFormulario => $idLlaveGralRaw) {
                 $idFormulario = (int)$idFormulario;
+                if (!in_array($idFormulario, $idsPermitidos, true)) {
+                    continue;
+                }
                 $idLlaveGral = (int)$idLlaveGralRaw;
 
                 if ($idFormulario <= 0 || !in_array($idLlaveGral, [0, 1, 2, 3], true)) {
@@ -164,7 +165,7 @@ if (!$selectedUser && !empty($usuarios)) {
     $selectedUser = obtenerUsuarioAdminPorId($conn, $selectedUserId);
 }
 
-$formularios = obtenerFormulariosPermisos($conn);
+$formularios = obtenerFormulariosPermisosV3($conn);
 $llavesGenerales = obtenerLlavesGenerales($conn);
 $llavesGeneralesPorId = [];
 foreach ($llavesGenerales as $llaveGeneral) {
@@ -187,7 +188,6 @@ if ($selectedUser) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion de Usuarios y Permisos</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -496,9 +496,8 @@ if ($selectedUser) {
 </div>
 
 <?php include '../funciones/footer.html'; ?>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script src="../funciones/sessionControl.js"></script>
 <script>
     $(document).on('change', '.modo-select', function () {

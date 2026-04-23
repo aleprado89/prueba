@@ -4,12 +4,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 include '../funciones/verificarSesion.php';
-//session_start();
-
-if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: loginAdmin.php');
-    exit;
-}
+include '../funciones/requerirSecretaria.php';
 
 include '../inicio/conexion.php'; // Asegúrate de que $conn esté definida y sea una conexión activa
 // Verifica si $conn es válida. Si no, algo salió mal en conexion.php
@@ -210,6 +205,12 @@ $groupedExamDetailsJson = json_encode($groupedExamDetails);
 
 
 <div class="container mt-4">
+  <?php if (isset($_GET['permiso']) && $_GET['permiso'] === 'denegado'): ?>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      No tiene permiso para acceder a esa seccion. Consulte al administrador.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <?php endif; ?>
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
       <div class="row align-items-center">
@@ -323,9 +324,8 @@ $groupedExamDetailsJson = json_encode($groupedExamDetails);
 </div>
 <?php include '../funciones/footer.html';?>
 <!-- Bootstrap JS y dependencias -->
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <!-- FullCalendar JS -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>

@@ -1,10 +1,13 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 include '../vendor/autoload.php';
 include '../inicio/conexion.php';
 ob_start();
 include '../funciones/consultas.php';
 ob_end_clean();
+include '../funciones/verificarAccesoReporte.php';
+assertReporteSoloAlumno();
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -48,7 +51,7 @@ $html = '
             text-align: center;
         }
         .header img {
-            max-width: 500px;
+            max-width: 878px;
             height: auto;
         }
         .container {

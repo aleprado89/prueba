@@ -72,7 +72,6 @@ $fechaHoraActual = new DateTime();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitar inscripción</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/material/bootstrap.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -253,7 +252,7 @@ $fechaHoraActual = new DateTime();
 
     <?php include '../funciones/footer.html'; ?>
 
-    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
     <script src="../funciones/sessionControl.js"></script>
     <script>
         let idInscripcionSeleccionado = null;

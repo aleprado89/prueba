@@ -1,9 +1,10 @@
 <?php
-session_start();
+define('VERIFICAR_SESION_SIN_SCRIPT', true);
+include '../funciones/verificarSesion.php';
 include '../inicio/conexion.php';
-// No es necesario ob_start/ob_end_clean si solo se incluyen archivos PHP sin salida
 include '../funciones/consultas.php';
 require_once '../vendor/autoload.php';
+include '../funciones/verificarAccesoReporte.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -30,6 +31,7 @@ if (isset($_GET['idAlumno'])) {
 } else {
     die("Error: No se ha especificado un alumno.");
 }
+assertReporteAlumnoOsecretariaPorIdAlumno((int) $idAlumno);
 if (isset($_GET['nombreAlumno'])) {
     $nombreAlumno = $_GET['nombreAlumno'];
 } elseif (isset($_SESSION['alu_apellido'], $_SESSION['alu_nombre'])) {
@@ -64,16 +66,19 @@ $html = '
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
         .header { text-align: center; }
-        .header img { max-width: 500px; height: auto; }
+        .header img { max-width: 878px; height: auto; }
         .container { width: 100%; }
         h3, h4 { text-align: center; margin: 5px 0; }
-        table { font-size: 10px; width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 4px; text-align: left; }
+        table { font-size: 9px; width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 3px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .columna1 { width: 20%; }
-        .columna2 { width: 50%; }
-        .columna3 { width: 20%; }
-        .columna4 { width: 10%; text-align: center; }
+        .columna1 { width: 14%; }
+        .columna2 { width: 28%; }
+        .columna3 { width: 18%; }
+        .columna4 { width: 8%; text-align: center; }
+        .columna5 { width: 12%; text-align: center; }
+        .columna6 { width: 10%; text-align: center; }
+        .columna7 { width: 10%; text-align: center; }
         .fecha { text-align: right; font-size: 14px; margin-bottom: 20px; }
         .aprobada {  font-weight: bold; } /* Estilo para materia aprobada */
     </style>
@@ -94,6 +99,9 @@ $html = '
                 <th class="columna2">Materia</th>
                 <th class="columna3">Estado</th>
                 <th class="columna4">Final</th>
+                <th class="columna5">Fecha examen</th>
+                <th class="columna6">Libro</th>
+                <th class="columna7">Folio</th>
             </tr>';
 
             //RECORRER TABLA DE CALIFICACIONES
@@ -105,6 +113,9 @@ $html = '
           $Curso = $listadoCalificaciones[$a]['Curso'];
           $Estado = $listadoCalificaciones[$a]['Estado'];
           $CalificacionFinal = $listadoCalificaciones[$a]['CalificacionFinal'];
+          $fechaEx = isset($listadoCalificaciones[$a]['FechaExamenFinal']) ? htmlspecialchars($listadoCalificaciones[$a]['FechaExamenFinal'], ENT_QUOTES, 'UTF-8') : '';
+          $libroEx = isset($listadoCalificaciones[$a]['LibroExamen']) ? htmlspecialchars($listadoCalificaciones[$a]['LibroExamen'], ENT_QUOTES, 'UTF-8') : '';
+          $folioEx = isset($listadoCalificaciones[$a]['FolioExamen']) ? htmlspecialchars($listadoCalificaciones[$a]['FolioExamen'], ENT_QUOTES, 'UTF-8') : '';
                         if (!$mostrarEstadoParcial)
                             $listadoCalificaciones[$a]['Estado'] = '';
           $html2=$html2.' <tr>
@@ -112,6 +123,9 @@ $html = '
                 <td>'.$listadoCalificaciones[$a]['Materia'].'</td>
                 <td>'.$listadoCalificaciones[$a]['Estado'].'</td>
                 <td>'.$listadoCalificaciones[$a]['CalificacionFinal'].'</td>
+                <td>'.$fechaEx.'</td>
+                <td>'.$libroEx.'</td>
+                <td>'.$folioEx.'</td>
             </tr>';
             $a++;  }
             $html=$html.$html2.'

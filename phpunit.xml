@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheResult="true"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="default">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="SESYSTEM_TEST_MODE" value="1"/>
+        <env name="SESYSTEM_DB_NAME" value="sesystem_test"/>
+        <ini name="display_errors" value="1"/>
+    </php>
+    <coverage>
+        <include>
+            <directory suffix=".php">funciones</directory>
+        </include>
+    </coverage>
+</phpunit>

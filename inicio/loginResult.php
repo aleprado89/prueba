@@ -5,7 +5,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include 'conexion.php'; // Conexión a la base de datos
-include 'variablesParticulares.php'; 
+include '../funciones/password_web.php';
+include 'variablesParticulares.php';
 
 // Verificar que la conexión a la base de datos sea válida
 if (!isset($conn) || !($conn instanceof mysqli)) {
@@ -30,7 +31,7 @@ if ($result_docente_modifica && $result_docente_modifica->num_rows > 0) {
 
 // Recoger el DNI (username) y la contraseña del formulario
 $username = trim($_POST['username'] ?? ''); // Aquí 'username' es el DNI
-$password = trim($_POST['password'] ?? '');
+$password = (string) ($_POST['password'] ?? '');
 
 $CLAVE_DOCENTE_POR_DEFECTO = $_SESSION['claveDocente'] ?? 'defaultdocpass'; 
 
@@ -166,7 +167,10 @@ function verificarAccesoDocente($dni, $passwordInput, $conn, $CLAVE_DOCENTE_POR_
 
         $forceClaveChange = false;
         if ($rowPass) {
-            if ($passwordInput === $rowPass['password']) {
+            if (password_web_verify($passwordInput, $rowPass['password'])) {
+                if (!password_web_is_hashed($rowPass['password'])) {
+                    password_web_upgrade_docente($conn, (int) $row['legajo'], $passwordInput);
+                }
                 $forceClaveChange = (strtolower($passwordInput) === strtolower($CLAVE_DOCENTE_POR_DEFECTO));
                 $colegioData = getColegioConfig($conn);
                 return [
@@ -183,10 +187,11 @@ function verificarAccesoDocente($dni, $passwordInput, $conn, $CLAVE_DOCENTE_POR_
             }
         } else {
             if ($passwordInput === $CLAVE_DOCENTE_POR_DEFECTO) {
+                $hashNuevo = password_web_hash($CLAVE_DOCENTE_POR_DEFECTO);
                 $sqlInsertPass = "INSERT INTO passwords (legajo, password) VALUES (?, ?)";
                 $stmtInsertPass = $conn->prepare($sqlInsertPass);
                 if (!$stmtInsertPass) { error_log("Error preparando insert pass docente: " . $conn->error); return false; }
-                $stmtInsertPass->bind_param("is", $row['legajo'], $CLAVE_DOCENTE_POR_DEFECTO);
+                $stmtInsertPass->bind_param("is", $row['legajo'], $hashNuevo);
                 if (!$stmtInsertPass->execute()) {
                     error_log("Error al insertar contraseña de docente: " . $stmtInsertPass->error);
                     return false;
@@ -245,7 +250,10 @@ function verificarAccesoAlumno($dni, $passwordInput, $conn) {
 
         $forceClaveChange = false;
         if ($rowPass) {
-            if ($passwordInput === $rowPass['password']) {
+            if (password_web_verify($passwordInput, $rowPass['password'])) {
+                if (!password_web_is_hashed($rowPass['password'])) {
+                    password_web_upgrade_alumno($conn, (int) $row['idAlumno'], $passwordInput);
+                }
                 $forceClaveChange = ($passwordInput === $dni);
                 $colegioData = getColegioConfig($conn);
                 return [
@@ -262,10 +270,11 @@ function verificarAccesoAlumno($dni, $passwordInput, $conn) {
             }
         } else {
             if ($passwordInput === $dni) {
+                $hashNuevo = password_web_hash($dni);
                 $sqlInsertPass = "INSERT INTO passwords_alumnos (idAlumno, password) VALUES (?, ?)";
                 $stmtInsertPass = $conn->prepare($sqlInsertPass);
                 if (!$stmtInsertPass) { error_log("Error preparando insert pass alumno: " . $conn->error); return false; }
-                $stmtInsertPass->bind_param("is", $row['idAlumno'], $dni);
+                $stmtInsertPass->bind_param("is", $row['idAlumno'], $hashNuevo);
                 if (!$stmtInsertPass->execute()) {
                     error_log("Error al insertar contraseña de alumno: " . $stmtInsertPass->error);
                     return false;
@@ -358,14 +367,18 @@ function verificarAccesoAlumnoYDocente($dni, $passwordInput, $conn, $CLAVE_DOCEN
         $stmt->close();
 
         if ($row) {
-            if ($passwordInput === $row['password']) {
+            if (password_web_verify($passwordInput, $row['password'])) {
+                if (!password_web_is_hashed($row['password'])) {
+                    password_web_upgrade_alumno($conn, (int) $alumnoData['idAlumno'], $passwordInput);
+                }
                 $claveAlumnoCorrecta = true;
                 $forceClaveChangeAlu = ($passwordInput === $dni);
             }
         } else if ($passwordInput === $dni) {
             // Crear clave por defecto
+            $hashNuevo = password_web_hash($dni);
             $stmt = $conn->prepare("INSERT INTO passwords_alumnos (idAlumno, password) VALUES (?, ?)");
-            $stmt->bind_param("is", $alumnoData['idAlumno'], $dni);
+            $stmt->bind_param("is", $alumnoData['idAlumno'], $hashNuevo);
             if ($stmt->execute()) {
                 $claveAlumnoCorrecta = true;
                 $forceClaveChangeAlu = true;
@@ -388,14 +401,18 @@ function verificarAccesoAlumnoYDocente($dni, $passwordInput, $conn, $CLAVE_DOCEN
         $stmt->close();
 
         if ($row) {
-            if ($passwordInput === $row['password']) {
+            if (password_web_verify($passwordInput, $row['password'])) {
+                if (!password_web_is_hashed($row['password'])) {
+                    password_web_upgrade_docente($conn, (int) $docenteData['legajo'], $passwordInput);
+                }
                 $claveDocenteCorrecta = true;
                 $forceClaveChangeDoc = (strtolower($passwordInput) === strtolower($CLAVE_DOCENTE_POR_DEFECTO));
             }
         } else if ($passwordInput === $CLAVE_DOCENTE_POR_DEFECTO) {
             // Crear clave por defecto
+            $hashNuevo = password_web_hash($CLAVE_DOCENTE_POR_DEFECTO);
             $stmt = $conn->prepare("INSERT INTO passwords (legajo, password) VALUES (?, ?)");
-            $stmt->bind_param("is", $docenteData['legajo'], $CLAVE_DOCENTE_POR_DEFECTO);
+            $stmt->bind_param("is", $docenteData['legajo'], $hashNuevo);
             if ($stmt->execute()) {
                 $claveDocenteCorrecta = true;
                 $forceClaveChangeDoc = true;

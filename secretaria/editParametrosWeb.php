@@ -8,6 +8,7 @@ error_reporting(E_ALL);
 // Esto se encarga de session_start(), la validación de $_SESSION['sec_nombreUsuario'],
 // y la redirección si no está logueado. También establece $_SESSION['active_user_identifier'].
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 
 // Las líneas comentadas a continuación ya no son necesarias gracias a verificarSesion.php.
 // session_start();
@@ -21,6 +22,10 @@ include '../inicio/conexion.php';
 if (!isset($conn) || !($conn instanceof mysqli)) {
     die("Error crítico: Conexión a la base de datos no establecida o inválida.");
 }
+
+include '../funciones/consultas.php';
+define('ID_FORMULARIO_SECRETARIA', 33);
+require_once '../funciones/requerirPermisoFormulario.php';
 
 // Variables para almacenar mensajes de feedback
 $message = '';
@@ -408,9 +413,8 @@ function formatDateTimeForInput($dateTimeStr) {
 </div>
 
 <!-- Bootstrap JS y dependencias -->
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script>
 // Inicializar tooltips de Bootstrap
 $(function () {

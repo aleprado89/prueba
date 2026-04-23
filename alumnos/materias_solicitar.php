@@ -2,7 +2,8 @@
 <html lang="es">
 
 <?php
-session_start(); 
+ob_start();
+session_start();
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
@@ -55,6 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $redirectUrl = "materias_solicitar.php?idMateria=" . urlencode($idMateriaPost) . 
                        "&nombreMateria=" . urlencode($nombreMateriaRaw) . 
                        "&nombreCurso=" . urlencode($nombreCursoRaw);
+        ob_end_clean();
         header("Location: " . $redirectUrl);
         exit();
     }
@@ -68,6 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $redirectUrl = "materias_solicitar.php?idMateria=" . urlencode($idMateria) . 
                        "&nombreMateria=" . urlencode($nombreMateriaRaw) . 
                        "&nombreCurso=" . urlencode($nombreCursoRaw);
+        ob_end_clean();
         header("Location: " . $redirectUrl);
         exit();
     }
@@ -117,12 +120,11 @@ if ($cantidadSolicitudes > 0 && !empty($idMateria)) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solicitar Inscripción</title>
   
-  <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <script src="../js/bootstrap.min.js"></script> 
+  <script src="../js/bootstrap.bundle.js"></script>
   <link rel="icon" type="image/png" href="../img/icon.png">
 </head>
 
@@ -279,9 +281,8 @@ if ($cantidadSolicitudes > 0 && !empty($idMateria)) {
 </div>
 
 <script src="../funciones/sessionControl.js"></script>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

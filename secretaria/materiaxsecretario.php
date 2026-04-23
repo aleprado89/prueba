@@ -1,12 +1,6 @@
 <?php
-session_start();
-
-// Redirigir al login si el usuario no está autenticado como secretario
-if (!isset($_SESSION['sec_nombreUsuario'])) {
-    header('Location: loginAdmin.php');
-    exit;
-}
 include '../funciones/verificarSesion.php';
+include '../funciones/requerirSecretaria.php';
 include '../inicio/conexion.php';
 include '../funciones/consultas.php';
 include '../funciones/parametrosWeb.php';
@@ -118,7 +112,6 @@ if ($primerCicloLectivoId && $primerPlanId) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Materias - Secretaría (<?php echo htmlspecialchars($page_title_suffix); ?>)</title>
   <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="../css/bootstrap.min.css">
   <link rel="stylesheet" href="../css/material/bootstrap.min.css">
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -221,9 +214,8 @@ if ($primerCicloLectivoId && $primerPlanId) {
 </div>
 
 <script src="../funciones/sessionControl.js"></script>
-<script src="../js/jquery-3.7.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-3.7.1.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 
 <script>
     // Función para cargar los cursos disponibles según el ciclo y plan seleccionados

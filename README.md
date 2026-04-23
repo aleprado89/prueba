@@ -26,6 +26,7 @@ Sistema web de gestion educativa para instituciones escolares, desarrollado en P
 │   ├── analisisestado.php      # Calculo de estados de cursado
 │   ├── controlCorrelatividad.php # Control de correlatividades
 │   ├── verificarSesion.php     # Control de sesion y autenticacion
+│   ├── verificarAccesoReporte.php # Autorizacion por rol en reportes PDF
 │   ├── menu.php / menu_docente.php / menu_secretaria.php
 │   ├── parametrosWeb.php       # Parametros dinamicos desde BD
 │   └── cerrarsesion.php        # Logout
@@ -41,6 +42,7 @@ Sistema web de gestion educativa para instituciones escolares, desarrollado en P
 ├── js/               # jQuery, Bootstrap JS, Chart.js
 ├── img/              # Logos y membretes
 ├── vendor/           # Dependencias Composer (Dompdf, PHPMailer)
+├── index.php         # Redireccion a inicio/login.php
 ├── configMail.php    # Configuracion SMTP
 └── shema_sistemasescolares.sql  # Esquema de BD
 ```
@@ -62,6 +64,15 @@ Sistema web de gestion educativa para instituciones escolares, desarrollado en P
 5. Ajustar `inicio/variablesParticulares.php` para la institucion
 6. Ejecutar `composer install` para dependencias
 
+## Tests automatizados
+
+- Documentación: **[docs/testing.md](docs/testing.md)** (variables de entorno, PHPUnit, HTTP opcional, smoke PDF).
+- Checklist manual y matriz de riesgo: **[docs/QA-checklist.md](docs/QA-checklist.md)**.
+- Base de datos de prueba: scripts `scripts/reset-test-db.ps1` (Windows) o `scripts/reset-test-db.sh` (Linux/macOS); seed en `tests/fixtures/seed_minimal.sql`.
+- Ejecución rápida: `composer test` o `vendor\bin\phpunit` con `SESYSTEM_TEST_MODE=1` y MySQL accesible (ver `docs/testing.md`).
+- **Todas las pruebas (incl. HTTP):** `composer run test:all` (levanta un `php -S` temporal; credenciales BD: ver `docs/testing.md`).
+- E2E opcional (Playwright): **[e2e/README.md](e2e/README.md)**.
+
 ## Principios de Desarrollo
 
 1. **Consultas centralizadas**: toda consulta SQL va en `funciones/consultas.php`
@@ -70,6 +81,18 @@ Sistema web de gestion educativa para instituciones escolares, desarrollado en P
 4. **Orden de includes**: `verificarSesion.php` → `conexion.php` → `consultas.php` → archivos adicionales
 5. **Paginas single-file**: cada pagina es un archivo PHP unico (logica + HTML)
 6. **Sanitizacion**: validar y sanitizar todos los inputs
+
+## Convencion Frontend (CSS/JS)
+
+- **Bootstrap CSS**: usar solo `css/material/bootstrap.min.css` (no duplicar con `css/bootstrap.min.css`).
+- **CSS comun**: incluir `css/estilos.css` despues del tema Material.
+- **Scripts base**: usar `js/jquery-3.7.1.js` + `js/bootstrap.bundle.js` (evitar `bootstrap.min.js`, `popper.min.js`, `jquery*.min.js` en paginas nuevas).
+- **Footer comun**: incluir `../funciones/footer.html` al final del `body` en paginas de `alumnos/`, `docentes/` y `secretaria/`.
+- **Menus**: `funciones/menu.php`, `funciones/menu_docente.php`, `funciones/menu_secretaria.php` se incluyen dentro del `body` y no deben volver a insertar hojas de estilo globales.
+
+La consulta de claves de acceso web (`secretaria/verClaves.php`) esta restringida a usuarios de secretaria; la URL antigua en `docentes/` redirige alli.
+
+**Contraseñas**: `funciones/password_web.php` centraliza `password_hash` / verificacion compatible con registros antiguos en texto plano. En el primer login valido se puede migrar el campo a hash. Usuarios administrativos (`usuarios.clave`) y cambios desde `cambiarClave.php` guardan hash. Las paginas bajo `secretaria/` incluyen `requerirSecretaria.php` para que solo personal con `sec_nombreUsuario` acceda (no alumnos/docentes con sesion abierta).
 
 ## Documentacion Tecnica para Agentes
 
