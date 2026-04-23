@@ -2505,10 +2505,21 @@ function analisis_estado(
                     }
                 }
             }
-
+            $controlIEFI = "f";
             if ($p8 < $cTrab && $p8 >= 0) {
                 $recuperatorio = "t";
                 $aprobado = "f";
+            }
+            if ($p8 >= 0) { $controlIEFI = "t"; }
+            if ($controlIEFI == "f") {$aprobado = "f";}
+
+            if ($r1 >= 0)
+            {
+                if ($r1 < $cReg && $r2 < 0) { $regular = false; }
+            }
+            if ($r2 >= 0)
+            {
+                if ($r2 < $cReg) { $regular = false; }
             }
         }        
 
