@@ -83,7 +83,7 @@ $html = "
     <style>
         body { font-family: Arial, sans-serif; font-size: 12pt; margin: 40px; }
         .header { text-align: center; margin-bottom: 40px; }
-        .header img { height: 80px; }
+        .header img { height: 141px; }
         .title { text-align: center; margin-bottom: 30px; }
         .footer { margin-top: 80px; text-align: center; font-size: 10pt; }
         .firma { margin-top: 60px; text-align: center; }

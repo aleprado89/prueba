@@ -116,7 +116,7 @@ $html = '
 <body>
 
     <div class="logo-container">
-        ' . ($img_base64 ? '<img src="' . $img_base64 . '" style="max-height: 140px; max-width: 100%; height: auto;">' : '<h2>' . $nombreColegio . '</h2>') . '
+        ' . ($img_base64 ? '<img src="' . $img_base64 . '" style="max-height: 246px; max-width: 100%; height: auto;">' : '<h2>' . $nombreColegio . '</h2>') . '
     </div>
 
     <div class="titulo-comprobante">Comprobante de Solicitudes para Cursado</div>

@@ -117,7 +117,11 @@ th {
 
 th:first-child { /* Establece un ancho mayor para la columna "Alumno" */
   width: 150px;
-}  
+}
+    .header img {
+      max-width: 878px;
+      height: auto;
+    }
   </style>
 <link rel="icon" type="image/png" href="../img/icon.png">
 

@@ -110,7 +110,7 @@ $html = '
         <table style="width: 100%;">
             <tr>
                 <td style="width: 20%; text-align: center;">
-                    <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo" style="max-width: 100px;">
+                    <img src="data:image/jpeg;base64,' . $img_base64 . '" alt="Logo" style="max-width: 176px;">
                 </td>
                 <td style="width: 80%; font-size: 12px; padding-left: 3px; box-sizing: border-box;">
                     <div style="padding-left: 10px;">

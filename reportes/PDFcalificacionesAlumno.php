@@ -66,7 +66,7 @@ $html = '
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
         .header { text-align: center; }
-        .header img { max-width: 500px; height: auto; }
+        .header img { max-width: 878px; height: auto; }
         .container { width: 100%; }
         h3, h4 { text-align: center; margin: 5px 0; }
         table { font-size: 9px; width: 100%; border-collapse: collapse; margin-top: 10px; }

@@ -140,7 +140,7 @@ $html = '
 <body>
 
     <div class="logo-container">
-        ' . ($img_base64 ? '<img src="' . $img_base64 . '" style="max-height: 70px;">' : '') . '
+        ' . ($img_base64 ? '<img src="' . $img_base64 . '" style="max-height: 123px;">' : '') . '
         <h3>' . htmlspecialchars($nombreColegio) . '</h3>
     </div>
 

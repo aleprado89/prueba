@@ -51,7 +51,7 @@ $html = '
             text-align: center;
         }
         .header img {
-            max-width: 500px;
+            max-width: 878px;
             height: auto;
         }
         .container {

@@ -41,7 +41,7 @@ $html = '
         @page { margin: 20px; }
         body { font-family: Arial, sans-serif; font-size: 8pt; }
         .header { text-align: center; margin-bottom: 15px; }
-        .header img { max-width: 100%; height: 70px; }
+        .header img { max-width: 100%; height: 123px; }
         .title { text-align: center; }
         h4, h5 { margin: 2px 0; font-size: 10pt; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
