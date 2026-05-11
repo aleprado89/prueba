@@ -90,8 +90,6 @@ if (isset($conn) && $conn instanceof mysqli && !function_exists('usuarioTieneAcc
         <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Datos de Personal</h6></li>
         <?php if (secretariaMenuMuestraFormulario($conn, 20)): ?><li><a class="dropdown-item ps-4" href="buscarPersonal.php">Legajos</a></li><?php endif; ?>
         <?php if (secretariaMenuMuestraFormulario($conn, 24)): ?><li><a class="dropdown-item ps-4" href="asignarDocenteMateria.php">Asignar docente a materia</a></li><?php endif; ?>
-        <li><hr class="dropdown-divider"></li>
-        <?php if (secretariaMenuMuestraFormulario($conn, 41)): ?><li><a class="dropdown-item ps-4" href="verClaves.php"><i class="bi bi-key"></i> Consultar claves (web)</a></li><?php endif; ?>
     </ul>
 </li>
 
@@ -116,14 +114,21 @@ if (isset($conn) && $conn instanceof mysqli && !function_exists('usuarioTieneAcc
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownColegio" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-building"></i> Instituto
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownColegio">
+                    <ul class="dropdown-menu shadow" aria-labelledby="navbarDropdownColegio">
                         <?php if (secretariaMenuMuestraFormulario($conn, 33)): ?><li><a class="dropdown-item" href="../secretaria/editParametrosWeb.php">Parámetros Web</a></li><?php endif; ?>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Parámetros</h6></li>
                         <?php if (secretariaMenuMuestraFormulario($conn, 33)): ?><li><a class="dropdown-item ps-4" href="../secretaria/parametrosPlanesEstudio.php">Planes de estudio</a></li><?php endif; ?>
                         <?php if (secretariaMenuMuestraFormulario($conn, 33)): ?><li><a class="dropdown-item ps-4" href="../secretaria/parametrosCursos.php">Cursos</a></li><?php endif; ?>
+                        <?php if (secretariaMenuMuestraFormulario($conn, 41) || (int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7): ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header text-dark fw-bold" style="font-size: inherit;"><i class="bi bi-dot"></i> Accesos autogestión</h6></li>
+                        <?php if (secretariaMenuMuestraFormulario($conn, 41)): ?><li><a class="dropdown-item ps-4" href="../secretaria/verClaves.php"><i class="bi bi-key"></i> Blanquear clave</a></li><?php endif; ?>
+                        <?php if ((int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7): ?><li><a class="dropdown-item ps-4" href="../secretaria/accederComoUsuario.php"><i class="bi bi-person-fill-gear"></i> Acceder como usuario</a></li><?php endif; ?>
+                        <?php endif; ?>
                         <?php if ((int)($_SESSION['sec_tipoPermiso'] ?? 0) === 7): ?>
-                            <li><a class="dropdown-item" href="../secretaria/usuarios.php">Usuarios y Permisos</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="../secretaria/usuarios.php">Usuarios y Permisos</a></li>
                         <?php endif; ?>
                     </ul>
                 </li>

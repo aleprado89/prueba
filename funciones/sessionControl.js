@@ -5,6 +5,23 @@
 
   const usuarioActual = window.usuarioActual || "null";
 
+  /**
+   * Cambio de rol Secretaría (sec_) ↔ portal alumno/docente (alu_/doc_) en la misma cookie de sesión
+   * (p. ej. "Acceder como usuario" / finalizar impersonación). No es un segundo login conflictivo.
+   */
+  function esTransicionSecretariaPortal(lsValor, uaValor) {
+    if (!lsValor || !uaValor || lsValor === "null" || uaValor === "null") {
+      return false;
+    }
+    if (lsValor.startsWith("sec_") && (uaValor.startsWith("doc_") || uaValor.startsWith("alu_"))) {
+      return true;
+    }
+    if ((lsValor.startsWith("doc_") || lsValor.startsWith("alu_")) && uaValor.startsWith("sec_")) {
+      return true;
+    }
+    return false;
+  }
+
   function cerrarSesion() {
     alert("Sesión finalizada por inactividad o cambio de estado. Serás redirigido al login.");
     // REDIRECCIONAR A cerrarsesion.php (el script general de logout)
@@ -31,6 +48,10 @@
   else if (usuarioActual !== "null") {
       if (sesionActivaLocalStorage === null || sesionActivaLocalStorage !== usuarioActual) {
           if (sesionActivaLocalStorage !== null && sesionActivaLocalStorage !== "null" && sesionActivaLocalStorage !== usuarioActual) {
+              if (esTransicionSecretariaPortal(sesionActivaLocalStorage, usuarioActual)) {
+                  localStorage.setItem(claveSesion, usuarioActual);
+                  return;
+              }
               alert("Se ha detectado un cambio de usuario en otra pestaña o se ha iniciado sesión con otro usuario. La sesión actual se cerrará.");
               // REDIRECCIONAR A cerrarsesion.php
               window.location.href = "../funciones/cerrarsesion.php?motivo=cambio_usuario_local";
@@ -46,6 +67,10 @@
       if (e.newValue === "null" || e.newValue === null) {
         // ... (cierre de sesión externo, inactividad, etc.) ...
       } else if (e.newValue !== usuarioActual && usuarioActual !== "null") {
+        if (esTransicionSecretariaPortal(usuarioActual, e.newValue) || esTransicionSecretariaPortal(e.newValue, usuarioActual)) {
+          window.location.reload();
+          return;
+        }
         // ESTE ES EL CASO: Otro login en otra pestaña mientras esta estaba activa
         alert("Se ha iniciado sesión con otro usuario. Esta pestaña se cerrará.");
 

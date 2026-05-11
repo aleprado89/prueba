@@ -1285,19 +1285,39 @@ function obtenerMateriasxProfesor($conexion, $legajo, $idCicloLectivo, $idPlan)
   return $listadoMaterias;
 }
 //obtener planes de un profe segun profesorxmateria
-function buscarPlanesProfesorMateria($conexion, $legajo)
+function buscarPlanesProfesorMateria($conexion, $legajo, $idCicloLectivo = null)
 {
-  $consulta = "SELECT p.idPlan, p.nombre
-        FROM profesorxmateria pm
-        INNER JOIN materiaterciario m
-        ON m.idMateria = pm.idMateria
-        INNER JOIN plandeestudio p
-        ON m.idPlan = p.idPlan
-        WHERE pm.idPersonal = ?
-        GROUP BY p.idPlan";
+  // Si se pasa $idCicloLectivo, filtra los planes en los que el docente tiene
+  // materias asignadas en ese ciclo. Sin el filtro devolveria planes de otros
+  // anios donde el docente ya no tiene materias activas.
+  if ($idCicloLectivo !== null) {
+    $consulta = "SELECT p.idPlan, p.nombre
+          FROM profesorxmateria pm
+          INNER JOIN materiaterciario m
+          ON m.idMateria = pm.idMateria
+          INNER JOIN plandeestudio p
+          ON m.idPlan = p.idPlan
+          WHERE pm.idPersonal = ?
+          AND m.idCicloLectivo = ?
+          GROUP BY p.idPlan
+          ORDER BY p.nombre";
 
-  $stmt = mysqli_prepare($conexion, $consulta);
-  mysqli_stmt_bind_param($stmt, "i", $legajo);
+    $stmt = mysqli_prepare($conexion, $consulta);
+    mysqli_stmt_bind_param($stmt, "ii", $legajo, $idCicloLectivo);
+  } else {
+    $consulta = "SELECT p.idPlan, p.nombre
+          FROM profesorxmateria pm
+          INNER JOIN materiaterciario m
+          ON m.idMateria = pm.idMateria
+          INNER JOIN plandeestudio p
+          ON m.idPlan = p.idPlan
+          WHERE pm.idPersonal = ?
+          GROUP BY p.idPlan
+          ORDER BY p.nombre";
+
+    $stmt = mysqli_prepare($conexion, $consulta);
+    mysqli_stmt_bind_param($stmt, "i", $legajo);
+  }
   mysqli_stmt_execute($stmt);
   $planes = mysqli_stmt_get_result($stmt);
 
@@ -6165,4 +6185,252 @@ function obtenerResumenPermisosUsuarios($conexion) {
     }
 
     return $usuarios;
+}
+
+/**
+ * Años de plataforma web (alumnos / docentes) desde colegio.
+ *
+ * @param mysqli $conexion
+ * @param int      $codNivel
+ * @return array{anioautoweb:int,anioCargaNotas:int}
+ */
+function obtenerAniosPlataformaColegio($conexion, $codNivel = 6) {
+    $anioWeb = (int) date('Y');
+    $anioCarga = (int) date('Y');
+    $sql = 'SELECT anioautoweb, anio_carga_notas FROM colegio WHERE codnivel = ? LIMIT 1';
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log('Error al preparar obtenerAniosPlataformaColegio: ' . $conexion->error);
+        return ['anioautoweb' => $anioWeb, 'anioCargaNotas' => $anioCarga];
+    }
+    $stmt->bind_param('i', $codNivel);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($row) {
+        $anioWeb = (int) ($row['anioautoweb'] ?? $anioWeb);
+        $anioCarga = (int) ($row['anio_carga_notas'] ?? $anioCarga);
+    }
+    return ['anioautoweb' => $anioWeb, 'anioCargaNotas' => $anioCarga];
+}
+
+/**
+ * Flag docenteModifica del colegio (docentes pueden modificar calif/asist).
+ */
+function obtenerDocenteModificaColegio($conexion, $codNivel = 6) {
+    $sql = 'SELECT docenteModifica FROM colegio WHERE codnivel = ? LIMIT 1';
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        return 0;
+    }
+    $stmt->bind_param('i', $codNivel);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return (int) ($row['docenteModifica'] ?? 0);
+}
+
+/**
+ * Datos de alumno terciario + clave web por DNI (LEFT passwords_alumnos).
+ *
+ * @return array<string,mixed>|null
+ */
+function obtenerAlumnoWebPasswordPorDni($conexion, $dni) {
+    $sql = 'SELECT a.idAlumno, p.apellido, p.nombre, p.dni, pass.password AS password
+            FROM persona p
+            INNER JOIN alumnosterciario a ON a.idPersona = p.idPersona
+            LEFT JOIN passwords_alumnos pass ON pass.idAlumno = a.idAlumno
+            WHERE p.dni = ? LIMIT 1';
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log('Error al preparar obtenerAlumnoWebPasswordPorDni: ' . $conexion->error);
+        return null;
+    }
+    $stmt->bind_param('s', $dni);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return $row ?: null;
+}
+
+/**
+ * Docente nivel 6 + clave web por DNI.
+ *
+ * @return array<string,mixed>|null
+ */
+function obtenerDocenteWebPasswordPorDni($conexion, $dni) {
+    $sql = 'SELECT per.legajo, p.apellido, p.nombre, p.dni, p.idPersona, pass.password AS password
+            FROM persona p
+            INNER JOIN personal per ON per.idPersona = p.idPersona AND per.nivel = 6
+            LEFT JOIN passwords pass ON pass.legajo = per.legajo
+            WHERE p.dni = ? LIMIT 1';
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log('Error al preparar obtenerDocenteWebPasswordPorDni: ' . $conexion->error);
+        return null;
+    }
+    $stmt->bind_param('s', $dni);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return $row ?: null;
+}
+
+/**
+ * Blanquea clave web de alumno a hash del DNI (INSERT o UPDATE).
+ */
+function blanquearClaveAlumno($conexion, $idAlumno, $dni) {
+    $idAlumno = (int) $idAlumno;
+    $plain = (string) $dni;
+    $hash = password_web_hash($plain);
+    $cap = password_web_column_capacity($conexion, 'passwords_alumnos', 'password');
+    if ($cap !== null && $cap < strlen($hash)) {
+        error_log('blanquearClaveAlumno: columna password demasiado corta');
+        return false;
+    }
+    $sqlEx = 'SELECT id FROM passwords_alumnos WHERE idAlumno = ? LIMIT 1';
+    $st = $conexion->prepare($sqlEx);
+    if (!$st) {
+        return false;
+    }
+    $st->bind_param('i', $idAlumno);
+    $st->execute();
+    $exists = $st->get_result()->num_rows > 0;
+    $st->close();
+    if ($exists) {
+        $sql = 'UPDATE passwords_alumnos SET password = ? WHERE idAlumno = ?';
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param('si', $hash, $idAlumno);
+        $ok = $stmt->execute();
+        $stmt->close();
+        return $ok;
+    }
+    $sql = 'INSERT INTO passwords_alumnos (idAlumno, password) VALUES (?, ?)';
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        return false;
+    }
+    $stmt->bind_param('is', $idAlumno, $hash);
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
+}
+
+/**
+ * Blanquea clave web de docente a hash de la clave por defecto (INSERT o UPDATE).
+ */
+function blanquearClaveDocente($conexion, $legajo, $claveDefault) {
+    $legajo = (int) $legajo;
+    $plain = (string) $claveDefault;
+    $hash = password_web_hash($plain);
+    $cap = password_web_column_capacity($conexion, 'passwords', 'password');
+    if ($cap !== null && $cap < strlen($hash)) {
+        error_log('blanquearClaveDocente: columna password demasiado corta');
+        return false;
+    }
+    $sqlEx = 'SELECT id FROM passwords WHERE legajo = ? LIMIT 1';
+    $st = $conexion->prepare($sqlEx);
+    if (!$st) {
+        return false;
+    }
+    $st->bind_param('i', $legajo);
+    $st->execute();
+    $exists = $st->get_result()->num_rows > 0;
+    $st->close();
+    if ($exists) {
+        $sql = 'UPDATE passwords SET password = ? WHERE legajo = ?';
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param('si', $hash, $legajo);
+        $ok = $stmt->execute();
+        $stmt->close();
+        return $ok;
+    }
+    $sql = 'INSERT INTO passwords (legajo, password) VALUES (?, ?)';
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        return false;
+    }
+    $stmt->bind_param('is', $legajo, $hash);
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
+}
+
+/**
+ * Registro en log (descripcion max 45 chars en esquema actual).
+ *
+ * @param mysqli $conexion
+ * @param int|null $idAlumno  null si solo docente
+ * @param string   $usuarioAdmin
+ * @param string   $descripcion
+ */
+function registrarLogBlanqueo($conexion, $idAlumno, $usuarioAdmin, $descripcion) {
+    $usuario = mb_substr((string) $usuarioAdmin, 0, 45, 'UTF-8');
+    $desc = mb_substr((string) $descripcion, 0, 45, 'UTF-8');
+    if ($idAlumno === null || $idAlumno === '') {
+        $sql = 'INSERT INTO log (fecha, idAlumno, usuario, descripcion) VALUES (NOW(), NULL, ?, ?)';
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            error_log('Error al preparar registrarLogBlanqueo: ' . $conexion->error);
+            return;
+        }
+        $stmt->bind_param('ss', $usuario, $desc);
+    } else {
+        $sql = 'INSERT INTO log (fecha, idAlumno, usuario, descripcion) VALUES (NOW(), ?, ?, ?)';
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            error_log('Error al preparar registrarLogBlanqueo: ' . $conexion->error);
+            return;
+        }
+        $idA = (int) $idAlumno;
+        $stmt->bind_param('iss', $idA, $usuario, $desc);
+    }
+    if (!$stmt->execute()) {
+        error_log('registrarLogBlanqueo execute: ' . $stmt->error);
+    }
+    $stmt->close();
+}
+
+/**
+ * Personas con rol alumno terciario y/o docente nivel 6 (búsqueda apellido/nombre).
+ *
+ * @return array<int,array<string,mixed>>
+ */
+function listarPersonasTerciarioParaImpersonacion($conexion, $apellido = '', $nombre = '') {
+    $sql = 'SELECT p.idPersona, p.apellido, p.nombre, p.dni,
+                   MAX(a.idAlumno) AS idAlumno,
+                   MAX(per.legajo) AS legajo_docente
+            FROM persona p
+            LEFT JOIN alumnosterciario a ON a.idPersona = p.idPersona
+            LEFT JOIN personal per ON per.idPersona = p.idPersona AND per.nivel = 6
+            WHERE p.apellido LIKE ? AND p.nombre LIKE ?
+            GROUP BY p.idPersona, p.apellido, p.nombre, p.dni
+            HAVING MAX(a.idAlumno) IS NOT NULL OR MAX(per.legajo) IS NOT NULL
+            ORDER BY
+                CASE WHEN p.apellido LIKE ? THEN 1 ELSE 2 END,
+                p.apellido, p.nombre
+            LIMIT 150';
+    $stmt = $conexion->prepare($sql);
+    if (!$stmt) {
+        error_log('Error al preparar listarPersonasTerciarioParaImpersonacion: ' . $conexion->error);
+        return [];
+    }
+    $paramApellidoLike = '%' . $apellido . '%';
+    $paramNombreLike = '%' . $nombre . '%';
+    $paramApellidoStarts = $apellido . '%';
+    $stmt->bind_param('sss', $paramApellidoLike, $paramNombreLike, $paramApellidoStarts);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $out = [];
+    while ($row = $res->fetch_assoc()) {
+        $out[] = $row;
+    }
+    $stmt->close();
+    return $out;
 }

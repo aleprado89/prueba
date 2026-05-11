@@ -37,21 +37,32 @@ if (isset($_POST['idMateria'])) {
 
 // Obtener el  ciclolectivo de tabla colegios para tomar predeterminado
 $primerCiclolectivo=$datosColegio[0]['anioCargaNotas'];
+$primerCicloLectivoId = buscarIdCiclo($conn, $primerCiclolectivo);
 // $ciclolectivos = levantarCiclosLectivos(conexion: $conn);
 // $primerCiclolectivo = $ciclolectivos[0]['idCicloLectivo'];
 
-// Obtener el primer plan
-$planes = buscarPlanesProfesorMateria($conn,$doc_legajo);
-$primerPlan = $planes[0]['idPlan'];
-$nombrePlan=$planes[0]['nombrePlan'];
+// Obtener los planes del docente filtrados por el ciclo lectivo actual,
+// para no mostrar carreras de anios anteriores donde ya no tiene materias.
+$planes = buscarPlanesProfesorMateria($conn, $doc_legajo, $primerCicloLectivoId);
+$primerPlan = !empty($planes) ? $planes[0]['idPlan'] : 0;
+$nombrePlan = !empty($planes) ? $planes[0]['nombrePlan'] : '';
+
+// Endpoint AJAX: devolver los planes del docente para un ciclo lectivo dado.
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'obtenerPlanes') {
+  header('Content-Type: application/json');
+  $idCicloPlanes = isset($_POST['ciclolectivo']) ? intval($_POST['ciclolectivo']) : 0;
+  $planesCiclo = buscarPlanesProfesorMateria($conn, $doc_legajo, $idCicloPlanes);
+  echo json_encode($planesCiclo);
+  exit;
+}
 
 // Cargar la variable de sesión con el primer ciclolectivo y plan
 if (!isset($_SESSION['valorSeleccionado'])) {
-  $_SESSION['valorSeleccionado'] = $primerCiclolectivo;
+  $_SESSION['valorSeleccionado'] = $primerCicloLectivoId;
   $_SESSION['planSeleccionado'] = $primerPlan;
 }
 if (!isset($materiasAsignadas)) {
-  $materiasAsignadas = obtenerMateriasxProfesor($conn,$doc_legajo,$primerCiclolectivo,$primerPlan);
+  $materiasAsignadas = obtenerMateriasxProfesor($conn, $doc_legajo, $primerCicloLectivoId, $primerPlan);
 }
 
 
@@ -156,7 +167,7 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
       <div class="col-auto "> 
 <label>Ciclo Lectivo:</label></div>
 <div class="col-12 col-md-8 ">
-<select name="ciclolectivo" class="form-select margenes padding" id="ciclolectivo" onchange="cargarValor(this.value)" <?php if ($_SESSION['profeModCiclo'] == 0) { echo 'disabled'; } ?>>
+<select name="ciclolectivo" class="form-select margenes padding" id="ciclolectivo" onchange="cargarCiclo(this.value)" <?php if ($_SESSION['profeModCiclo'] == 0) { echo 'disabled'; } ?>>
 <?php
         $ciclolectivos = levantarCiclosLectivos(conexion: $conn); // Llamar a la función levantarCiclosLectivos
         $ciclolectivo_seleccionado = null;
@@ -181,9 +192,13 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
   <div class="col-12 col-md-9 ">
   <select name="plan" class="form-select margenes padding" id="plan" onchange="cargarValor(this.value)">
     <?php
-        $planes = buscarPlanesProfesorMateria($conn,$doc_legajo); // Llamar a la función buscarPlanesProfesorMateria
-        foreach ($planes as $plan) {
-          echo '<option value="' . $plan['idPlan'] . '">' . $plan['nombrePlan'] . '</option>';
+        // Planes filtrados por ciclo lectivo actual ($planes ya cargado arriba).
+        if (empty($planes)) {
+          echo '<option value="">Sin carreras asignadas en este ciclo</option>';
+        } else {
+          foreach ($planes as $plan) {
+            echo '<option value="' . $plan['idPlan'] . '">' . $plan['nombrePlan'] . '</option>';
+          }
         }
         ?>
       </select></div></div>
@@ -246,6 +261,33 @@ if (isset($_SESSION['valorSeleccionado']) && isset($_SESSION['planSeleccionado']
           if (tabla.length > 0) {
             $('#tablaMaterias').html(tabla.html());
           }
+        }
+      });
+    }
+
+    // Al cambiar el ciclo lectivo: refrescar primero el select de carreras
+    // (para mostrar solo las del docente en ese ciclo) y despues la tabla de materias.
+    function cargarCiclo(idCiclo) {
+      $.ajax({
+        type: 'POST',
+        url: 'materiaxdocente.php',
+        data: {accion: 'obtenerPlanes', ciclolectivo: idCiclo},
+        dataType: 'json',
+        success: function(planes) {
+          var $plan = $('#plan');
+          $plan.empty();
+          if (!planes || planes.length === 0) {
+            $plan.append('<option value="">Sin carreras asignadas en este ciclo</option>');
+          } else {
+            $.each(planes, function(_, p) {
+              $plan.append('<option value="' + p.idPlan + '">' + p.nombrePlan + '</option>');
+            });
+          }
+          cargarValor(idCiclo);
+        },
+        error: function() {
+          // Fallback: igual refrescar la tabla con lo que haya en el select.
+          cargarValor(idCiclo);
         }
       });
     }

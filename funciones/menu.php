@@ -31,6 +31,18 @@ if ($params) {
     }
 }
 ?>
+<?php if (!empty($_SESSION['impersonando'])):
+    $lblImp = isset($_SESSION['impersonacion_label']) ? (string) $_SESSION['impersonacion_label'] : 'Usuario';
+    ?>
+<div class="alert alert-warning text-center m-0 rounded-0 py-2 mb-0 border-0">
+  <i class="bi bi-eye-fill"></i>
+  Vista desde Secretaría como <strong><?php echo htmlspecialchars($lblImp, ENT_QUOTES, 'UTF-8'); ?></strong>
+  &nbsp;·&nbsp;
+  <a href="../secretaria/finalizarImpersonacion.php" class="alert-link fw-semibold">
+    <i class="bi bi-box-arrow-left"></i> Volver a Secretaría
+  </a>
+</div>
+<?php endif; ?>
 <nav class="navbar navbar-expand-lg" data-bs-theme="light">
     <div class="container">
       <div class="d-flex flex-column align-items-center centrarlogomenu">

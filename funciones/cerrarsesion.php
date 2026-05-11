@@ -1,6 +1,12 @@
 <?php
 session_start();
 
+// Impersonación: no destruir sesión; volver a Secretaría con sesión admin restaurada
+if (!empty($_SESSION['impersonando']) && !empty($_SESSION['_sec_backup'])) {
+    header('Location: ../secretaria/finalizarImpersonacion.php?from=cerrarsesion');
+    exit;
+}
+
 // 1. Determine redirect URL based on the most reliable information
 $redirect_url = '../inicio/login.php'; // Default fallback to general login
 
